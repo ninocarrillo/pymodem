@@ -97,6 +97,12 @@ def main():
 
 	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
 	print(decoded_data)
+	for packet in decoded_data:
+		for byte in packet:
+			byte = int(byte)
+			print(chr(byte), end='')
+		print("\r\n",end='')
+
 
 	# Check CRCs on each decoded packet
 
