@@ -26,14 +26,12 @@ def decode(decoder, data):
 		for bit_index in range(8):
 			if input_byte & 0x80:
 				# this is a '1' bit
+				decoder['working_byte'] >>= 1
+				decoder['working_byte'] &= 0xFF
 				decoder['working_byte'] |= 0x80
 				decoder['one_count'] += 1
 				decoder['working_byte_bit_index'] += 1
-				if decoder['one_count'] > 6:
-					# abort frame for invalid bit sequence
-					decoder['working_byte_bit_index'] = 0
-					decoder['working_packet_byte_index'] = 0
-				elif decoder['working_byte_bit_index'] > 7:
+				if decoder['working_byte_bit_index'] > 7:
 					# Byte complete, do something with it
 					decoder['working_byte_bit_index'] = 0
 					decoder['working_packet'][
@@ -50,12 +48,10 @@ def decode(decoder, data):
 						# Don't treat the rest of the data before the next
 						# flag as a valid packet
 						decoder['stranded_data_flag'] = True
-				else:
-					decoder['working_byte'] >>= 1
-					decoder['working_byte'] &= 0xFF
 			else:
 				# this is a '0' bit
 				if decoder['one_count'] < 5:
+					decoder['working_byte'] >>= 1
 					decoder['working_byte'] &= 0x7F
 					decoder['working_byte_bit_index'] += 1
 					if decoder['working_byte_bit_index'] > 7:
@@ -74,11 +70,6 @@ def decode(decoder, data):
 							# Don't treat the rest of the data before the next
 							# flag as a valid packet
 							decoder['stranded_data_flag'] = True
-					else:
-						decoder['working_byte'] >>= 1
-				elif decoder['one_count'] == 5:
-					# this is a stuffed zero, ignore
-					pass
 				elif decoder['one_count'] == 6:
 					# This is a flag, check and save the packet
 					if (
@@ -97,9 +88,6 @@ def decode(decoder, data):
 					decoder['working_packet_byte_index'] = 0
 					decoder['working_byte_bit_index'] = 0
 					decoder['stranded_data_flag'] = False
-				else:
-					decoder['working_packet_byte_index'] = 0
-					decoder['working_byte_bit_index'] = 0
 				decoder['one_count'] = 0
 			# shift input byte
 			input_byte <<= 1
