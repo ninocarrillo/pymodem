@@ -7,7 +7,6 @@
 from scipy.signal import firwin
 from math import ceil
 from numpy import arange, array, sin, cos, pi, convolve, sqrt
-import matplotlib.pyplot as plt
 
 def initialize(
 		input_bpf_low_cutoff,
@@ -31,10 +30,6 @@ def initialize(
 		pass_zero='bandpass'
 	)
 
-	plt.figure()
-	plt.plot(demodulator['input_bpf'])
-	plt.show()
-
 	# Use scipy.signal.firwin to generate taps for output low pass filter.
 	# Output lpf is implemented as a Finite Impulse Response filter (FIR).
 	# firwin defaults to hamming window if not specified.
@@ -42,10 +37,6 @@ def initialize(
 		output_lpf_tap_count,
 		output_lpf_cutoff/sample_rate
 	)
-
-	plt.figure()
-	plt.plot(demodulator['output_lpf'])
-	plt.show()
 
 	# Create quadrature correlators for mark and space tones. Quadrature means
 	# we will have two tone patterns at each frequency, with 90 degrees of
@@ -64,14 +55,6 @@ def initialize(
 	# Calculate the space waveforms, apply space gain factor (for emphasis)
 	demodulator['space_correlator_i'] = space_gain * cos(space_indices)
 	demodulator['space_correlator_q'] = space_gain * sin(space_indices)
-
-	plt.figure()
-	plt.plot(demodulator['mark_correlator_i'])
-	plt.plot(demodulator['mark_correlator_q'])
-	plt.plot(demodulator['space_correlator_i'])
-	plt.plot(demodulator['space_correlator_q'])
-	plt.show()
-
 	return demodulator
 
 def demodulate(demodulator, input_audio):
@@ -79,20 +62,15 @@ def demodulate(demodulator, input_audio):
 	audio = convolve(input_audio, demodulator['input_bpf'], 'valid')
 	# Create the correlation products.
 	mark_rms = sqrt(
-					convolve(audio, demodulator['mark_correlator_i'], 'valid')**2
-					+ convolve(audio, demodulator['mark_correlator_q'], 'valid')**2
-				)
+		convolve(audio, demodulator['mark_correlator_i'], 'valid')**2
+		+ convolve(audio, demodulator['mark_correlator_q'], 'valid')**2
+	)
 	space_rms = sqrt(
-					convolve(audio, demodulator['space_correlator_i'], 'valid')**2
-					+ convolve(audio, demodulator['space_correlator_q'], 'valid')**2
-				)
+		convolve(audio, demodulator['space_correlator_i'], 'valid')**2
+		+ convolve(audio, demodulator['space_correlator_q'], 'valid')**2
+	)
 	# The demodulated signal is mark-space:
 	audio = mark_rms - space_rms
 	# Apply the output filter:
 	audio = convolve(audio, demodulator['output_lpf'], 'valid')
-
-	plt.figure()
-	plt.plot(audio)
-	plt.show()
-
 	return audio

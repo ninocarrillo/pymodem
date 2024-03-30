@@ -12,6 +12,7 @@ import sys
 from scipy.io.wavfile import read as readwav
 import afsk_functions
 import slicer_functions
+import lfsr_functions
 
 def main():
 	# check correct version of Python
@@ -67,6 +68,19 @@ def main():
 
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
 	print(sliced_data)
+
+	# Apply differential decoding through a linear feedback shift register.
+	# The same method can be used for de-scrambling.
+	# simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
+	polynomial = 0x3
+	invert = True
+	lfsr = lfsr_functions.initialize(
+		polynomial,
+		invert
+	)
+
+	descrambled_data = lfsr_functions.unscramble(lfsr, sliced_data)
+	print(descrambled_data)
 
 if __name__ == "__main__":
 	main()
