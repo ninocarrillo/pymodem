@@ -26,9 +26,8 @@ def decode(decoder, data):
 		for bit_index in range(8):
 			if input_byte & 0x80:
 				# this is a '1' bit
-				decoder['one_count'] += 1
 				decoder['working_byte'] |= 0x80
-				decoder['working_byte'] &= 0xFF
+				decoder['one_count'] += 1
 				decoder['working_byte_bit_index'] += 1
 				if decoder['one_count'] > 6:
 					# abort frame for invalid bit sequence
@@ -40,18 +39,20 @@ def decode(decoder, data):
 					decoder['working_packet'][
 							decoder['working_packet_byte_index']
 						] = decoder['working_byte']
-					decoder['working_packet_byte_index'] += 1	
+					decoder['working_packet_byte_index'] += 1
 					if (
 							decoder['working_packet_byte_index'] >
 							decoder['max_packet_length']
 					):
 						# This packet exceeds max length
 						decoder['working_packet_byte_index'] = 0
+						decoder['one_count'] = 0
 						# Don't treat the rest of the data before the next
 						# flag as a valid packet
 						decoder['stranded_data_flag'] = True
 				else:
 					decoder['working_byte'] >>= 1
+					decoder['working_byte'] &= 0xFF
 			else:
 				# this is a '0' bit
 				if decoder['one_count'] < 5:
@@ -97,10 +98,10 @@ def decode(decoder, data):
 						print(" packet ")
 					decoder['working_packet_byte_index'] = 0
 					decoder['stranded_data_flag'] = False
+				else:
+					decoder['working_packet_byte_index'] = 0
+					decoder['working_byte_bit_index'] = 0
 				decoder['one_count'] = 0
 			# shift input byte
 			input_byte <<= 1
-		# advance the working byte by one bit and bound in 8 bits
-		decoder['working_byte'] <<= 1
-		decoder['working_byte'] &= 0xFF
 	return result
