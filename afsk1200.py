@@ -13,6 +13,7 @@ from scipy.io.wavfile import read as readwav
 import afsk_functions
 import slicer_functions
 import lfsr_functions
+import ax25_functions
 
 def main():
 	# check correct version of Python
@@ -43,7 +44,7 @@ def main():
 	output_lpf_tap_count = 39		# FIR tap count
 									# more taps = shaper cutoff, more processing
 	symbol_rate = 1200.0			# 1200 symbols per second (or baud)
-	demodulator = afsk_functions.initialize(
+	demodulator = afsk_functions.initialize_demodulator(
 		input_bpf_low_cutoff,
 		input_bpf_high_cutoff,
 		input_bpf_tap_count,
@@ -67,11 +68,16 @@ def main():
 	)
 
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
-	print(sliced_data)
 
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
-	# simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
+	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
+	# AX.25 invertes the bitstream as well
+	# The G3RUH polynomial is 0x21001.
+	# Sequential lfsr operations can be combined by multiplying the polynomials
+	# together.
+	# So G3RUH descrambling combined with differential decoding is equivalent
+	# to lfsr polynomial 0x21001 * 0x3 = 0x63003
 	polynomial = 0x3
 	invert = True
 	lfsr = lfsr_functions.initialize(
@@ -80,7 +86,21 @@ def main():
 	)
 
 	descrambled_data = lfsr_functions.unscramble(lfsr, sliced_data)
-	print(descrambled_data)
+
+	# Attempt ax.25 decoding on the descrambled data
+	min_packet_length = 18
+	max_packet_length = 1023
+	ax25_decoder = ax25_functions.initialize_decoder(
+		min_packet_length,
+		max_packet_length
+	)
+
+	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
+	print(decoded_data)
+
+	# Check CRCs on each decoded packet
+
+
 
 if __name__ == "__main__":
 	main()

@@ -8,7 +8,7 @@ from scipy.signal import firwin
 from math import ceil
 from numpy import arange, array, sin, cos, pi, convolve, sqrt
 
-def initialize(
+def initialize_demodulator(
 		input_bpf_low_cutoff,
 		input_bpf_high_cutoff,
 		input_bpf_tap_count,
