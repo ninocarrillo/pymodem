@@ -14,6 +14,7 @@ import afsk_functions
 import slicer_functions
 import lfsr_functions
 import ax25_functions
+import matplotlib
 
 def main():
 	# check correct version of Python
@@ -95,10 +96,11 @@ def main():
 		max_packet_length
 	)
 
-	print(descrambled_data)
-
 	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
+	packet_number = 0
 	for packet in decoded_data:
+		packet_number += 1
+		print("packet number", packet_number)
 		for byte in packet:
 			byte = int(byte)
 			print(chr(byte), end='')
