@@ -90,6 +90,9 @@ def demodulate(demodulator, input_audio):
 	audio = mark_rms - space_rms
 	# Apply the output filter:
 	audio = convolve(audio, demodulator['output_lpf'], 'valid')
+
 	plt.figure()
 	plt.plot(audio)
 	plt.show()
+	
+	return audio

@@ -34,7 +34,7 @@ def main():
 	space_freq = 2200.0				# space tone frequency
 	space_gain = 1.0				# gain correction for space tone correlator
 									# for optimizing pre-emphasized audio
-	output_lpf_cutoff = 800.0		# low pass filter cutoff frequency for
+	output_lpf_cutoff = 1200.0		# low pass filter cutoff frequency for
 									# output signal after correlators
 	symbol_rate = 1200.0			# 1200 symbols per second (or baud)
 	demodulator = afsk_functions.initialize(
@@ -49,6 +49,8 @@ def main():
 	)
 
 	demod_audio = afsk_functions.demodulate(demodulator, input_audio)
+
+	# Slice demodulated audio into bitstream.
 
 if __name__ == "__main__":
 	main()
