@@ -60,7 +60,7 @@ def main():
 	demod_audio = afsk_functions.demodulate(demodulator, input_audio)
 
 	# Slice demodulated audio into bitstream.
-	lock_rate = 0.77
+	lock_rate = 0.95
 	slicer = slicer_functions.initialize(
 		input_sample_rate,
 		symbol_rate,
@@ -94,7 +94,7 @@ def main():
 		min_packet_length,
 		max_packet_length
 	)
-	
+
 	print(descrambled_data)
 
 	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)

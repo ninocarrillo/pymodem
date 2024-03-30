@@ -64,7 +64,7 @@ def decode(decoder, data):
 						decoder['working_packet'][
 								decoder['working_packet_byte_index']
 							] = decoder['working_byte']
-						decoder['working_packet_byte_index'] += 1		
+						decoder['working_packet_byte_index'] += 1
 						if (
 								decoder['working_packet_byte_index'] >
 								decoder['max_packet_length']
@@ -81,7 +81,6 @@ def decode(decoder, data):
 					pass
 				elif decoder['one_count'] == 6:
 					# This is a flag, check and save the packet
-					print('flag ',end='')
 					if (
 							(
 								decoder['working_packet_byte_index'] >=
@@ -93,10 +92,10 @@ def decode(decoder, data):
 						result.append(
 							decoder['working_packet'][
 								:decoder['working_packet_byte_index']
-							]
+							].copy()
 						)
-						print(" packet ")
 					decoder['working_packet_byte_index'] = 0
+					decoder['working_byte_bit_index'] = 0
 					decoder['stranded_data_flag'] = False
 				else:
 					decoder['working_packet_byte_index'] = 0
