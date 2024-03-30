@@ -37,6 +37,7 @@ def decode(decoder, data):
 				# this is a '0' bit
 				if decoder['one_count'] < 5:
 					decoder['working_byte'] &= 0x7F
+					decoder['working_byte'] >>= 1
 					decoder['working_byte_bit_index'] += 1
 					if decoder['working_byte_bit_index'] > 7:
 						# Byte complete, do something with it
