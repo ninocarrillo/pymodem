@@ -12,10 +12,12 @@ import matplotlib.pyplot as plt
 def initialize(
 		input_bpf_low_cutoff,
 		input_bpf_high_cutoff,
+		input_bpf_tap_count,
 		mark_freq,
 		space_freq,
 		space_gain,
 		output_lpf_cutoff,
+		output_lpf_tap_count,
 		sample_rate,
 		symbol_rate
 	):
@@ -23,10 +25,9 @@ def initialize(
 	demodulator = {}
 	# Use scipy.signal.firwin to generate taps for input bandpass filter.
 	# Input bpf is implemented as a Finite Impulse Response filter (FIR).
-	input_bpf_tap_count = 115 # more taps means shaper cutoff, more processing
 	demodulator['input_bpf'] = firwin(
 		input_bpf_tap_count,
-		[input_bpf_low_cutoff/sample_rate, input_bpf_high_cutoff/sample_rate],
+		[ input_bpf_low_cutoff/sample_rate, input_bpf_high_cutoff/sample_rate ],
 		pass_zero='bandpass'
 	)
 
@@ -37,7 +38,6 @@ def initialize(
 	# Use scipy.signal.firwin to generate taps for output low pass filter.
 	# Output lpf is implemented as a Finite Impulse Response filter (FIR).
 	# firwin defaults to hamming window if not specified.
-	output_lpf_tap_count = 39 # more taps means sharper cutoff, more processing
 	demodulator['output_lpf'] = firwin(
 		output_lpf_tap_count,
 		output_lpf_cutoff/sample_rate
@@ -52,7 +52,7 @@ def initialize(
 	# phase difference (sine and cosine).
 	# First we will create an array of time indices for one symbol length.
 	# Computing the time indices in steps. First, create an ascending count,
-	# one count for each sample in the symbol time.
+	# one count for each sample in the symbol-time.
 	time_indices = arange(ceil(sample_rate / symbol_rate))
 	# Now scale the time indices according to frequency.
 	mark_indices = time_indices * (2.0 * pi * mark_freq / sample_rate)
@@ -94,5 +94,5 @@ def demodulate(demodulator, input_audio):
 	plt.figure()
 	plt.plot(audio)
 	plt.show()
-	
+
 	return audio
