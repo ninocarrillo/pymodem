@@ -14,7 +14,6 @@ import afsk_functions
 import slicer_functions
 import lfsr_functions
 import ax25_functions
-import matplotlib
 
 def main():
 	# check correct version of Python
