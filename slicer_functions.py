@@ -49,14 +49,14 @@ def slice(slicer, samples):
 		if slicer['phase_clock'] >= slicer['rollover_threshold']:
 			# at or past symbol center, reset phase_clock
 			slicer['phase_clock'] -= slicer['samples_per_symbol']
+			# shift and bound the working byte
+			slicer['working_byte'] = (slicer['working_byte'] << 1) & 0xFF
 			# make a bit decision
 			if sample >= 0:
 				# this is a '1' bit
 				slicer['working_byte'] |= 1
 				# zero bit case is handled by default through the shift operator
 			# save this bit into the lsb of the working_byte
-			# bound the working byte
-			slicer['working_byte'] = (slicer['working_byte'] << 1) & 0xFF
 			slicer['working_bit_count'] += 1
 			# after 8 bits, save this byte in the result array and reset bit
 			# count
@@ -66,8 +66,8 @@ def slice(slicer, samples):
 				result_index += 1
 		# check for zero-crossing in sample stream
 		if (
-				(slicer['last_sample'] < 0 and sample >= 0)
-				or (slicer['last_sample'] >= 0 and sample < 0)
+				(slicer['last_sample'] < 0.0 and sample >= 0.0)
+				or (slicer['last_sample'] >= 0.0 and sample < 0.0)
 			):
 			# zero crossing detected, adjust phase_clock
 			slicer['phase_clock'] = slicer['phase_clock'] * slicer['lock_rate']
