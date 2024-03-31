@@ -97,21 +97,14 @@ def main():
 	)
 
 	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
-	packet_number = 0
-	for packet in decoded_data:
-		packet_number += 1
-		print("packet number", packet_number)
-		for byte in packet:
-			byte = int(byte)
-			print(hex(byte), end=' ')
-		print(" ")
-
 
 	# Check CRCs on each decoded packet
+	good_count = 0
 	for packet in decoded_data:
-		packet_crc1 = int((256*packet[-1]) + packet[-2])
 		calc_crc = crc_functions.CheckCRC(packet, len(packet))
-		print(hex(packet_crc1), hex(calc_crc[0]), hex(calc_crc[1]))
+		if calc_crc[2] == 1:
+			good_count += 1
+			print(good_count, hex(calc_crc[0]))
 
 
 if __name__ == "__main__":

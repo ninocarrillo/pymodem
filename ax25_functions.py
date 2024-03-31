@@ -33,13 +33,14 @@ def decode(decoder, data):
 					# abort frame for invalid bit sequence
 					decoder['bit_index'] = 0
 					decoder['byte_index'] = 0
-				if decoder['bit_index'] >= 8:
+				if decoder['bit_index'] == 8:
 					# Byte complete, do something with it
 					decoder['bit_index'] = 0
 					decoder['working_packet'][
 							decoder['byte_index']
 						] = decoder['working_byte']
 					decoder['byte_index'] += 1
+					decoder['working_byte'] >>= 1
 					if (
 							decoder['byte_index'] >
 							decoder['max_packet_length']
@@ -48,12 +49,13 @@ def decode(decoder, data):
 						decoder['byte_index'] = 0
 						decoder['one_count'] = 0
 				else:
+					#pass
 					decoder['working_byte'] >>= 1
 			else:
 				# this is a '0' bit
 				if decoder['one_count'] < 5:
 					decoder['bit_index'] += 1
-					if decoder['bit_index'] > 7:
+					if decoder['bit_index'] == 8:
 						# Byte complete, do something with it
 						decoder['bit_index'] = 0
 						decoder['working_packet'][
