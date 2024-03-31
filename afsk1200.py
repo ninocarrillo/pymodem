@@ -104,7 +104,14 @@ def main():
 		calc_crc = crc_functions.CheckCRC(packet, len(packet))
 		if calc_crc[2] == 1:
 			good_count += 1
-			print(good_count, hex(calc_crc[0]))
+			print("Packet number: ", good_count, " CRC: ", hex(calc_crc[0]))
+			for byte in packet:
+				byte = int(byte)
+				if (byte < 0x7F) and (byte > 0x20):
+					print(chr(int(byte)), end='')
+				else:
+					print('.', end='')
+			print(" ")
 
 
 if __name__ == "__main__":
