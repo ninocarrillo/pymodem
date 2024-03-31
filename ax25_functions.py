@@ -40,7 +40,6 @@ def decode(decoder, data):
 							decoder['byte_index']
 						] = decoder['working_byte']
 					decoder['byte_index'] += 1
-					decoder['working_byte'] >>= 1
 					if (
 							decoder['byte_index'] >
 							decoder['max_packet_length']
@@ -48,9 +47,7 @@ def decode(decoder, data):
 						# This packet exceeds max length
 						decoder['byte_index'] = 0
 						decoder['one_count'] = 0
-				else:
-					#pass
-					decoder['working_byte'] >>= 1
+				decoder['working_byte'] >>= 1
 			else:
 				# this is a '0' bit
 				if decoder['one_count'] < 5:
@@ -68,8 +65,7 @@ def decode(decoder, data):
 						):
 							# This packet exceeds max length
 							decoder['byte_index'] = 0
-					else:
-						decoder['working_byte'] >>= 1
+					decoder['working_byte'] >>= 1
 				elif decoder['one_count'] == 5:
 					#ignore stuffed zero
 					pass
