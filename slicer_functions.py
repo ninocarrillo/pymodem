@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from numpy import zeros, uint8
+from numpy import zeros
 
 def initialize(
 		sample_rate,
