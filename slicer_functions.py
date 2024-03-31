@@ -55,7 +55,9 @@ def slice(slicer, samples):
 			if sample >= 0:
 				# this is a '1' bit
 				slicer['working_byte'] |= 1
-				# zero bit case is handled by default through the shift operator
+			else:
+				# this is a '0' bit
+				slicer['working_byte'] &= 0xFE
 			# save this bit into the lsb of the working_byte
 			slicer['working_bit_count'] += 1
 			# after 8 bits, save this byte in the result array and reset bit

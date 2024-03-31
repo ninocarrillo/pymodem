@@ -9,9 +9,9 @@ from numpy import zeros
 def initialize(polynomial, invert):
 	# Create an empty dictionary to hold slicer parameters.
 	lfsr = {}
-	lfsr['polynomial'] = int(polynomial)
+	lfsr['polynomial'] = polynomial
 	lfsr['invert'] = invert
-	lfsr['shift_register'] = int(0)
+	lfsr['shift_register'] = 0
 	return lfsr
 
 def unscramble(lfsr, data):
@@ -23,19 +23,19 @@ def unscramble(lfsr, data):
 	working_byte = int(0)
 	result_index = 0
 	for input_byte in data:
-		input_byte = int(input_byte)
+		input_byte = int(round(input_byte))
 		# cycle through each bit in this byte
 		for bit_index in range(8):
+			# advance the lfsr shift register 1 bit
+			lfsr['shift_register'] >>= 1
 			# make room in working byte for a new bit
 			working_byte <<= 1
-			working_byte &= 0xFF
+			working_byte &= 0xFE
 			# msb is first, sample it
 			if input_byte & 0x80:
 				# if the msb is 1, xor the polynomial into the shift register
 				lfsr['shift_register'] ^= lfsr['polynomial']
-			working_byte |= lfsr['shift_register'] & 1
-			# advance the lfsr shift register 1 bit
-			lfsr['shift_register'] >>= 1
+			working_byte |= (lfsr['shift_register'] & 1)
 			input_byte <<= 1
 		# 8 bits have been processed, save the byte
 

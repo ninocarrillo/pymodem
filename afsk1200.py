@@ -14,6 +14,7 @@ import afsk_functions
 import slicer_functions
 import lfsr_functions
 import ax25_functions
+import crc_functions
 
 def main():
 	# check correct version of Python
@@ -102,12 +103,15 @@ def main():
 		print("packet number", packet_number)
 		for byte in packet:
 			byte = int(byte)
-			print(chr(byte), end='')
+			print(byte, end=' ')
 		print("\r\n",end='')
 
 
 	# Check CRCs on each decoded packet
-
+	for packet in decoded_data:
+		packet_crc1 = int((256*packet[-1]) + packet[-2])
+		calc_crc = crc_functions.CheckCRC(packet, len(packet))
+		print(hex(packet_crc1), hex(calc_crc[0]), hex(calc_crc[1]))
 
 
 if __name__ == "__main__":

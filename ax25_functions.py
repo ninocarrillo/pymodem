@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from numpy import zeros, append
+from numpy import zeros, append, rint
 
 def initialize_decoder(min_packet_length, max_packet_length):
 	decoder = {}
@@ -29,7 +29,11 @@ def decode(decoder, data):
 				decoder['working_byte'] |= 0x80
 				decoder['one_count'] += 1
 				decoder['bit_index'] += 1
-				if decoder['bit_index'] > 7:
+				if decoder['one_count'] > 6:
+					# abort frame for invalid bit sequence
+					decoder['bit_index'] = 0
+					decoder['byte_index'] = 0
+				if decoder['bit_index'] >= 8:
 					# Byte complete, do something with it
 					decoder['bit_index'] = 0
 					decoder['working_packet'][
@@ -64,6 +68,9 @@ def decode(decoder, data):
 							decoder['byte_index'] = 0
 					else:
 						decoder['working_byte'] >>= 1
+				elif decoder['one_count'] == 5:
+					#ignore stuffed zero
+					pass
 				elif decoder['one_count'] == 6:
 					# This is a flag, check and save the packet
 					if (
