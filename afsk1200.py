@@ -103,8 +103,8 @@ def main():
 		print("packet number", packet_number)
 		for byte in packet:
 			byte = int(byte)
-			print(byte, end=' ')
-		print("\r\n",end='')
+			print(hex(byte), end=' ')
+		print(" ")
 
 
 	# Check CRCs on each decoded packet
