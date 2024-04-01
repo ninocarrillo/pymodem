@@ -35,7 +35,7 @@ def main():
 	# These are a good starting point.
 	# Experimentation is helpful to understand the effects of each.
 	input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
-	input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
+	input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
 	input_bpf_tap_count = 115 		# FIR tap count
 									# more taps = shaper cutoff, more processing
 	mark_freq = 1200.0				# mark tone frequency
@@ -46,7 +46,7 @@ def main():
 									# for de-emphasized audio.
 									# Implement multiple parallel demodulators
 									# to handle general cases.
-	output_lpf_cutoff = 2000.0		# low pass filter cutoff frequency for
+	output_lpf_cutoff = 1000.0		# low pass filter cutoff frequency for
 									# output signal after correlators
 	output_lpf_tap_count = 39		# FIR tap count
 									# more taps = shaper cutoff, more processing

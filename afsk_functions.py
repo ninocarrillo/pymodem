@@ -26,8 +26,9 @@ def initialize_demodulator(
 	# Input bpf is implemented as a Finite Impulse Response filter (FIR).
 	demodulator['input_bpf'] = firwin(
 		input_bpf_tap_count,
-		[ input_bpf_low_cutoff/sample_rate, input_bpf_high_cutoff/sample_rate ],
-		pass_zero='bandpass'
+		[ input_bpf_low_cutoff, input_bpf_high_cutoff ],
+		pass_zero='bandpass',
+		fs=sample_rate
 	)
 
 	# Use scipy.signal.firwin to generate taps for output low pass filter.
@@ -35,7 +36,8 @@ def initialize_demodulator(
 	# firwin defaults to hamming window if not specified.
 	demodulator['output_lpf'] = firwin(
 		output_lpf_tap_count,
-		output_lpf_cutoff/sample_rate
+		output_lpf_cutoff,
+		fs=sample_rate
 	)
 
 	# Create quadrature correlators for mark and space tones. Quadrature means
