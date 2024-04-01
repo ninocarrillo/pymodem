@@ -101,10 +101,10 @@ def main():
 	# Check CRCs on each decoded packet
 	good_count = 0
 	for packet in decoded_data:
-		calc_crc = crc_functions.CheckCRC(packet, len(packet))
-		if calc_crc[2] == 1:
+		crc_result = crc_functions.CheckCRC(packet)
+		if crc_result[2] == True:
 			good_count += 1
-			print("Packet number: ", good_count, " CRC: ", hex(calc_crc[0]))
+			print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
 			for byte in packet:
 				byte = int(byte)
 				if (byte < 0x7F) and (byte > 0x20):
