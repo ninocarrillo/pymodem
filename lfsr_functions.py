@@ -14,8 +14,10 @@ def initialize(polynomial, invert):
 	lfsr['shift_register'] = 0
 	return lfsr
 
-def unscramble(lfsr, data):
+def stream_unscramble_8bit(lfsr, data):
 	# this process creates one output byte for each input byte
+	# The lfsr is free-running and arbitrarily initialized, so valid data
+	# appears after the length of the polynomial.
 	# create an array for the result
 	result = zeros(len(data))
 	# step through each input byte

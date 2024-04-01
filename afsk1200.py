@@ -86,7 +86,7 @@ def main():
 		invert
 	)
 
-	descrambled_data = lfsr_functions.unscramble(lfsr, sliced_data)
+	descrambled_data = lfsr_functions.stream_unscramble_8bit(lfsr, sliced_data)
 
 	# Attempt ax.25 decoding on the descrambled data
 	min_packet_length = 18
