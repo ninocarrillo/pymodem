@@ -31,7 +31,9 @@ def main():
 	except:
 		print('Unable to open audio file.')
 		sys.exit(3)
-	# Initialize the AFSK Demodulator with these parameters:
+	# Parameters for AFSK demodulator.
+	# These are a good starting point.
+	# Experimentation is helpful to understand the effects of each.
 	input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
 	input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
 	input_bpf_tap_count = 115 		# FIR tap count
@@ -39,7 +41,11 @@ def main():
 	mark_freq = 1200.0				# mark tone frequency
 	space_freq = 2200.0				# space tone frequency
 	space_gain = 1.0				# gain correction for space tone correlator
-									# for optimizing pre-emphasized audio
+									# for optimizing emphasized audio.
+									# 1.0 recommended for flat audio, around 1.7
+									# for de-emphasized audio.
+									# Implement multiple parallel demodulators
+									# to handle general cases.
 	output_lpf_cutoff = 2000.0		# low pass filter cutoff frequency for
 									# output signal after correlators
 	output_lpf_tap_count = 39		# FIR tap count
