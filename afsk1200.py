@@ -116,7 +116,7 @@ def main():
 			print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
 			for byte in packet[:-2]:
 				byte = int(byte)
-				if (byte < 0x7F) and (byte > 0x20):
+				if (byte < 0x7F) and (byte > 0x1F):
 					print(chr(int(byte)), end='')
 				else:
 					print('.', end='')
