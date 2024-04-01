@@ -67,7 +67,10 @@ def main():
 	demod_audio = afsk_functions.demodulate(demodulator, input_audio)
 
 	# Slice demodulated audio into bitstream.
-	lock_rate = 0.75
+	lock_rate = 0.75 # This should be between 0 and 1.0
+					 # Lower numbers cause slicer to sync the bitstream faster,
+					 # but increase jitter. Higher values are more stable,
+					 # but sync the bitstream more slowly. Typically 0.65-0.95.
 	slicer = slicer_functions.initialize(
 		input_sample_rate,
 		symbol_rate,
@@ -94,7 +97,7 @@ def main():
 
 	descrambled_data = lfsr_functions.stream_unscramble_8bit(lfsr, sliced_data)
 
-	# Attempt ax.25 decoding on the descrambled data
+	# Attempt AX.25 packet decoding on the descrambled data.
 	min_packet_length = 18
 	max_packet_length = 1023
 	ax25_decoder = ax25_functions.initialize_decoder(
@@ -104,7 +107,7 @@ def main():
 
 	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
 
-	# Check CRCs on each decoded packet
+	# Check CRCs on each decoded packet.
 	good_count = 0
 	for packet in decoded_data:
 		crc_result = crc_functions.CheckCRC(packet)
