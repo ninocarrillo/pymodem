@@ -15,6 +15,7 @@ import slicer_functions
 import lfsr_functions
 import ax25_functions
 import crc_functions
+import il2p_functions
 
 def main():
 	# check correct version of Python
@@ -79,6 +80,9 @@ def main():
 
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
 
+	il2p_decoder = il2p_functions.initialize_decoder()
+	il2p_decoded_data = il2p_functions.decode(il2p_decoder, sliced_data)
+
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
 	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
@@ -105,11 +109,11 @@ def main():
 		max_packet_length
 	)
 
-	decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
+	ax25_decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
 
 	# Check CRCs on each decoded packet.
 	good_count = 0
-	for packet in decoded_data:
+	for packet in ax25_decoded_data:
 		crc_result = crc_functions.CheckCRC(packet)
 		if crc_result[2] == True:
 			good_count += 1
