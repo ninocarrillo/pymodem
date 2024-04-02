@@ -77,9 +77,9 @@ def decode(decoder, data):
 			elif decoder['state'] == 'rx_header':
 				decoder['bit_index'] += 1
 				decoder['working_word'] <<= 1
+				decoder['working_word'] &= 0xFF
 				if input_byte & 0x80:
 					decoder['working_word'] |= 1
-				decoder['working_word'] &= 0xFF
 				input_byte <<= 1
 				if decoder['bit_index'] == 8:
 					decoder['bit_index'] = 0
