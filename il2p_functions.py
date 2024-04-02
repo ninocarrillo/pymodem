@@ -66,9 +66,9 @@ def decode(decoder, data):
 		for bit_index in range(8):
 			if decoder['state'] == 'sync_search':
 				decoder['working_word'] <<= 1
+				decoder['working_word'] &= 0xFFFFFF
 				if input_byte & 0x80:
 					decoder['working_word'] |= 1
-				decoder['working_word'] &= 0xFFFFFF
 				input_byte <<= 1
 				if bit_distance_24(decoder['working_word'], 0xF15E48) <= decoder['sync_tolerance']:
 					count += 1

@@ -35,9 +35,15 @@ def main():
 	# Parameters for AFSK demodulator.
 	# These are a good starting point.
 	# Experimentation is helpful to understand the effects of each.
+	symbol_rate = 1200.0			# 1200 symbols per second (or baud)
 	input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
 	input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
-	input_bpf_tap_count = 115 		# FIR tap count
+	input_bpf_span = 4.80			# Number of symbols to span with the input
+									# filter. This is used with the sampling
+									# rate to determine the tap count.
+	input_bpf_tap_count = round(
+			input_sample_rate * input_bpf_span / symbol_rate
+		)
 									# more taps = shaper cutoff, more processing
 	mark_freq = 1200.0				# mark tone frequency
 	space_freq = 2200.0				# space tone frequency
@@ -49,9 +55,13 @@ def main():
 									# to handle general cases.
 	output_lpf_cutoff = 1000.0		# low pass filter cutoff frequency for
 									# output signal after correlators
-	output_lpf_tap_count = 39		# FIR tap count
+	output_lpf_span = 1.5			# Number of symbols to span with the output
+									# filter. This is used with the sampling
+									# rate to determine the tap count.
+	output_lpf_tap_count = round(
+			input_sample_rate * output_lpf_span / symbol_rate
+		)
 									# more taps = shaper cutoff, more processing
-	symbol_rate = 1200.0			# 1200 symbols per second (or baud)
 	demodulator = afsk_functions.initialize_demodulator(
 		input_bpf_low_cutoff,
 		input_bpf_high_cutoff,
