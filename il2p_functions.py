@@ -11,6 +11,9 @@ def initialize_decoder():
 	decoder['state'] = 'sync_search'
 	decoder['working_word'] = int(0xFFFFFF)
 	decoder['sync_tolerance'] = 1
+	decoder['rx_buffer'] = zeros(1200)
+	decoder['bit_index'] = 0
+	decoder['byte_index'] = 0
 	return decoder
 
 def bit_distance_24(data_a, data_b):
@@ -70,8 +73,22 @@ def decode(decoder, data):
 				if bit_distance_24(decoder['working_word'], 0xF15E48) <= decoder['sync_tolerance']:
 					count += 1
 					print('sync', count)
+					decoder['state'] = 'rx_header'
 			elif decoder['state'] == 'rx_header':
-				pass
+				decoder['bit_index'] += 1
+				decoder['working_word'] <<= 1
+				if input_byte & 0x80:
+					decoder['working_word'] |= 1
+				decoder['working_word'] &= 0xFF
+				input_byte <<= 1
+				if decoder['bit_index'] == 8:
+					decoder['bit_index'] = 0
+					decoder['rx_buffer'][decoder['byte_index']] = decoder['working_word']
+					decoder['byte_index'] += 1
+					if decoder['byte_index'] == 15:
+						decoder['byte_index'] = 0
+						print('header: ', decoder['rx_buffer'][:15])
+						decoder['state'] = 'sync_search'
 			elif decoder['state'] == 'rx_bigblocks':
 				pass
 			elif decoder['state'] ==  'rx_smallblocks':
