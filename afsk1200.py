@@ -133,7 +133,7 @@ def main():
 				if (byte < 0x7F) and (byte > 0x1F):
 					print(chr(int(byte)), end='')
 				else:
-					print('.', end='')
+					print(f'<{byte}>', end='')
 			print(" ")
 
 
