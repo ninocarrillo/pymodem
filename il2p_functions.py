@@ -21,9 +21,12 @@ def initialize_decoder():
 	decoder['byte_index_b'] = 0
 	decoder['block_index'] = 0
 	decoder['num_roots'] = 16
+	# IL2P Polynomial x^9 + x^4 + 1
+	polynomial = 0x211
+	invert = False
 	decoder['lfsr'] = lf.initialize(
-		0x211,
-		False
+		polynomial,
+		invert
 	)
 	return decoder
 

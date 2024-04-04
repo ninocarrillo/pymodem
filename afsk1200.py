@@ -35,7 +35,7 @@ def main():
 	# Parameters for AFSK demodulator.
 	# These are a good starting point.
 	# Experimentation is helpful to understand the effects of each.
-	symbol_rate = 1200.0			# 1200 symbols per second (or baud)
+	symbol_rate = 300.0			# symbols per second (or baud)
 	input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
 	input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
 	input_bpf_span = 4.80			# Number of symbols to span with the input
@@ -45,8 +45,8 @@ def main():
 			input_sample_rate * input_bpf_span / symbol_rate
 		)
 									# more taps = shaper cutoff, more processing
-	mark_freq = 1200.0				# mark tone frequency
-	space_freq = 2200.0				# space tone frequency
+	mark_freq = 1600.0				# mark tone frequency
+	space_freq = 1800.0				# space tone frequency
 	space_gain = 1.0				# gain correction for space tone correlator
 									# for optimizing emphasized audio.
 									# 1.0 recommended for flat audio, around 1.7
@@ -91,7 +91,7 @@ def main():
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
 
 	il2p_decoder = il2p_functions.initialize_decoder()
-	check_crc = False
+	check_crc = True
 	il2p_decoded_data = il2p_functions.decode(il2p_decoder, sliced_data, check_crc)
 
 	# Apply differential decoding through a linear feedback shift register.
