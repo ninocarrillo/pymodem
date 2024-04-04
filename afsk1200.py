@@ -91,7 +91,7 @@ def main():
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
 
 	il2p_decoder = il2p_functions.initialize_decoder()
-	check_crc = True
+	check_crc = False
 	il2p_decoded_data = il2p_functions.decode(il2p_decoder, sliced_data, check_crc)
 
 	# Apply differential decoding through a linear feedback shift register.

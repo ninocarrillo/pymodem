@@ -7,6 +7,7 @@
 from numpy import zeros, append, rint, ceil, floor
 import array
 import lfsr_functions as lf
+import crc_functions
 
 def initialize_decoder():
 	decoder = {}
@@ -25,6 +26,31 @@ def initialize_decoder():
 		False
 	)
 	return decoder
+
+def hamming_decode(data):
+	# Hamming(7,4) Decoding Table
+	# Enter this table with 7-bit encoded value, high bit mased.
+	# Returns 4-bit decoded value.
+	hamming_decode_table = [
+			0x0, 0x0, 0x0, 0x3, 0x0, 0x5, 0xe, 0x7,
+			0x0, 0x9, 0xe, 0xb, 0xe, 0xd, 0xe, 0xe,
+			0x0, 0x3, 0x3, 0x3, 0x4, 0xd, 0x6, 0x3,
+			0x8, 0xd, 0xa, 0x3, 0xd, 0xd, 0xe, 0xd,
+			0x0, 0x5, 0x2, 0xb, 0x5, 0x5, 0x6, 0x5,
+			0x8, 0xb, 0xb, 0xb, 0xc, 0x5, 0xe, 0xb,
+			0x8, 0x1, 0x6, 0x3, 0x6, 0x5, 0x6, 0x6,
+			0x8, 0x8, 0x8, 0xb, 0x8, 0xd, 0x6, 0xf,
+			0x0, 0x9, 0x2, 0x7, 0x4, 0x7, 0x7, 0x7,
+			0x9, 0x9, 0xa, 0x9, 0xc, 0x9, 0xe, 0x7,
+			0x4, 0x1, 0xa, 0x3, 0x4, 0x4, 0x4, 0x7,
+			0xa, 0x9, 0xa, 0xa, 0x4, 0xd, 0xa, 0xf,
+			0x2, 0x1, 0x2, 0x2, 0xc, 0x5, 0x2, 0x7,
+			0xc, 0x9, 0x2, 0xb, 0xc, 0xc, 0xc, 0xf,
+			0x1, 0x1, 0x2, 0x1, 0x4, 0x1, 0x6, 0xf,
+			0x8, 0x1, 0xa, 0xf, 0xc, 0xf, 0xf, 0xf
+		]
+	result = hamming_decode_table[int(data) & 0x7F]
+	return result
 
 def bit_distance_24(data_a, data_b):
 	Distance8 = [
@@ -212,7 +238,8 @@ def decode(decoder, data, check_crc):
 		for input_bit_index in range(8):
 			if decoder['state'] == 'sync_search':
 				get_a_bit(decoder, 0xFFFFFF)
-				if bit_distance_24(decoder['working_word'], 0xF15E48) <= decoder['sync_tolerance']:
+				if bit_distance_24(decoder['working_word'], 0xF15E48) <= \
+													decoder['sync_tolerance']:
 					count += 1
 					print('sync', count)
 					decoder['bit_index'] = 0
@@ -222,7 +249,8 @@ def decode(decoder, data, check_crc):
 				get_a_bit(decoder, 0xFF)
 				if decoder['bit_index'] == 8:
 					decoder['bit_index'] = 0
-					decoder['buffer_a'][decoder['byte_index_a']] = decoder['working_word']
+					decoder['buffer_a'][decoder['byte_index_a']] = \
+														decoder['working_word']
 					decoder['byte_index_a'] += 1
 					if decoder['byte_index_a'] == 15:
 						decoder['byte_index_a'] = 0
@@ -321,7 +349,10 @@ def decode(decoder, data, check_crc):
 						else:
 							# this frame is only a header, dispose of it
 							print(decoder['buffer_b'][decoder['byte_index_b']])
-							decoder['state'] = 'sync_search'
+							if check_crc:
+								decoder['state'] = 'rx_trailing_crc'
+							else:
+								decoder['state'] = 'sync_search'
 
 			elif decoder['state'] == 'rx_bigblocks':
 				get_a_bit(decoder, 0xFF)
@@ -334,11 +365,19 @@ def decode(decoder, data, check_crc):
 
 						# de-scramble
 						decoder['lfsr']['shift_register'] = 0x1F0
-						decoder['buffer_a'][:decoder['byte_index_a']] = lf.stream_unscramble_8bit(
+						decoder['buffer_a'][:decoder['byte_index_a']] = \
+							lf.stream_unscramble_8bit(
 								decoder['lfsr'],
 								decoder['buffer_a'][:decoder['byte_index_a']]
 							)
 						decoder['byte_index_a'] = 0
+
+						for i in range(decoder['block_size']):
+							decoder['buffer_b'][decoder['byte_index_b']] = \
+								decoder['buffer_a'][i]
+							decoder['byte_index_b'] += 1
+
+
 						decoder['block_index'] += 1
 						for byte in decoder['buffer_a'][:decoder['block_size']]:
 							byte = int(byte)
@@ -349,8 +388,11 @@ def decode(decoder, data, check_crc):
 							if decoder['block_count'] > decoder['block_index']:
 								decoder['block_size'] -= 1
 								decoder['state'] = 'rx_smallblocks'
+							elif check_crc:
+								decoder['state'] = 'rx_trailing_crc'
 							else:
 								decoder['state'] = 'sync_search'
+
 			elif decoder['state'] ==  'rx_smallblocks':
 				get_a_bit(decoder, 0xFF)
 				if decoder['bit_index'] == 8:
@@ -362,12 +404,19 @@ def decode(decoder, data, check_crc):
 
 						# de-descramble
 						decoder['lfsr']['shift_register'] = 0x1F0
-						decoder['buffer_a'][:decoder['byte_index_a']] = lf.stream_unscramble_8bit(
+						decoder['buffer_a'][:decoder['byte_index_a']] = \
+							lf.stream_unscramble_8bit(
 								decoder['lfsr'],
 								decoder['buffer_a'][:decoder['byte_index_a']]
 							)
 
 						decoder['block_index'] += 1
+
+						for i in range(decoder['block_size']):
+							decoder['buffer_b'][decoder['byte_index_b']] = \
+								decoder['buffer_a'][i]
+							decoder['byte_index_b'] += 1
+
 						decoder['byte_index_a'] = 0
 						for byte in decoder['buffer_a'][:decoder['block_size']]:
 							byte = int(byte)
@@ -375,6 +424,31 @@ def decode(decoder, data, check_crc):
 								print(chr(int(byte)), end='')
 						print("")
 						if decoder['block_index'] == decoder['block_count']:
-							decoder['state'] = 'sync_search'
+							if check_crc:
+								decoder['state'] = 'rx_trailing_crc'
+							else:
+								decoder['state'] = 'sync_search'
 			elif decoder['state'] == 'rx_trailing_crc':
-				pass
+				get_a_bit(decoder, 0xFF)
+				if decoder['bit_index'] == 8:
+					decoder['bit_index'] = 0
+					decoder['buffer_a'][decoder['byte_index_a']] = decoder['working_word']
+					decoder['byte_index_a'] += 1
+					if decoder['byte_index_a'] == 4:
+						decoder['byte_index_a'] = 0
+						# complete trailing crc has been received
+						# Apply hamming correction and compute CRC
+						trailing_crc = 0
+						for i in range(4):
+							trailing_crc += \
+									hamming_decode(decoder['buffer_a'][i]) << \
+									(12 - (i * 4))
+						decoder['buffer_b'][decoder['byte_index_b']] = \
+							trailing_crc & 0xFF
+						decoder['byte_index_b'] += 1
+						decoder['buffer_b'][decoder['byte_index_b']] = \
+							trailing_crc >> 8
+						decoder['byte_index_b'] += 1
+						print(hex(trailing_crc))
+						print(crc_functions.CheckCRC(decoder['buffer_b'][:decoder['byte_index_b']]))
+						decoder['state'] = 'sync_search'
