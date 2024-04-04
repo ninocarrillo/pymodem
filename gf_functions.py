@@ -38,6 +38,9 @@ def initialize(power, genpoly):
 		lfsr_step(gf)
 		gf['table'][i] = gf['lfsr']
 		gf['index'][gf['lfsr']] = i
+	# generate the inverse table by brute force, using
+	# multiplication to find the multiplicand that results in
+	# product 1
 	for i in range(1, gf['order']):
 		j = 1
 		while (mul(gf, i, j) != 1):
