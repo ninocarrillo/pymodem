@@ -16,6 +16,7 @@ import lfsr_functions
 import ax25_functions
 import crc_functions
 import il2p_functions
+import gf_functions
 
 def main():
 	# check correct version of Python
@@ -168,6 +169,11 @@ def main():
 				else:
 					print(f'<{byte}>', end='')
 			print(" ")
+
+	gf_poly = 0x11D
+	gf_power = 8
+	gf = gf_functions.initialize(gf_power, gf_poly)
+	print(gf)
 
 
 if __name__ == "__main__":
