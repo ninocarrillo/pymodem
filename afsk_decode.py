@@ -1,4 +1,4 @@
-# afsk1200
+# afsk_decode
 # Python3
 # Demodulate, slice, and decode packets from an audio file.
 # Nino Carrillo
@@ -91,8 +91,40 @@ def main():
 	sliced_data = slicer_functions.slice(slicer, demod_audio)
 
 	il2p_decoder = il2p_functions.initialize_decoder()
-	check_crc = True
-	il2p_decoded_data = il2p_functions.decode(il2p_decoder, sliced_data, check_crc)
+	trailing_crc = True
+	il2p_decoded_data = il2p_functions.decode(
+		il2p_decoder,
+		sliced_data,
+		trailing_crc
+	)
+
+	if trailing_crc:
+	# Check CRCs on each decoded packet.
+		good_count = 0
+		for packet in il2p_decoded_data:
+			crc_result = crc_functions.CheckCRC(packet)
+			if crc_result[2] == True:
+				good_count += 1
+				print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
+				for byte in packet[:-2]:
+					byte = int(byte)
+					if (byte < 0x7F) and (byte > 0x1F):
+						print(chr(int(byte)), end='')
+					else:
+						print(f'<{byte}>', end='')
+				print(" ")
+	else:
+		good_count = 0
+		for packet in il2p_decoded_data:
+				good_count += 1
+				print("Packet number: ", good_count)
+				for byte in packet:
+					byte = int(byte)
+					if (byte < 0x7F) and (byte > 0x1F):
+						print(chr(int(byte)), end='')
+					else:
+						print(f'<{byte}>', end='')
+				print(" ")
 
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
