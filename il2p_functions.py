@@ -5,6 +5,7 @@
 # 1 Apr 2024
 
 from numpy import zeros, append, rint, ceil, floor
+import array
 import lfsr_functions as lf
 
 def initialize_decoder():
@@ -86,13 +87,13 @@ def decode_header(data):
 		header['dest'] = [0, 0, 0, 0, 0, 0, 0]
 		for i in range(6):
 			header['dest'][i] = (int(data[i]) & 0x3F) + 0x20
-		header['dest'][6] = (int(data[i]) & 0xF) + 0x30
+		header['dest'][6] = (int(data[i]) & 0xF)
 
 		# extract source callsign
 		header['source'] = [0, 0, 0, 0, 0, 0, 0]
 		for i in range(6):
 			header['source'][i] = (int(data[i + 6]) & 0x3F) + 0x20
-		header['source'][6] = ((int(data[i]) & 0xF) >> 4) + 0x30
+		header['source'][6] = ((int(data[i]) & 0xF) >> 4)
 
 		# Extract IL2P PID data. This has meaning even if the AX.25 PID doesn't
 		# exist.
@@ -103,8 +104,8 @@ def decode_header(data):
 
 		header['control'] = 0
 		for i in range(7):
-			if (int(data[i + 5]) & 0x80):
-				header['control'] |= 0x80 >> i
+			if (int(data[i + 5]) & 0x40):
+				header['control'] |= 0x40 >> i
 
 		header['type'] = 'unknown'
 		# extract UI frame indicator
@@ -148,33 +149,53 @@ def decode_header(data):
 			elif header['PID'] == 0xF:
 				header['AX25_PID'] = 0xF0
 
-		header['PFbit'] = 0
-		header['Cbit'] = 0
+		header['PFbit'] = False
+		header['Cbit'] = False
 		header['NR'] = 0
 		header['NS'] = 0
 		header['opcode'] = 0
 		# translate IL2P control field
 		if header['type'] == 'AX25_I':
 			if header['control'] & 0x40:
-				header['PFbit'] = 1
+				header['PFbit'] = True
 			header['NS'] = header['control'] & 0x7
 			header['NR'] = (header['control'] >> 3) & 0x7
-			header['CBit'] = 1 # all I frames are commands
+			header['CBit'] = True # all I frames are commands
 		elif header['type'] == 'AX25_S':
 			header['NR'] = (header['control'] >> 3) & 0x7
-			header['Cbit'] = 1
+			if header['control'] & 0x4:
+				header['Cbit'] = True
 			header['opcode'] = header['control'] & 0x3
-		elif header['type'] == 'AX25_U':
-			header['PFbit'] = (header['control'] >> 6) & 0x1
-			header['Cbit'] = (header['control'] >> 2) & 0x1
+		elif (header['type'] == 'AX25_U') or (header['type'] == 'AX25_UI'):
+			if (header['control'] >> 6) & 0x1:
+				header['PFbit'] = True
+			if header['control'] & 0x4:
+				header['Cbit'] = True
 			header['opcode'] = (header['control'] >> 3) & 0x7
-
-
-
 	else:
 		# transparent encapsulation
 		pass
 	return header
+
+def reform_control_byte(header):
+	control_byte = 0
+	U_Control = [ 0x2F, 0x43, 0x0F, 0x63, 0x87, 0x03, 0xAF, 0xE3 ]
+	if (header['type'] == 'AX25_U') or (header['type'] == 'AX25_UI'):
+		control_byte = U_Control[header['opcode'] & 0x7]
+		if header['PFbit']:
+			control_byte |= 0x10
+	elif header['AX25_PID'] == 'AX25_S':
+		control_byte = 0x1
+		control_byte |= header['opcode'] << 2
+		control_byte |= header['NR'] << 5
+		if header['PFbit']:
+			control_byte |= 0x10
+	elif header['AX25_PID'] == 'AX25_I':
+		control_byte = header['NS'] << 1
+		control_byte |= header['NR'] << 5
+		if header['PFbit']:
+			control_byte |= 0x10
+	return control_byte
 
 def get_a_bit(decoder, word_mask):
 	decoder['working_word'] <<= 1
@@ -184,7 +205,7 @@ def get_a_bit(decoder, word_mask):
 	decoder['input_byte'] <<= 1
 	decoder['bit_index'] += 1
 
-def decode(decoder, data):
+def decode(decoder, data, check_crc):
 	count = 0
 	for input_byte in data:
 		decoder['input_byte'] = int(input_byte)
@@ -195,6 +216,7 @@ def decode(decoder, data):
 					count += 1
 					print('sync', count)
 					decoder['bit_index'] = 0
+					decoder['byte_index_b'] = 0
 					decoder['state'] = 'rx_header'
 			elif decoder['state'] == 'rx_header':
 				get_a_bit(decoder, 0xFF)
@@ -214,47 +236,91 @@ def decode(decoder, data):
 							)
 
 						# decode header
-						header = decode_header(decoder['buffer_a'][:13])
+						decoder['header'] = \
+							decode_header(decoder['buffer_a'][:13])
 
 						decoder['block_index'] = 0
 						decoder['block_byte_count'] = 0
-						if header['count'] > 0:
+
+						# re-assemble AX.25 header in buffer_b:
+						# First add the destination callsign and SSID
+						for i in range(6):
+							decoder['buffer_b'][decoder['byte_index_b']] = \
+											decoder['header']['dest'][i] << 1
+							decoder['byte_index_b'] += 1
+						# Now add the destination SSID and bits
+						decoder['buffer_b'][decoder['byte_index_b']] = \
+											decoder['header']['dest'][6] << 1
+						# Set RR bits
+						decoder['buffer_b'][decoder['byte_index_b']] += 0x60
+						# Set C/R bit per AX.25 2.2
+						# Command is indicated by Dest 1 Src 0
+						# Response is indicated by Dest 0 Src 1
+						if decoder['header']['Cbit'] == True:
+							decoder['buffer_b'][decoder['byte_index_b']] += 0x80
+						decoder['byte_index_b'] += 1
+
+						# Now add source callsign and SSID
+						for i in range(6):
+							decoder['buffer_b'][decoder['byte_index_b']] = \
+											decoder['header']['source'][i] << 1
+							decoder['byte_index_b'] += 1
+						# Now add the destination SSID and bits
+						decoder['buffer_b'][decoder['byte_index_b']] = \
+											decoder['header']['source'][6] << 1
+						# Set RR bits
+						decoder['buffer_b'][decoder['byte_index_b']] += 0x60
+						# Set C/R bit per AX.25 2.2
+						# Command is indicated by Dest 1 Src 0
+						# Response is indicated by Dest 0 Src 1
+						if decoder['header']['Cbit'] == False:
+							decoder['buffer_b'][decoder['byte_index_b']] += 0x80
+						# Set callsign extension bit
+						decoder['buffer_b'][decoder['byte_index_b']] += 1
+						decoder['byte_index_b'] += 1
+
+						# add the Control byte:
+						decoder['buffer_b'][decoder['byte_index_b']] = \
+										reform_control_byte(decoder['header'])
+						decoder['byte_index_b'] += 1
+
+						# add the PID byte, if applicable
+						if (decoder['header']['type'] == 'AX25_I') or \
+								(decoder['header']['type'] == 'AX25_UI'):
+							decoder['buffer_b'][decoder['byte_index_b']] = \
+												decoder['header']['AX25_PID']
+							decoder['byte_index_b'] += 1
+
+						print(decoder['header'])
+						for byte in decoder['buffer_b'][:decoder['byte_index_b']]:
+							print(hex(int(byte)), end = ' ')
+
+						if decoder['header']['count'] > 0:
 							decoder['block_count'] = int(ceil(
-									header['count'] / 239
+									decoder['header']['count'] / 239
 								))
 							decoder['block_size'] = int(floor(
-									header['count'] / decoder['block_count']
+									decoder['header']['count']
+									/ decoder['block_count']
 								))
-							decoder['big_blocks'] = int(header['count'] - (
+							decoder['big_blocks'] = \
+								int(decoder['header']['count'] - (
 									decoder['block_count']
 									* decoder['block_size']
 								))
 							if decoder['big_blocks'] > 0:
 								# there are big blocks in this frame, collect those first.
 								decoder['block_size'] += 1
-								print(header)
 								decoder['bit_index'] = 0
 								decoder['state'] = 'rx_bigblocks'
 							else:
-								print(header)
 								decoder['bit_index'] = 0
 								# there are only small blocks in this frame, collect.
 								decoder['state'] = 'rx_smallblocks'
 
 						else:
 							# this frame is only a header, dispose of it
-							print('count: ', header['count'])
-							for byte in header['dest']:
-								byte = int(byte)
-								if (byte < 0x7F) and (byte > 0x1F):
-									print(chr(int(byte)), end='')
-							print("")
-							for byte in header['source']:
-								byte = int(byte)
-								if (byte < 0x7F) and (byte > 0x1F):
-									print(chr(int(byte)), end='')
-							print("")
-							print(header)
+							print(decoder['buffer_b'][decoder['byte_index_b']])
 							decoder['state'] = 'sync_search'
 
 			elif decoder['state'] == 'rx_bigblocks':
