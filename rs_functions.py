@@ -5,6 +5,7 @@
 # 4 Apr 2024
 
 from numpy import zeros
+import gf_functions
 
 def initialize(numroots):
 	rs = {}
