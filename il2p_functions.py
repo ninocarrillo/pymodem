@@ -23,16 +23,19 @@ def initialize_decoder():
 	decoder['block_index'] = 0
 	decoder['num_roots'] = 16
 	# IL2P Polynomial x^9 + x^4 + 1
-	polynomial = 0x211
-	invert = False
+	lfsr_polynomial = 0x211
+	lfsr_invert = False
 	decoder['lfsr'] = lf.initialize(
-		polynomial,
-		invert
+		lfsr_polynomial,
+		lfsr_invert
 	)
-	numroots = 2
-	decoder['header_rs'] = rs_functions.initialize(numroots)
+	rs_firstroot = 0
+	rs_numroots = 2
+	rs_power = 8
+	rs_poly = 0x11D
+	decoder['header_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
 	numroots = 16
-	decoder['block_rs'] = rs_functions.initialize(numroots)
+	decoder['block_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
 	decoder['bytes_corrected'] = 0
 	decoder['block_fail'] = False
 	return decoder
@@ -64,38 +67,39 @@ def hamming_decode(data):
 
 def bit_distance_24(data_a, data_b):
 	Distance8 = [
-    0, 1, 1, 2, 1, 2, 2, 3,
-    1, 2, 2, 3, 2, 3, 3, 4,
-    1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7,
-    1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7,
-    2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7,
-    3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7,
-    4, 5, 5, 6, 5, 6, 6, 7,
-    5, 6, 6, 7, 6, 7, 7, 8]
+			0, 1, 1, 2, 1, 2, 2, 3,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			5, 6, 6, 7, 6, 7, 7, 8
+		]
 	result = 0
 	for index in range(3):
 		a = data_a & 0xFF

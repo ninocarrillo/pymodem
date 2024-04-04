@@ -16,6 +16,7 @@ import lfsr_functions
 import ax25_functions
 import crc_functions
 import il2p_functions
+import rs_functions
 import gf_functions
 
 def main():
@@ -173,7 +174,11 @@ def main():
 	gf_poly = 0x11D
 	gf_power = 8
 	gf = gf_functions.initialize(gf_power, gf_poly)
-	print(gf)
+	#print(gf)
+	rs = rs_functions.initialize(0, 16, 8, 0x11D)
+	print(rs)
+	rs = rs_functions.initialize(0, 2, 8, 0x11D)
+	print(rs)
 
 
 if __name__ == "__main__":
