@@ -6,8 +6,6 @@ Currently working:
 - AX.25 decoder
 - IL2P+CRC decoder
 
-I am working on porting my Reed Solomon decoder to Python for this project.
-
 IL2P+CRC decoder is working but I have not fully tested and validated it for all header types and packet lengths yet. If you do, please give feedback!
 
 I plan to add PSK, and transmit waveform generators.
