@@ -271,11 +271,10 @@ def decode(decoder, data, collect_crc):
 					decoder['byte_index_a'] += 1
 					if decoder['byte_index_a'] == 15:
 						decoder['byte_index_a'] = 0
-
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['header_rs'],
-								decoder['buffer'][:decoder['byte_index_a']]
+								decoder['buffer'][:15]
 						)
 						if rs_result < 0:
 							# RS decoding header failed
