@@ -39,7 +39,7 @@ def initialize_decoder():
 	rs_power = 8
 	rs_poly = 0x11D
 	decoder['header_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
-	numroots = 16
+	rs_numroots = 16
 	decoder['block_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
 	decoder['bytes_corrected'] = 0
 	decoder['block_fail'] = False
@@ -252,6 +252,10 @@ def get_a_bit(decoder, word_mask):
 
 def decode(decoder, data, collect_crc):
 	result = []
+	if collect_crc:
+		min_distance = 0
+	else:
+		min_distance = 1
 	for input_byte in data:
 		decoder['input_byte'] = int(input_byte)
 		for input_bit_index in range(8):
@@ -274,7 +278,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['header_rs'],
-								decoder['buffer'][:15]
+								decoder['buffer'][:15],
+								min_distance
 						)
 						if rs_result < 0:
 							# RS decoding header failed
@@ -399,7 +404,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['block_rs'],
-								decoder['buffer'][:decoder['byte_index_a']]
+								decoder['buffer'][:decoder['byte_index_a']],
+								min_distance
 						)
 						if rs_result < 0:
 							# RS decoding failed
@@ -456,7 +462,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['block_rs'],
-								decoder['buffer'][:decoder['byte_index_a']]
+								decoder['buffer'][:decoder['byte_index_a']],
+								min_distance
 						)
 						if rs_result < 0:
 							# RS decoding failed

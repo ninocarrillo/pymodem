@@ -30,7 +30,7 @@ def initialize(first_root, num_roots, gf_power, gf_poly):
 		)
 	return rs
 
-def decode(rs, data):
+def decode(rs, data, min_distance):
 	error_count = 0
 	# calculate one syndrome for each root of genpoly:
 	syndromes = []
@@ -40,16 +40,19 @@ def decode(rs, data):
 		for j in range(len(data) - 1):
 			syndromes[i] = gf_functions.mul(rs['gf'], syndromes[i] ^ data[j], x)
 		syndromes[i] ^= data[-1]
-	print(syndromes)
 
 	# Berlekamp's Algorithm
 	# calculate the error locator
 	error_locator = []
 	correction_poly = []
 	next_error_locator = []
+	error_locations = []
+	error_magnitudes = []
 	for i in range(rs['num_roots']):
 		error_locator.append(0)
 		next_error_locator.append(0)
+		error_locations.append(0)
+		error_magnitudes.append(0)
 	for i in range(rs['num_roots'] + 1):
 		correction_poly.append(0)
 	error_locator[0] = 1
@@ -80,5 +83,62 @@ def decode(rs, data):
 		correction_poly[0] = 0
 	# now solve the error locator polynomial to find the error positions
 	# by using the Chien Search
-	print(correction_poly)
+	for j in range(len(data)):
+		x = 0
+		y = j + rs['gf']['order'] - len(data)
+		for i in range(1, (rs['num_roots'] // 2) + 1, 1):
+			if error_locator[i]:
+				z = (y * i) + rs['gf']['index'][error_locator[i]]
+				while z > (rs['gf']['order'] - 2):
+					z -= (rs['gf']['order'] + 1)
+				x ^= rs['gf']['table'][z]
+		x ^= error_locator[0]
+		if x == 0:
+			# found an error here
+			error_locations[error_count] = j
+			error_count += 1
+	if (error_count <= (rs['num_roots'] // 2) - min_distance):
+		# Forney algorithm to determine error values
+		for i in range(error_count):
+			correction_poly[i] = syndromes[rs['first_root'] + i]
+			for j in range(1, i + 1):
+				correction_poly[i] ^= gf_functions.mul(
+						rs['gf'],
+						syndromes[rs['first_root'] + i - j],
+						error_locator[j]
+				)
+		for i in range(error_count):
+			e = len(data) - error_locations[i] - 1
+			z = correction_poly[0]
+			for j in range(1, error_count):
+				x = e * j
+				while x > (rs['gf']['order'] - 2):
+					x += (1 - rs['gf']['order'])
+				x = rs['gf']['order'] - x - 1
+				while x > (rs['gf']['order'] - 2):
+					x += (1 - rs['gf']['order'])
+				z ^= gf_functions.mul(
+						rs['gf'],
+						correction_poly[j],
+						rs['gf']['table'][x]
+				)
+			z = gf_functions.mul(rs['gf'], z, rs['gf']['table'][e])
+			y = error_locator[1]
+			for j in range(3, (rs['num_roots'] // 2) + 1, 2):
+				x = e * (j - 1)
+				while x > (rs['gf']['order'] - 2):
+					x += (1 - rs['gf']['order'])
+				x = rs['gf']['order'] - x - 1
+				while x > (rs['gf']['order'] - 2):
+					x += (1 - rs['gf']['order'])
+				y ^= gf_functions.mul(rs['gf'], error_locator[j], rs['gf']['table'][x])
+			y = rs['gf']['index'][y]
+			y = rs['gf']['order'] - y - 1
+			if y == (rs['gf']['order'] - 1):
+				y = 0
+			y = rs['gf']['table'][y]
+			error_magnitudes[i] = gf_functions.mul(rs['gf'], y, z)
+			print(error_locations)
+			print(error_magnitudes)
+			data[error_locations[i]] ^= error_magnitudes[i]
 	return error_count
