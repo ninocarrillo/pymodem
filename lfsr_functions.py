@@ -28,8 +28,6 @@ def stream_unscramble_8bit(lfsr, data):
 		input_byte = int(round(input_byte))
 		# cycle through each bit in this byte
 		for bit_index in range(8):
-			# advance the lfsr shift register 1 bit
-			lfsr['shift_register'] >>= 1
 			# make room in working byte for a new bit
 			working_byte <<= 1
 			working_byte &= 0xFE
@@ -39,6 +37,8 @@ def stream_unscramble_8bit(lfsr, data):
 				lfsr['shift_register'] ^= lfsr['polynomial']
 			working_byte |= (lfsr['shift_register'] & 1)
 			input_byte <<= 1
+			# advance the lfsr shift register 1 bit
+			lfsr['shift_register'] >>= 1
 		# 8 bits have been processed, save the byte
 
 		if lfsr['invert']:
