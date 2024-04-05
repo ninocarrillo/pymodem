@@ -171,15 +171,5 @@ def main():
 					print(f'<{byte}>', end='')
 			print(" ")
 
-	gf_poly = 0x11D
-	gf_power = 8
-	gf = gf_functions.initialize(gf_power, gf_poly)
-	#print(gf)
-	rs = rs_functions.initialize(0, 16, 8, 0x11D)
-	print(rs)
-	rs = rs_functions.initialize(0, 2, 8, 0x11D)
-	print(rs)
-
-
 if __name__ == "__main__":
 	main()

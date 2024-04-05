@@ -4,19 +4,24 @@
 # Nino Carrillo
 # 1 Apr 2024
 
-from numpy import zeros, append, rint, ceil, floor
-import array
 import lfsr_functions as lf
 import crc_functions
 import rs_functions
+
+def ceil(arg):
+	return int(arg) + (arg % 1 > 0)
 
 def initialize_decoder():
 	decoder = {}
 	decoder['state'] = 'sync_search'
 	decoder['working_word'] = int(0xFFFFFF)
 	decoder['sync_tolerance'] = 1
-	decoder['buffer'] = zeros(255)
-	decoder['working_packet'] = zeros(1200)
+	decoder['buffer'] = []
+	for i in range(255):
+		decoder['buffer'].append(0)
+	decoder['working_packet'] = []
+	for i in range(1200):
+		decoder['working_packet'].append(0)
 	decoder['bit_index'] = 0
 	decoder['byte_index_a'] = 0
 	decoder['byte_index_b'] = 0
@@ -42,7 +47,7 @@ def initialize_decoder():
 
 def hamming_decode(data):
 	# Hamming(7,4) Decoding Table
-	# Enter this table with 7-bit encoded value, high bit mased.
+	# Enter this table with 7-bit encoded value, high bit masked.
 	# Returns 4-bit decoded value.
 	hamming_decode_table = [
 			0x0, 0x0, 0x0, 0x3, 0x0, 0x5, 0xe, 0x7,
@@ -352,10 +357,10 @@ def decode(decoder, data, collect_crc):
 							decoder['block_count'] = int(ceil(
 									decoder['header']['count'] / 239
 								))
-							decoder['block_size'] = int(floor(
+							decoder['block_size'] = int(
 									decoder['header']['count']
 									/ decoder['block_count']
-								))
+								)
 							decoder['big_blocks'] = \
 								int(decoder['header']['count'] - (
 									decoder['block_count']
@@ -499,7 +504,8 @@ def decode(decoder, data, collect_crc):
 				get_a_bit(decoder, 0xFF)
 				if decoder['bit_index'] == 8:
 					decoder['bit_index'] = 0
-					decoder['buffer'][decoder['byte_index_a']] = decoder['working_word']
+					decoder['buffer'][decoder['byte_index_a']] = \
+														decoder['working_word']
 					decoder['byte_index_a'] += 1
 					if decoder['byte_index_a'] == 4:
 						decoder['byte_index_a'] = 0
@@ -509,16 +515,16 @@ def decode(decoder, data, collect_crc):
 						for i in range(4):
 							trailing_crc += \
 									hamming_decode(decoder['buffer'][i]) << \
-									(12 - (i * 4))
+																(12 - (i * 4))
 						decoder['working_packet'][decoder['byte_index_b']] = \
-							trailing_crc & 0xFF
+															trailing_crc & 0xFF
 						decoder['byte_index_b'] += 1
 						decoder['working_packet'][decoder['byte_index_b']] = \
-							trailing_crc >> 8
+															trailing_crc >> 8
 						decoder['byte_index_b'] += 1
 						result.append(
 							decoder['working_packet'] \
-							[:decoder['byte_index_b']].copy()
+											[:decoder['byte_index_b']].copy()
 						)
 						decoder['state'] = 'sync_search'
 	return result
