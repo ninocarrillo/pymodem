@@ -4,7 +4,7 @@ Simple packet radio demodulators (and some day maybe modulators) written in Pyth
 Currently working:
 - AFSK demodulator
 - AX.25 decoder
-- IL2P+CRC decoder without Reed-Solomon
+- IL2P+CRC decoder
 
 I am working on porting my Reed Solomon decoder to Python for this project.
 
