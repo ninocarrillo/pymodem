@@ -27,7 +27,7 @@ def initialize_decoder():
 	decoder['byte_index_b'] = 0
 	decoder['block_index'] = 0
 	decoder['num_roots'] = 16
-	# IL2P Polynomial x^9 + x^4 + 1
+	# IL2P Scrambling Polynomial x^9 + x^4 + 1
 	lfsr_polynomial = 0x211
 	lfsr_invert = False
 	decoder['lfsr'] = lf.initialize(
@@ -35,12 +35,12 @@ def initialize_decoder():
 		lfsr_invert
 	)
 	rs_firstroot = 0
-	rs_numroots = 2
-	rs_power = 8
-	rs_poly = 0x11D
-	decoder['header_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
-	rs_numroots = 16
-	decoder['block_rs'] = rs_functions.initialize(rs_firstroot, rs_numroots, rs_power, rs_poly)
+	rs_header_numroots = 2
+	rs_block_numroots = 16
+	rs_gf_power = 8
+	rs_gf_poly = 0x11D
+	decoder['header_rs'] = rs_functions.initialize(rs_firstroot, rs_header_numroots, rs_gf_power, rs_gf_poly)
+	decoder['block_rs'] = rs_functions.initialize(rs_firstroot, rs_block_numroots, rs_gf_power, rs_gf_poly)
 	decoder['bytes_corrected'] = 0
 	decoder['block_fail'] = False
 	return decoder
@@ -278,7 +278,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['header_rs'],
-								decoder['buffer'][:15],
+								decoder['buffer'],
+								15, # block size
 								min_distance
 						)
 						if rs_result < 0:
@@ -404,7 +405,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['block_rs'],
-								decoder['buffer'][:decoder['byte_index_a']],
+								decoder['buffer'],
+								decoder['byte_index_a'],
 								min_distance
 						)
 						if rs_result < 0:
@@ -462,7 +464,8 @@ def decode(decoder, data, collect_crc):
 						# do reed-solomon error correction
 						rs_result = rs_functions.decode(
 								decoder['block_rs'],
-								decoder['buffer'][:decoder['byte_index_a']],
+								decoder['buffer'],
+								decoder['byte_index_a'],
 								min_distance
 						)
 						if rs_result < 0:

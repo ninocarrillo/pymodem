@@ -30,17 +30,16 @@ def initialize(first_root, num_roots, gf_power, gf_poly):
 		)
 	return rs
 
-def decode(rs, data, min_distance):
+def decode(rs, data, block_size, min_distance):
 	error_count = 0
 	# calculate one syndrome for each root of genpoly:
 	syndromes = []
 	for i in range(rs['num_roots']):
 		syndromes.append(0)
 		x = rs['gf']['table'][rs['first_root'] + i]
-		for j in range(len(data) - 1):
+		for j in range(block_size - 1):
 			syndromes[i] = gf_functions.mul(rs['gf'], syndromes[i] ^ data[j], x)
-		syndromes[i] ^= data[-1]
-
+		syndromes[i] ^= data[block_size - 1]
 	# Berlekamp's Algorithm
 	# calculate the error locator
 	error_locator = []
@@ -57,14 +56,14 @@ def decode(rs, data, min_distance):
 		correction_poly.append(0)
 	error_locator[0] = 1
 	correction_poly[1] = 1
-	order_tracker = 1
-	for step_factor in range(1, rs['num_roots'] + 1, 1):
+	order_tracker = 0
+	for step_factor in range(1, rs['num_roots'] + 1):
 		# calculate error locator
 		y = step_factor - 1
 		e = syndromes[y]
-		for i in range(1, order_tracker + 1, 1):
+		for i in range(1, order_tracker + 1):
 			x = y - i
-			e = e ^ gf_functions.mul(rs['gf'], error_locator[i], syndromes[x])
+			e ^= gf_functions.mul(rs['gf'], error_locator[i], syndromes[x])
 		# update estimate of next_error_locator
 		if (e != 0):
 			for i in range(order_tracker + 1):
@@ -83,14 +82,14 @@ def decode(rs, data, min_distance):
 		correction_poly[0] = 0
 	# now solve the error locator polynomial to find the error positions
 	# by using the Chien Search
-	for j in range(len(data)):
+	for j in range(block_size):
 		x = 0
-		y = j + rs['gf']['order'] - len(data)
-		for i in range(1, (rs['num_roots'] // 2) + 1, 1):
+		y = j + rs['gf']['order'] - block_size
+		for i in range(1, (rs['num_roots'] // 2) + 1):
 			if error_locator[i]:
 				z = (y * i) + rs['gf']['index'][error_locator[i]]
 				while z > (rs['gf']['order'] - 2):
-					z -= (rs['gf']['order'] + 1)
+					z -= (rs['gf']['order'] - 1)
 				x ^= rs['gf']['table'][z]
 		x ^= error_locator[0]
 		if x == 0:
@@ -108,15 +107,15 @@ def decode(rs, data, min_distance):
 						error_locator[j]
 				)
 		for i in range(error_count):
-			e = len(data) - error_locations[i] - 1
+			e = block_size - error_locations[i] - 1
 			z = correction_poly[0]
 			for j in range(1, error_count):
 				x = e * j
 				while x > (rs['gf']['order'] - 2):
-					x += (1 - rs['gf']['order'])
+					x -= (rs['gf']['order'] - 1)
 				x = rs['gf']['order'] - x - 1
 				while x > (rs['gf']['order'] - 2):
-					x += (1 - rs['gf']['order'])
+					x -= (rs['gf']['order'] - 1)
 				z ^= gf_functions.mul(
 						rs['gf'],
 						correction_poly[j],
@@ -127,10 +126,10 @@ def decode(rs, data, min_distance):
 			for j in range(3, (rs['num_roots'] // 2) + 1, 2):
 				x = e * (j - 1)
 				while x > (rs['gf']['order'] - 2):
-					x += (1 - rs['gf']['order'])
+					x -= (rs['gf']['order'] - 1)
 				x = rs['gf']['order'] - x - 1
 				while x > (rs['gf']['order'] - 2):
-					x += (1 - rs['gf']['order'])
+					x -= (rs['gf']['order'] - 1)
 				y ^= gf_functions.mul(rs['gf'], error_locator[j], rs['gf']['table'][x])
 			y = rs['gf']['index'][y]
 			y = rs['gf']['order'] - y - 1
@@ -138,7 +137,14 @@ def decode(rs, data, min_distance):
 				y = 0
 			y = rs['gf']['table'][y]
 			error_magnitudes[i] = gf_functions.mul(rs['gf'], y, z)
-			print(error_locations)
-			print(error_magnitudes)
 			data[error_locations[i]] ^= error_magnitudes[i]
+		# error correction is complete, now check for success by calculating syndromes on the corrected data
+		for i in range(rs['num_roots']):
+			syndromes[i] = 0
+			x = rs['gf']['table'][rs['first_root'] + i]
+			for j in range(block_size - 1):
+				syndromes[i] = gf_functions.mul(rs['gf'], syndromes[i] ^ data[j], x)
+			syndromes[i] ^= data[block_size - 1]
+			if syndromes[i] != 0:
+				error_count = -1
 	return error_count
