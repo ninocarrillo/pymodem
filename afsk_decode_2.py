@@ -10,12 +10,12 @@
 
 import sys
 from scipy.io.wavfile import read as readwav
-from afsk_functions import AFSK_modem
-import slicer_functions
+from afsk import AFSKModem
+from slicer import BinarySlicer
+from il2p import IL2PCodec
 import lfsr_functions
 import ax25_functions
 import crc_functions
-import il2p_functions
 import rs_functions
 import gf_functions
 
@@ -35,30 +35,16 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(3)
 
-	modem_1 = AFSK_modem(input_sample_rate)
-	modem_1.configure(config='300')
+
+	modem_1 = AFSKModem(input_sample_rate, config='300')
 	demod_audio = modem_1.demod(input_audio)
 
 	# Slice demodulated audio into bitstream.
-	lock_rate = 0.75 # This should be between 0 and 1.0
-					 # Lower numbers cause slicer to sync the bitstream faster,
-					 # but increase jitter. Higher values are more stable,
-					 # but sync the bitstream more slowly. Typically 0.65-0.95.
-	slicer = slicer_functions.initialize(
-		modem_1.input_sample_rate,
-		modem_1.symbol_rate,
-		lock_rate
-	)
+	slicer_1 = BinarySlicer(input_sample_rate, config='300')
+	sliced_data = slicer_1.slice(demod_audio)
 
-	sliced_data = slicer_functions.slice(slicer, demod_audio)
-
-	il2p_decoder = il2p_functions.initialize_decoder()
-	trailing_crc = True
-	il2p_decoded_data = il2p_functions.decode(
-		il2p_decoder,
-		sliced_data,
-		trailing_crc
-	)
+	il2p_codec_1 = IL2PCodec(crc=True)
+	il2p_decoded_data = il2p_codec_1.decode(sliced_data)
 
 	if trailing_crc:
 	# Check CRCs on each decoded packet.

@@ -1,4 +1,4 @@
-# afsk_functions
+# afsk
 # Python3
 # Functions for demodulating AFSK
 # Nino Carrillo
@@ -8,12 +8,10 @@ from scipy.signal import firwin
 from math import ceil
 from numpy import arange, array, sin, cos, pi, convolve, sqrt
 
-class AFSK_modem:
+class AFSKModem:
 
-	def __init__(self, sample_rate):
+	def __init__(self, sample_rate, **kwargs):
 		self.input_sample_rate = sample_rate
-
-	def configure(self, **kwargs):
 		try:
 			self.definition = kwargs.get('config', None)
 		except:
