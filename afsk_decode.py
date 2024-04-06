@@ -38,32 +38,68 @@ def main():
 	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
 	demod_audio_1 = modem_1.demod(input_audio)
 	
-	modem_2 = AFSKModem(sample_rate=input_sample_rate, config='1200')
+	modem_2 = AFSKModem(sample_rate=input_sample_rate, config='300')
+	modem_2.correlator_offset = -10
+	modem_2.tune()
 	demod_audio_2 = modem_2.demod(input_audio)
+	
+	modem_3 = AFSKModem(sample_rate=input_sample_rate, config='300')
+	modem_3.correlator_offset = 10
+	modem_3.tune()
+	demod_audio_3 = modem_3.demod(input_audio)
+	
+	modem_4 = AFSKModem(sample_rate=input_sample_rate, config='1200')
+	demod_audio_4 = modem_4.demod(input_audio)
+	
+	modem_5 = AFSKModem(sample_rate=input_sample_rate, config='1200')
+	modem_5.space_gain = 1.7
+	modem_5.tune()
+	demod_audio_5 = modem_5.demod(input_audio)
+	
+	modem_6 = AFSKModem(sample_rate=input_sample_rate, config='1200')
+	modem_6.space_gain = 2.1
+	modem_6.tune()
+	demod_audio_6 = modem_6.demod(input_audio)
+
 
 	print("Slicing bits.")
 
 	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
 	sliced_data_1 = slicer_1.slice(demod_audio_1)
 	
-	slicer_2 = BinarySlicer(sample_rate=input_sample_rate, config='1200')
+	slicer_2 = BinarySlicer(sample_rate=input_sample_rate, config='300')
 	sliced_data_2 = slicer_2.slice(demod_audio_2)
+	
+	slicer_3 = BinarySlicer(sample_rate=input_sample_rate, config='300')
+	sliced_data_3 = slicer_3.slice(demod_audio_3)
+	
+	slicer_4 = BinarySlicer(sample_rate=input_sample_rate, config='1200')
+	sliced_data_4 = slicer_4.slice(demod_audio_4)
+	
+	slicer_5 = BinarySlicer(sample_rate=input_sample_rate, config='1200')
+	sliced_data_5 = slicer_5.slice(demod_audio_5)
+	
+	slicer_6 = BinarySlicer(sample_rate=input_sample_rate, config='1200')
+	sliced_data_6 = slicer_6.slice(demod_audio_5)
 
 	print("IL2P Decoding.")
 
-	il2p_codec_1 = IL2PCodec(ident='il2pc 300', crc=True)
+	il2p_codec_1 = IL2PCodec(ident='il2pc 300 +0', crc=True)
 	il2p_decoded_data_1 = il2p_codec_1.decode(sliced_data_1)
 	
-	il2p_codec_2 = IL2PCodec(ident='il2pc 1200', crc=True)
+	il2p_codec_2 = IL2PCodec(ident='il2pc 300 -10', crc=True)
 	il2p_decoded_data_2 = il2p_codec_2.decode(sliced_data_2)
 	
-	il2p_codec_3 = IL2PCodec(ident='il2p 1200', crc=False)
-	il2p_decoded_data_3 = il2p_codec_3.decode(sliced_data_2)
+	il2p_codec_3 = IL2PCodec(ident='il2pc 300 +10', crc=True)
+	il2p_decoded_data_3 = il2p_codec_3.decode(sliced_data_3)
+	
+	il2p_codec_4 = IL2PCodec(ident='il2p 1200 flat', crc=False)
+	il2p_decoded_data_4 = il2p_codec_4.decode(sliced_data_4)
 
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
 	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
-	# AX.25 invertes the bitstream as well
+	# AX.25 inverts the bitstream as well
 	# The G3RUH polynomial is 0x21001.
 	# Sequential lfsr operations can be combined by multiplying the polynomials
 	# together.
@@ -78,29 +114,58 @@ def main():
 	LFSR_2 = LFSR(poly=0x3, invert=True)
 	descrambled_data_2 = LFSR_2.stream_unscramble_8bit(sliced_data_2)
 
+	LFSR_3 = LFSR(poly=0x3, invert=True)
+	descrambled_data_3 = LFSR_3.stream_unscramble_8bit(sliced_data_3)
+	
+	LFSR_4 = LFSR(poly=0x3, invert=True)
+	descrambled_data_4 = LFSR_4.stream_unscramble_8bit(sliced_data_4)
+
+	LFSR_5 = LFSR(poly=0x3, invert=True)
+	descrambled_data_5 = LFSR_5.stream_unscramble_8bit(sliced_data_5)
+	
+	LFSR_6 = LFSR(poly=0x3, invert=True)
+	descrambled_data_6 = LFSR_6.stream_unscramble_8bit(sliced_data_6)
+
 	# Attempt AX.25 packet decoding on the descrambled data.
 
 	print("AX25 Decoding.")
 
-	ax25_codec_1 = AX25Codec(ident='ax25 300')
+	ax25_codec_1 = AX25Codec(ident='ax25 300 +0')
 	ax25_decoded_data_1 = ax25_codec_1.decode(descrambled_data_1)
 	
-	ax25_codec_2 = AX25Codec(ident='ax25 1200')
+	ax25_codec_2 = AX25Codec(ident='ax25 300 +10')
 	ax25_decoded_data_2 = ax25_codec_2.decode(descrambled_data_2)
+
+	ax25_codec_3 = AX25Codec(ident='ax25 300 -10')
+	ax25_decoded_data_3 = ax25_codec_3.decode(descrambled_data_3)
+	
+	ax25_codec_4 = AX25Codec(ident='ax25 1200')
+	ax25_decoded_data_4 = ax25_codec_4.decode(descrambled_data_4)
+
+	ax25_codec_5 = AX25Codec(ident='ax25 1200 s1.7')
+	ax25_decoded_data_5 = ax25_codec_5.decode(descrambled_data_5)
+	
+	ax25_codec_6 = AX25Codec(ident='ax25 1200 s2.1')
+	ax25_decoded_data_6 = ax25_codec_6.decode(descrambled_data_6)
 
 	print("Correlating results.")
 
 	results = PacketMetaArray()
 	results.add(ax25_decoded_data_1)
 	results.add(ax25_decoded_data_2)
+	results.add(ax25_decoded_data_3)
+	results.add(ax25_decoded_data_4)
+	results.add(ax25_decoded_data_5)
+	results.add(ax25_decoded_data_6)
 	results.add(il2p_decoded_data_1)
 	results.add(il2p_decoded_data_2)
+	results.add(il2p_decoded_data_3)
 	results.CalcCRCs()
 	results.Correlate(address_distance=input_sample_rate/4)
 
 	# print the non-CRC IL2P results first
 	good_count = 0
-	for packet in il2p_decoded_data_3:
+	for packet in il2p_decoded_data_4:
 			good_count += 1
 			print("Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 			for byte in packet.data[:-2]:
