@@ -4,7 +4,8 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from numpy import zeros, append, rint
+from packet_meta import PacketMeta
+import copy
 
 class AX25Codec:
 
@@ -14,10 +15,11 @@ class AX25Codec:
 		self.max_packet_length = kwargs.get('max_packet_length', 1023)
 
 		self.working_byte = 0
-		self.working_packet = []
+		self.working_packet = PacketMeta()
 		self.byte_index = 0
 		self.one_count = 0
 		self.bit_index = 0
+		self.absolute_bit_index = 0
 
 	def decode(self, data):
 		# create an empty list to collect decoded packets
@@ -25,6 +27,7 @@ class AX25Codec:
 		for input_byte in data:
 			input_byte = int(input_byte)
 			for bit_index in range(8):
+				self.absolute_bit_index += 1
 				if input_byte & 0x80:
 					# this is a '1' bit
 					self.working_byte |= 0x80
@@ -37,7 +40,7 @@ class AX25Codec:
 					if self.bit_index == 8:
 						# Byte complete, do something with it
 						self.bit_index = 0
-						self.working_packet.append(self.working_byte)
+						self.working_packet.data.append(self.working_byte)
 						self.byte_index += 1
 						if (
 								self.byte_index >
@@ -54,7 +57,7 @@ class AX25Codec:
 						if self.bit_index == 8:
 							# Byte complete, do something with it
 							self.bit_index = 0
-							self.working_packet.append(self.working_byte)
+							self.working_packet.data.append(self.working_byte)
 							self.byte_index += 1
 							if (
 									self.byte_index >
@@ -76,10 +79,11 @@ class AX25Codec:
 									self.bit_index == 7
 								)
 						):
+							self.working_packet.bitaddress = self.absolute_bit_index
 							result.append(
-								self.working_packet.copy()
+								copy.copy(self.working_packet)
 							)
-						self.working_packet = []
+						self.working_packet = PacketMeta()
 						self.byte_index = 0
 						self.bit_index = 0
 					self.one_count = 0

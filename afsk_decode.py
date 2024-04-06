@@ -15,9 +15,8 @@ from slicer import BinarySlicer
 from il2p import IL2PCodec
 from lfsr import LFSR
 from ax25 import AX25Codec
+from packet_meta import PacketMeta
 import crc_functions
-import rs_functions
-import gf_functions
 
 def main():
 	# check correct version of Python
@@ -36,10 +35,10 @@ def main():
 		sys.exit(3)
 
 
-	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
+	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='1200')
 	demod_audio = modem_1.demod(input_audio)
 
-	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
+	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='1200')
 	sliced_data = slicer_1.slice(demod_audio)
 
 	il2p_codec_1 = IL2PCodec(crc=True)
@@ -63,42 +62,42 @@ def main():
 	ax25_codec_1 = AX25Codec()
 	ax25_decoded_data = ax25_codec_1.decode(descrambled_data)
 
-	if il2p_codec_1.crc:
-	# Check CRCs on each decoded packet.
-		good_count = 0
-		for packet in il2p_decoded_data:
-			crc_result = crc_functions.CheckCRC(packet)
-			if crc_result[2] == True:
-				good_count += 1
-				print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
-				for byte in packet[:-2]:
-					byte = int(byte)
-					if (byte < 0x7F) and (byte > 0x1F):
-						print(chr(int(byte)), end='')
-					else:
-						print(f'<{byte}>', end='')
-				print(" ")
-	else:
-		good_count = 0
-		for packet in il2p_decoded_data:
-				good_count += 1
-				print("Packet number: ", good_count)
-				for byte in packet:
-					byte = int(byte)
-					if (byte < 0x7F) and (byte > 0x1F):
-						print(chr(int(byte)), end='')
-					else:
-						print(f'<{byte}>', end='')
-				print(" ")
+	# if il2p_codec_1.crc:
+	#Check CRCs on each decoded packet.
+		# good_count = 0
+		# for packet in il2p_decoded_data:
+			# crc_result = crc_functions.CheckCRC(packet)
+			# if crc_result[2] == True:
+				# good_count += 1
+				# print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
+				# for byte in packet[:-2]:
+					# byte = int(byte)
+					# if (byte < 0x7F) and (byte > 0x1F):
+						# print(chr(int(byte)), end='')
+					# else:
+						# print(f'<{byte}>', end='')
+				# print(" ")
+	# else:
+		# good_count = 0
+		# for packet in il2p_decoded_data:
+				# good_count += 1
+				# print("Packet number: ", good_count)
+				# for byte in packet:
+					# byte = int(byte)
+					# if (byte < 0x7F) and (byte > 0x1F):
+						# print(chr(int(byte)), end='')
+					# else:
+						# print(f'<{byte}>', end='')
+				# print(" ")
 
 	# Check CRCs on each decoded packet.
 	good_count = 0
 	for packet in ax25_decoded_data:
-		crc_result = crc_functions.CheckCRC(packet)
-		if crc_result[2] == True:
+		packet.CalcCRC()
+		if packet.ValidCRC:
 			good_count += 1
-			print("Packet number: ", good_count, " CRC: ", hex(crc_result[0]))
-			for byte in packet[:-2]:
+			print("Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "bit address: ", packet.bitaddress)
+			for byte in packet.data[:-2]:
 				byte = int(byte)
 				if (byte < 0x7F) and (byte > 0x1F):
 					print(chr(int(byte)), end='')
