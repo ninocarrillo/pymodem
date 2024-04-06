@@ -39,12 +39,29 @@ def main():
 	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
 	demod_audio = modem_1.demod(input_audio)
 
-	# Slice demodulated audio into bitstream.
 	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
 	sliced_data = slicer_1.slice(demod_audio)
 
 	il2p_codec_1 = IL2PCodec(crc=True)
 	il2p_decoded_data = il2p_codec_1.decode(sliced_data)
+
+	# Apply differential decoding through a linear feedback shift register.
+	# The same method can be used for de-scrambling.
+	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
+	# AX.25 invertes the bitstream as well
+	# The G3RUH polynomial is 0x21001.
+	# Sequential lfsr operations can be combined by multiplying the polynomials
+	# together.
+	# So G3RUH descrambling combined with differential decoding is equivalent
+	# to lfsr polynomial 0x21001 * 0x3 = 0x63003
+
+	LFSR_1 = LFSR(poly=0x3, invert=True)
+	descrambled_data = LFSR_1.stream_unscramble_8bit(sliced_data)
+
+	# Attempt AX.25 packet decoding on the descrambled data.
+
+	ax25_codec_1 = AX25Codec()
+	ax25_decoded_data = ax25_codec_1.decode(descrambled_data)
 
 	if il2p_codec_1.crc:
 	# Check CRCs on each decoded packet.
@@ -73,24 +90,6 @@ def main():
 					else:
 						print(f'<{byte}>', end='')
 				print(" ")
-
-	# Apply differential decoding through a linear feedback shift register.
-	# The same method can be used for de-scrambling.
-	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
-	# AX.25 invertes the bitstream as well
-	# The G3RUH polynomial is 0x21001.
-	# Sequential lfsr operations can be combined by multiplying the polynomials
-	# together.
-	# So G3RUH descrambling combined with differential decoding is equivalent
-	# to lfsr polynomial 0x21001 * 0x3 = 0x63003
-
-	LFSR_1 = LFSR(poly=0x3, invert=True)
-	descrambled_data = LFSR_1.stream_unscramble_8bit(sliced_data)
-
-	# Attempt AX.25 packet decoding on the descrambled data.
-
-	ax25_codec_1 = AX25Codec()
-	ax25_decoded_data = ax25_codec_1.decode(descrambled_data)
 
 	# Check CRCs on each decoded packet.
 	good_count = 0
