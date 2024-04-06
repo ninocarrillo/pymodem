@@ -10,7 +10,7 @@
 
 import sys
 from scipy.io.wavfile import read as readwav
-import afsk_functions
+from afsk_functions import AFSK_modem
 import slicer_functions
 import lfsr_functions
 import ax25_functions
@@ -35,9 +35,8 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(3)
 
-
-	modem_1 = afsk_functions.AFSK_modem(input_sample_rate, mode='1200')
-	modem_1.configure()
+	modem_1 = AFSK_modem(input_sample_rate)
+	modem_1.configure(config='300')
 	demod_audio = modem_1.demod(input_audio)
 
 	# Slice demodulated audio into bitstream.

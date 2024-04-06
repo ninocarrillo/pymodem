@@ -79,14 +79,14 @@ def demodulate(demodulator, input_audio):
 
 class AFSK_modem:
 
-	def __init__(self, sample_rate, **kwargs):
+	def __init__(self, sample_rate):
 		self.input_sample_rate = sample_rate
+
+	def configure(self, **kwargs):
 		try:
-			self.definition = kwargs.get('mode', None)
+			self.definition = kwargs.get('config', None)
 		except:
 			self.definition = '1200'
-
-	def configure(self):
 
 		if self.definition == '300':
 			# set some default values for 300 bps AFSK:
@@ -105,12 +105,13 @@ class AFSK_modem:
 											# for de-emphasized audio.
 											# Implement multiple parallel demodulators
 											# to handle general cases.
-			self.output_lpf_cutoff = 1000.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after correlators
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.correlator_span = 1.0		# correlator span in symbols
+			self.correlator_offset = 0.0		# frequency offset for correlator in hz
 		else:
 			# set some default values for 1200 bps AFSK:
 			self.symbol_rate = 1200.0			# symbols per second (or baud)
@@ -134,7 +135,11 @@ class AFSK_modem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.correlator_span = 1.0		# correlator span in symbols
+			self.correlator_offset = 0.0		# frequency offset for correlator in hz
 
+		self.tune()
+
+	def tune(self):
 		self.input_bpf_tap_count = round(
 			self.input_sample_rate * self.input_bpf_span / self.symbol_rate
 		)
@@ -168,15 +173,17 @@ class AFSK_modem:
 		# one count for each sample in the symbol-time.
 		time_indices = arange(ceil(self.correlator_span * self.input_sample_rate / self.symbol_rate))
 		# Now scale the time indices according to frequency.
-		mark_indices = time_indices * (2.0 * pi * self.mark_freq / self.input_sample_rate)
+		mark_indices = time_indices * (2.0 * pi * (self.mark_freq + self.correlator_offset) / self.input_sample_rate)
 		# Calculate the mark waveforms.
 		self.mark_correlator_i = cos(mark_indices)
 		self.mark_correlator_q = sin(mark_indices)
 		# Scale time indices for space tone.
-		space_indices = time_indices * (2.0 * pi * self.space_freq / self.input_sample_rate)
+		space_indices = time_indices * (2.0 * pi * (self.space_freq + self.correlator_offset) / self.input_sample_rate)
 		# Calculate the space waveforms, apply space gain factor (for emphasis)
 		self.space_correlator_i = self.space_gain * cos(space_indices)
 		self.space_correlator_q = self.space_gain * sin(space_indices)
+
+
 
 
 	def demod(self, input_audio):
