@@ -13,7 +13,7 @@ from scipy.io.wavfile import read as readwav
 from afsk import AFSKModem
 from slicer import BinarySlicer
 from il2p import IL2PCodec
-import lfsr_functions
+from lfsr import LFSR
 import ax25_functions
 import crc_functions
 import rs_functions
@@ -83,14 +83,9 @@ def main():
 	# together.
 	# So G3RUH descrambling combined with differential decoding is equivalent
 	# to lfsr polynomial 0x21001 * 0x3 = 0x63003
-	polynomial = 0x3
-	invert = True
-	lfsr = lfsr_functions.initialize(
-		polynomial,
-		invert
-	)
 
-	descrambled_data = lfsr_functions.stream_unscramble_8bit(lfsr, sliced_data)
+	LFSR_1 = LFSR(poly=0x3, invert=True)
+	descrambled_data = LFSR_1.stream_unscramble_8bit(sliced_data)
 
 	# Attempt AX.25 packet decoding on the descrambled data.
 	min_packet_length = 18

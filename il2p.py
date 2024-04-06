@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 1 Apr 2024
 
-import lfsr_functions as lf
+from lfsr import LFSR
 import crc_functions
 import rs_functions
 
@@ -229,12 +229,7 @@ class IL2PCodec:
 		self.block_index = 0
 		self.num_roots = 16
 		# IL2P Scrambling Polynomial x^9 + x^4 + 1
-		lfsr_polynomial = 0x211
-		lfsr_invert = False
-		self.lfsr = lf.initialize(
-			lfsr_polynomial,
-			lfsr_invert
-		)
+		self.lfsr = LFSR(poly=0x211, invert=False)
 		rs_firstroot = 0
 		rs_header_numroots = 2
 		rs_block_numroots = 16
@@ -292,11 +287,8 @@ class IL2PCodec:
 								self.bytes_corrected += rs_result
 
 							# descramble header
-							self.lfsr['shift_register'] = 0x1F0
-							self.buffer[:13] = lf.stream_unscramble_8bit(
-									self.lfsr,
-									self.buffer[:13]
-							)
+							self.lfsr.shift_register = 0x1F0
+							self.buffer[:13] = self.lfsr.stream_unscramble_8bit(self.buffer[:13])
 
 							# Unpack IL2P header
 							self.header = \
@@ -419,12 +411,9 @@ class IL2PCodec:
 								self.bytes_corrected += rs_result
 
 							# de-scramble
-							self.lfsr['shift_register'] = 0x1F0
+							self.lfsr.shift_register = 0x1F0
 							self.buffer[:self.byte_index_a] = \
-								lf.stream_unscramble_8bit(
-									self.lfsr,
-									self.buffer[:self.byte_index_a]
-								)
+								self.lfsr.stream_unscramble_8bit(self.buffer[:self.byte_index_a])
 							self.byte_index_a = 0
 
 							for i in range(self.block_size):
@@ -478,12 +467,11 @@ class IL2PCodec:
 								self.bytes_corrected += rs_result
 
 							# de-descramble
-							self.lfsr['shift_register'] = 0x1F0
+							self.lfsr.shift_register = 0x1F0
+
 							self.buffer[:self.byte_index_a] = \
-								lf.stream_unscramble_8bit(
-									self.lfsr,
-									self.buffer[:self.byte_index_a]
-								)
+								self.lfsr.stream_unscramble_8bit(self.buffer[:self.byte_index_a])
+
 
 							self.block_index += 1
 
