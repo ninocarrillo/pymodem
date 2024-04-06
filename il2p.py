@@ -210,10 +210,9 @@ def reform_control_byte(header):
 
 class IL2PCodec:
 	def __init__(self, **kwargs):
-		try:
-			self.crc = kwargs.get('crc', None)
-		except:
-			self.crc = True
+
+		self.crc = kwargs.get('crc', True)
+
 		self.state = 'sync_search'
 		self.working_word = int(0xFFFFFF)
 		self.sync_tolerance = 1

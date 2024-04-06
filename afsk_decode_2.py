@@ -14,7 +14,7 @@ from afsk import AFSKModem
 from slicer import BinarySlicer
 from il2p import IL2PCodec
 from lfsr import LFSR
-import ax25_functions
+from ax25 import AX25Codec
 import crc_functions
 import rs_functions
 import gf_functions
@@ -36,11 +36,11 @@ def main():
 		sys.exit(3)
 
 
-	modem_1 = AFSKModem(input_sample_rate, config='300')
+	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
 	demod_audio = modem_1.demod(input_audio)
 
 	# Slice demodulated audio into bitstream.
-	slicer_1 = BinarySlicer(input_sample_rate, config='300')
+	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
 	sliced_data = slicer_1.slice(demod_audio)
 
 	il2p_codec_1 = IL2PCodec(crc=True)
@@ -88,14 +88,9 @@ def main():
 	descrambled_data = LFSR_1.stream_unscramble_8bit(sliced_data)
 
 	# Attempt AX.25 packet decoding on the descrambled data.
-	min_packet_length = 18
-	max_packet_length = 1023
-	ax25_decoder = ax25_functions.initialize_decoder(
-		min_packet_length,
-		max_packet_length
-	)
 
-	ax25_decoded_data = ax25_functions.decode(ax25_decoder, descrambled_data)
+	ax25_codec_1 = AX25Codec()
+	ax25_decoded_data = ax25_codec_1.decode(descrambled_data)
 
 	# Check CRCs on each decoded packet.
 	good_count = 0

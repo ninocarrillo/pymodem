@@ -6,13 +6,10 @@
 
 class BinarySlicer:
 
-	def __init__(self, sample_rate, **kwargs):
-		self.sample_rate = sample_rate
+	def __init__(self, **kwargs):
 
-		try:
-			self.definition = kwargs.get('config', None)
-		except:
-			self.definition = '1200'
+		self.definition = kwargs.get('config', '1200')
+		self.sample_rate = kwargs.get('sample_rate', '8000')
 
 
 		# lock_rate should be between 0 and 1.0

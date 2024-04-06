@@ -7,16 +7,9 @@
 class LFSR:
 
 	def __init__(self, **kwargs):
-
-		try:
-			self.polynomial = kwargs.get('poly', None)
-		except:
-			self.polynomial = 0x3
-
-		try:
-			self.invert = kwargs.get('invert', None)
-		except:
-			self.invert = True
+		
+		self.polynomial = kwargs.get('poly', 0x3)
+		self.invert = kwargs.get('invert', True)
 
 		self.shift_register = 0
 

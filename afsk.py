@@ -10,12 +10,9 @@ from numpy import arange, array, sin, cos, pi, convolve, sqrt
 
 class AFSKModem:
 
-	def __init__(self, sample_rate, **kwargs):
-		self.input_sample_rate = sample_rate
-		try:
-			self.definition = kwargs.get('config', None)
-		except:
-			self.definition = '1200'
+	def __init__(self, **kwargs):
+		self.definition = kwargs.get('config', '1200')
+		self.sample_rate = kwargs.get('sample_rate', 8000)
 
 		if self.definition == '300':
 			# set some default values for 300 bps AFSK:
@@ -70,10 +67,10 @@ class AFSKModem:
 
 	def tune(self):
 		self.input_bpf_tap_count = round(
-			self.input_sample_rate * self.input_bpf_span / self.symbol_rate
+			self.sample_rate * self.input_bpf_span / self.symbol_rate
 		)
 		self.output_lpf_tap_count = round(
-			self.input_sample_rate * self.output_lpf_span / self.symbol_rate
+			self.sample_rate * self.output_lpf_span / self.symbol_rate
 		)
 
 		# Use scipy.signal.firwin to generate taps for input bandpass filter.
@@ -82,7 +79,7 @@ class AFSKModem:
 			self.input_bpf_tap_count,
 			[ self.input_bpf_low_cutoff, self.input_bpf_high_cutoff ],
 			pass_zero='bandpass',
-			fs=self.input_sample_rate
+			fs=self.sample_rate
 		)
 
 		# Use scipy.signal.firwin to generate taps for output low pass filter.
@@ -91,7 +88,7 @@ class AFSKModem:
 		self.output_lpf = firwin(
 			self.output_lpf_tap_count,
 			self.output_lpf_cutoff,
-			fs=self.input_sample_rate
+			fs=self.sample_rate
 		)
 
 		# Create quadrature correlators for mark and space tones. Quadrature means
@@ -100,14 +97,14 @@ class AFSKModem:
 		# First we will create an array of time indices for one symbol length.
 		# Computing the time indices in steps. First, create an ascending count,
 		# one count for each sample in the symbol-time.
-		time_indices = arange(ceil(self.correlator_span * self.input_sample_rate / self.symbol_rate))
+		time_indices = arange(ceil(self.correlator_span * self.sample_rate / self.symbol_rate))
 		# Now scale the time indices according to frequency.
-		mark_indices = time_indices * (2.0 * pi * (self.mark_freq + self.correlator_offset) / self.input_sample_rate)
+		mark_indices = time_indices * (2.0 * pi * (self.mark_freq + self.correlator_offset) / self.sample_rate)
 		# Calculate the mark waveforms.
 		self.mark_correlator_i = cos(mark_indices)
 		self.mark_correlator_q = sin(mark_indices)
 		# Scale time indices for space tone.
-		space_indices = time_indices * (2.0 * pi * (self.space_freq + self.correlator_offset) / self.input_sample_rate)
+		space_indices = time_indices * (2.0 * pi * (self.space_freq + self.correlator_offset) / self.sample_rate)
 		# Calculate the space waveforms, apply space gain factor (for emphasis)
 		self.space_correlator_i = self.space_gain * cos(space_indices)
 		self.space_correlator_q = self.space_gain * sin(space_indices)
