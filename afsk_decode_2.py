@@ -38,8 +38,6 @@ def main():
 	modem_1 = AFSK_modem(input_sample_rate)
 	modem_1.configure(config='300')
 	demod_audio = modem_1.demod(input_audio)
-	for tap in modem_1.output_lpf:
-		print(tap, end = ' ')
 
 	# Slice demodulated audio into bitstream.
 	lock_rate = 0.75 # This should be between 0 and 1.0
