@@ -36,11 +36,9 @@ def main():
 	print("Demodulating audio.")
 
 	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	modem_1.tune()
 	demod_audio_1 = modem_1.demod(input_audio)
 	
 	modem_2 = AFSKModem(sample_rate=input_sample_rate, config='1200')
-	modem_2.tune()
 	demod_audio_2 = modem_2.demod(input_audio)
 
 	print("Slicing bits.")
