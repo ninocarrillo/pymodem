@@ -4,6 +4,8 @@
 # Nino Carrillo
 # 30 Mar 2024
 
+from data_classes import AddressedData
+
 class LFSR:
 
 	def __init__(self, **kwargs):
@@ -21,8 +23,8 @@ class LFSR:
 		# step through each input byte
 		# and in each input byte, operate on each bit
 		working_byte = int(0)
-		for input_byte in data:
-			input_byte = int(round(input_byte))
+		for stream_byte in data:
+			input_byte = int(stream_byte.data)
 			# cycle through each bit in this byte
 			for bit_index in range(8):
 				# make room in working byte for a new bit
@@ -39,8 +41,8 @@ class LFSR:
 			# 8 bits have been processed, save the byte
 
 			if self.invert:
-				result.append(0xFF ^ working_byte)
+				result.append(AddressedData(0xFF ^ working_byte, stream_byte.address))
 
 			else:
-				result.append(working_byte)
+				result.append(AddressedData, stream_byte.address)
 		return result

@@ -13,7 +13,7 @@ class PacketMeta:
 		# the reference point in the bitstream where this packet was decoded
 		# it is measured to the last bit of the closing flag in the packet.
 		# this is used for comparing age of packets in multi-decoder systems
-		self.bitaddress = 0
+		self.streamaddress = 0
 		# the calculated CRC for the packet data
 		self.CalculatedCRC = 0
 		self.CarriedCRC = 0
@@ -44,31 +44,34 @@ class PacketMetaArray:
 				packet.CalcCRC()
 		
 	def Correlate(self, **kwargs):
-		self.address_distance = kwargs.get('address_distance', 50)
+		self.address_distance = kwargs.get('address_distance', 10000)
 		# Identify unique and duplicate packets based on bitaddress and CalculatedCRC
+		first_array = True
 		for raw_packet_array in self.raw_packet_arrays:
 			for raw_packet in raw_packet_array:
 				if raw_packet.ValidCRC:
 					# only check packets with a valid CRC
 					# assume this packet is unique
 					is_unique = True
-					# compare this packet with the existing unique packets, flag false if matched
-					for unique_packet in self.unique_packet_array:
-						if (
-							(abs(raw_packet.bitaddress - unique_packet.bitaddress) < self.address_distance)
-							and
-							(raw_packet.CalculatedCRC == unique_packet.CalculatedCRC)
-						):
-							is_unique = False
-							unique_packet.CorrelatedDecoders.append(raw_packet.SourceDecoder)
-							break
+					if first_array == False:
+						# compare this packet with the existing unique packets, flag false if matched
+						for unique_packet in self.unique_packet_array:
+							if (unique_packet.SourceDecoder != raw_packet.SourceDecoder):
+								if (
+									(abs(raw_packet.streamaddress - unique_packet.streamaddress) < self.address_distance)
+									and
+									(raw_packet.CalculatedCRC == unique_packet.CalculatedCRC)
+								):
+									is_unique = False
+									unique_packet.CorrelatedDecoders.append(raw_packet.SourceDecoder)
+									break
+					first_array = False
 					if is_unique:
-						print("unique", raw_packet.bitaddress, raw_packet.CalculatedCRC)
 						raw_packet.CorrelatedDecoders.append(raw_packet.SourceDecoder)
 						# this packet is unique, add it to the list.
 						self.unique_packet_array.append(raw_packet)
 		# now sort the unique list:
-		self.unique_packet_array = sorted(self.unique_packet_array, key=lambda packet: packet.bitaddress)
+		self.unique_packet_array = sorted(self.unique_packet_array, key=lambda packet: packet.streamaddress)
 
 						
 			

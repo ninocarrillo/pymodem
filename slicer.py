@@ -4,6 +4,8 @@
 # Nino Carrillo
 # 30 Mar 2024
 
+from data_classes import AddressedData
+
 class BinarySlicer:
 
 	def __init__(self, **kwargs):
@@ -33,6 +35,7 @@ class BinarySlicer:
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
+		self.streamaddress = 0
 
 
 	def slice(self, samples):
@@ -48,11 +51,10 @@ class BinarySlicer:
 		# it is synchronized. When zero-crossing is detected in sample stream,
 		# multiply phase_clock by lock_rate (positive number less than 1.0)
 		# this causes phase_clock to converge to synchronization
-		estimated_bit_count = len(samples) /self.samples_per_symbol
-		estimated_byte_count = int((estimated_bit_count * 1.5) / 8)
 		result = []
 		result_index = 0
 		for sample in samples:
+			self.streamaddress += 1
 			# increment phase_clock
 			self.phase_clock += 1.0
 			# check for symbol center
@@ -74,7 +76,7 @@ class BinarySlicer:
 				# count
 				if self.working_bit_count >= 8:
 					self.working_bit_count = 0
-					result.append(self.working_byte)
+					result.append(AddressedData(self.working_byte, self.streamaddress))
 			# check for zero-crossing in sample stream
 			if (
 					(self.last_sample < 0.0 and sample >= 0.0)

@@ -5,8 +5,9 @@
 # 1 Apr 2024
 
 from lfsr import LFSR
-import crc_functions
 import rs_functions
+
+from data_classes import AddressedData
 
 def ceil(arg):
 	return int(arg) + (arg % 1 > 0)
@@ -220,8 +221,6 @@ class IL2PCodec:
 		for i in range(255):
 			self.buffer.append(0)
 		self.working_packet = []
-		for i in range(1200):
-			self.working_packet.append(0)
 		self.bit_index = 0
 		self.byte_index_a = 0
 		self.byte_index_b = 0
@@ -253,8 +252,8 @@ class IL2PCodec:
 			min_distance = 0
 		else:
 			min_distance = 1
-		for input_byte in data:
-			self.input_byte = int(input_byte)
+		for stream_byte in data:
+			self.input_byte = int(stream_byte.data)
 			for input_bit_index in range(8):
 				if self.state == 'sync_search':
 					self.get_a_bit(0xFFFFFF)
@@ -381,6 +380,7 @@ class IL2PCodec:
 								if self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
+									self.working_packet.streamaddress = stream_byte.address
 									result.append(
 										self.working_packet \
 										[:self.byte_index_b].copy()
@@ -521,6 +521,7 @@ class IL2PCodec:
 							self.working_packet[self.byte_index_b] = \
 																trailing_crc >> 8
 							self.byte_index_b += 1
+							self.working_packet.streamaddress = stream_byte.address
 							result.append(
 								self.working_packet \
 												[:self.byte_index_b].copy()
