@@ -34,50 +34,11 @@ def main():
 	except:
 		print('Unable to open audio file.')
 		sys.exit(3)
-	# Parameters for AFSK demodulator.
-	# These are a good starting point.
-	# Experimentation is helpful to understand the effects of each.
-	symbol_rate = 1200.0			# symbols per second (or baud)
-	input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
-	input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
-	input_bpf_span = 4.80			# Number of symbols to span with the input
-									# filter. This is used with the sampling
-									# rate to determine the tap count.
-	input_bpf_tap_count = round(
-			input_sample_rate * input_bpf_span / symbol_rate
-		)
-									# more taps = shaper cutoff, more processing
-	mark_freq = 1200.0				# mark tone frequency
-	space_freq = 2200.0				# space tone frequency
-	space_gain = 1.0				# gain correction for space tone correlator
-									# for optimizing emphasized audio.
-									# 1.0 recommended for flat audio, around 1.7
-									# for de-emphasized audio.
-									# Implement multiple parallel demodulators
-									# to handle general cases.
-	output_lpf_cutoff = 1000.0		# low pass filter cutoff frequency for
-									# output signal after correlators
-	output_lpf_span = 1.5			# Number of symbols to span with the output
-									# filter. This is used with the sampling
-									# rate to determine the tap count.
-	output_lpf_tap_count = round(
-			input_sample_rate * output_lpf_span / symbol_rate
-		)
-									# more taps = shaper cutoff, more processing
-	demodulator = afsk_functions.initialize_demodulator(
-		input_bpf_low_cutoff,
-		input_bpf_high_cutoff,
-		input_bpf_tap_count,
-		mark_freq,
-		space_freq,
-		space_gain,
-		output_lpf_cutoff,
-		output_lpf_tap_count,
-		input_sample_rate,
-		symbol_rate
-	)
 
-	demod_audio = afsk_functions.demodulate(demodulator, input_audio)
+
+	modem_1 = afsk_functions.AFSK_modem(input_sample_rate, mode='1200')
+	modem_1.configure()
+	demod_audio = modem_1.demod(input_audio)
 
 	# Slice demodulated audio into bitstream.
 	lock_rate = 0.75 # This should be between 0 and 1.0
@@ -85,8 +46,8 @@ def main():
 					 # but increase jitter. Higher values are more stable,
 					 # but sync the bitstream more slowly. Typically 0.65-0.95.
 	slicer = slicer_functions.initialize(
-		input_sample_rate,
-		symbol_rate,
+		modem_1.input_sample_rate,
+		modem_1.symbol_rate,
 		lock_rate
 	)
 
@@ -170,6 +131,7 @@ def main():
 				else:
 					print(f'<{byte}>', end='')
 			print(" ")
+
 
 if __name__ == "__main__":
 	main()
