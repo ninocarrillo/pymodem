@@ -8,18 +8,18 @@
 
 def CheckCRC(packet):
 	packet_crc = int((packet[-1] * 256) + packet[-2])
-	fcs = 0xFFFF
+	calculated_crc = 0xFFFF
 	CRC_poly = 0x8408
 	for byte in packet[:-2]:
 		byte = int(byte)
 		for i in range(8):
-			if (fcs & 1) != (byte & 1):
-				fcs = (fcs >> 1) ^ CRC_poly
+			if (calculated_crc & 1) != (byte & 1):
+				calculated_crc = (calculated_crc >> 1) ^ CRC_poly
 			else:
-				fcs >>= 1
+				calculated_crc >>= 1
 			byte >>= 1
-	fcs ^= 0xFFFF
-	if packet_crc == fcs:
-		return [packet_crc, fcs, True]
+	calculated_crc ^= 0xFFFF
+	if packet_crc == calculated_crc:
+		return [packet_crc, calculated_crc, True]
 	else:
-		return [packet_crc, fcs, False]
+		return [packet_crc, calculated_crc, False]
