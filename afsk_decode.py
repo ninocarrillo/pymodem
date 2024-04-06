@@ -24,7 +24,7 @@ def main():
 		sys.exit(1)
 	# check correct number of parameters were passed to command line
 	if len(sys.argv) != 2:
-		print("Not enough arguments. Usage: python3 afsk1200.py <sound file>")
+		print("Not enough arguments. Usage: python3 afsk_decode.py <sound file>")
 		sys.exit(2)
 	# try to open audio file
 	try:
