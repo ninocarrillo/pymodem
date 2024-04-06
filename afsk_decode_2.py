@@ -46,7 +46,7 @@ def main():
 	il2p_codec_1 = IL2PCodec(crc=True)
 	il2p_decoded_data = il2p_codec_1.decode(sliced_data)
 
-	if trailing_crc:
+	if il2p_codec_1.crc:
 	# Check CRCs on each decoded packet.
 		good_count = 0
 		for packet in il2p_decoded_data:

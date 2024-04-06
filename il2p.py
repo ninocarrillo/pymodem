@@ -11,43 +11,6 @@ import rs_functions
 def ceil(arg):
 	return int(arg) + (arg % 1 > 0)
 
-class IL2PCodec:
-	def __init__(self, **kwargs):
-		try:
-			self.crc = kwargs.get('crc', None)
-		except:
-			self.crc = True
-		self.state = 'sync_search'
-		self.working_word = int(0xFFFFFF)
-		self.sync_tolerance = 1
-		self.buffer = []
-		for i in range(255):
-			self.buffer.append(0)
-		self.working_packet = []
-		for i in range(1200):
-			self.working_packet.append(0)
-		self.bit_index = 0
-		self.byte_index_a = 0
-		self.byte_index_b = 0
-		self.block_index = 0
-		self.num_roots = 16
-		# IL2P Scrambling Polynomial x^9 + x^4 + 1
-		lfsr_polynomial = 0x211
-		lfsr_invert = False
-		self.lfsr = lf.initialize(
-			lfsr_polynomial,
-			lfsr_invert
-		)
-		rs_firstroot = 0
-		rs_header_numroots = 2
-		rs_block_numroots = 16
-		rs_gf_power = 8
-		rs_gf_poly = 0x11D
-		self.header_rs = rs_functions.initialize(rs_firstroot, rs_header_numroots, rs_gf_power, rs_gf_poly)
-		self.block_rs = rs_functions.initialize(rs_firstroot, rs_block_numroots, rs_gf_power, rs_gf_poly)
-		self.bytes_corrected = 0
-		self.block_fail = False
-
 def hamming_decode(data):
 	# Hamming(7,4) Decoding Table
 	# Enter this table with 7-bit encoded value, high bit masked.
@@ -245,298 +208,335 @@ def reform_control_byte(header):
 			control_byte |= 0x10
 	return control_byte
 
-def get_a_bit(decoder, word_mask):
-	decoder['working_word'] <<= 1
-	decoder['working_word'] &= word_mask
-	if decoder['input_byte'] & 0x80:
-		decoder['working_word'] |= 1
-	decoder['input_byte'] <<= 1
-	decoder['bit_index'] += 1
+class IL2PCodec:
+	def __init__(self, **kwargs):
+		try:
+			self.crc = kwargs.get('crc', None)
+		except:
+			self.crc = True
+		self.state = 'sync_search'
+		self.working_word = int(0xFFFFFF)
+		self.sync_tolerance = 1
+		self.buffer = []
+		for i in range(255):
+			self.buffer.append(0)
+		self.working_packet = []
+		for i in range(1200):
+			self.working_packet.append(0)
+		self.bit_index = 0
+		self.byte_index_a = 0
+		self.byte_index_b = 0
+		self.block_index = 0
+		self.num_roots = 16
+		# IL2P Scrambling Polynomial x^9 + x^4 + 1
+		lfsr_polynomial = 0x211
+		lfsr_invert = False
+		self.lfsr = lf.initialize(
+			lfsr_polynomial,
+			lfsr_invert
+		)
+		rs_firstroot = 0
+		rs_header_numroots = 2
+		rs_block_numroots = 16
+		rs_gf_power = 8
+		rs_gf_poly = 0x11D
+		self.header_rs = rs_functions.initialize(rs_firstroot, rs_header_numroots, rs_gf_power, rs_gf_poly)
+		self.block_rs = rs_functions.initialize(rs_firstroot, rs_block_numroots, rs_gf_power, rs_gf_poly)
+		self.bytes_corrected = 0
+		self.block_fail = False
 
-def decode(decoder, data, collect_crc):
-	result = []
-	if collect_crc:
-		min_distance = 0
-	else:
-		min_distance = 1
-	for input_byte in data:
-		decoder['input_byte'] = int(input_byte)
-		for input_bit_index in range(8):
-			if decoder['state'] == 'sync_search':
-				get_a_bit(decoder, 0xFFFFFF)
-				if bit_distance_24(decoder['working_word'], 0xF15E48) <= \
-													decoder['sync_tolerance']:
-					decoder['bit_index'] = 0
-					decoder['byte_index_b'] = 0
-					decoder['state'] = 'rx_header'
-			elif decoder['state'] == 'rx_header':
-				get_a_bit(decoder, 0xFF)
-				if decoder['bit_index'] == 8:
-					decoder['bit_index'] = 0
-					decoder['buffer'][decoder['byte_index_a']] = \
-														decoder['working_word']
-					decoder['byte_index_a'] += 1
-					if decoder['byte_index_a'] == 15:
-						decoder['byte_index_a'] = 0
-						# do reed-solomon error correction
-						rs_result = rs_functions.decode(
-								decoder['header_rs'],
-								decoder['buffer'],
-								15, # block size
-								min_distance
-						)
-						if rs_result < 0:
-							# RS decoding header failed
-							decoder['block_fail'] = True
-						else:
-							decoder['bytes_corrected'] += rs_result
+	def get_a_bit(self, word_mask):
+		self.working_word <<= 1
+		self.working_word &= word_mask
+		if self.input_byte & 0x80:
+			self.working_word |= 1
+		self.input_byte <<= 1
+		self.bit_index += 1
 
-						# descramble header
-						decoder['lfsr']['shift_register'] = 0x1F0
-						decoder['buffer'][:13] = lf.stream_unscramble_8bit(
-								decoder['lfsr'],
-								decoder['buffer'][:13]
-						)
-
-						# Unpack IL2P header
-						decoder['header'] = \
-							unpack_header(decoder['buffer'][:13])
-
-						decoder['block_index'] = 0
-						decoder['block_byte_count'] = 0
-
-						# re-assemble AX.25 header in working_packet:
-						# First add the destination callsign and SSID
-						for i in range(6):
-							decoder['working_packet'][decoder['byte_index_b']] = \
-											decoder['header']['dest'][i] << 1
-							decoder['byte_index_b'] += 1
-						# Now add the destination SSID and bits
-						decoder['working_packet'][decoder['byte_index_b']] = \
-											decoder['header']['dest'][6] << 1
-						# Set RR bits
-						decoder['working_packet'][decoder['byte_index_b']] += 0x60
-						# Set C/R bit per AX.25 2.2
-						# Command is indicated by Dest 1 Src 0
-						# Response is indicated by Dest 0 Src 1
-						if decoder['header']['Cbit'] == True:
-							decoder['working_packet'][decoder['byte_index_b']] += 0x80
-						decoder['byte_index_b'] += 1
-
-						# Now add source callsign and SSID
-						for i in range(6):
-							decoder['working_packet'][decoder['byte_index_b']] = \
-											decoder['header']['source'][i] << 1
-							decoder['byte_index_b'] += 1
-						# Now add the destination SSID and bits
-						decoder['working_packet'][decoder['byte_index_b']] = \
-											decoder['header']['source'][6] << 1
-						# Set RR bits
-						decoder['working_packet'][decoder['byte_index_b']] += 0x60
-						# Set C/R bit per AX.25 2.2
-						# Command is indicated by Dest 1 Src 0
-						# Response is indicated by Dest 0 Src 1
-						if decoder['header']['Cbit'] == False:
-							decoder['working_packet'][decoder['byte_index_b']] += 0x80
-						# Set callsign extension bit
-						decoder['working_packet'][decoder['byte_index_b']] += 1
-						decoder['byte_index_b'] += 1
-
-						# add the Control byte:
-						decoder['working_packet'][decoder['byte_index_b']] = \
-										reform_control_byte(decoder['header'])
-						decoder['byte_index_b'] += 1
-
-						# add the PID byte, if applicable
-						if (decoder['header']['type'] == 'AX25_I') or \
-								(decoder['header']['type'] == 'AX25_UI'):
-							decoder['working_packet'][decoder['byte_index_b']] = \
-												decoder['header']['AX25_PID']
-							decoder['byte_index_b'] += 1
-
-						# print(decoder['header'])
-						# for byte in decoder['working_packet'][:decoder['byte_index_b']]:
-						# 	print(hex(int(byte)), end = ' ')
-
-						if decoder['block_fail']:
-							decoder['block_fail'] = False
-							decoder['state'] = 'sync_search'
-						elif decoder['header']['count'] > 0:
-							decoder['block_count'] = int(ceil(
-									decoder['header']['count'] / 239
-								))
-							decoder['block_size'] = int(
-									decoder['header']['count']
-									/ decoder['block_count']
-								)
-							decoder['big_blocks'] = \
-								int(decoder['header']['count'] - (
-									decoder['block_count']
-									* decoder['block_size']
-								))
-							if decoder['big_blocks'] > 0:
-								# there are big blocks in this frame, collect those first.
-								decoder['block_size'] += 1
-								decoder['bit_index'] = 0
-								decoder['state'] = 'rx_bigblocks'
-							else:
-								decoder['bit_index'] = 0
-								# there are only small blocks in this frame, collect.
-								decoder['state'] = 'rx_smallblocks'
-
-						else:
-							# this frame is only a header, dispose of it
-							#print(decoder['working_packet'][decoder['byte_index_b']])
-							if collect_crc:
-								decoder['state'] = 'rx_trailing_crc'
-							else:
-								result.append(
-									decoder['working_packet'] \
-									[:decoder['byte_index_b']].copy()
-								)
-								decoder['state'] = 'sync_search'
-
-			elif decoder['state'] == 'rx_bigblocks':
-				get_a_bit(decoder, 0xFF)
-				if decoder['bit_index'] == 8:
-					decoder['bit_index'] = 0
-					decoder['buffer'][decoder['byte_index_a']] = \
-					 									decoder['working_word']
-					decoder['byte_index_a'] += 1
-					if decoder['byte_index_a'] == decoder['block_size'] + decoder['num_roots']:
-						# this block is completely collected
-						# do reed-solomon error correction
-						rs_result = rs_functions.decode(
-								decoder['block_rs'],
-								decoder['buffer'],
-								decoder['byte_index_a'],
-								min_distance
-						)
-						if rs_result < 0:
-							# RS decoding failed
-							decoder['block_fail'] = True
-						else:
-							decoder['bytes_corrected'] += rs_result
-
-						# de-scramble
-						decoder['lfsr']['shift_register'] = 0x1F0
-						decoder['buffer'][:decoder['byte_index_a']] = \
-							lf.stream_unscramble_8bit(
-								decoder['lfsr'],
-								decoder['buffer'][:decoder['byte_index_a']]
+	def decode(self, data):
+		result = []
+		if self.crc:
+			min_distance = 0
+		else:
+			min_distance = 1
+		for input_byte in data:
+			self.input_byte = int(input_byte)
+			for input_bit_index in range(8):
+				if self.state == 'sync_search':
+					self.get_a_bit(0xFFFFFF)
+					if bit_distance_24(self.working_word, 0xF15E48) <= \
+														self.sync_tolerance:
+						self.bit_index = 0
+						self.byte_index_b = 0
+						self.state = 'rx_header'
+				elif self.state == 'rx_header':
+					self.get_a_bit(0xFF)
+					if self.bit_index == 8:
+						self.bit_index = 0
+						self.buffer[self.byte_index_a] = \
+															self.working_word
+						self.byte_index_a += 1
+						if self.byte_index_a == 15:
+							self.byte_index_a = 0
+							# do reed-solomon error correction
+							rs_result = rs_functions.decode(
+									self.header_rs,
+									self.buffer,
+									15, # block size
+									min_distance
 							)
-						decoder['byte_index_a'] = 0
-
-						for i in range(decoder['block_size']):
-							decoder['working_packet'][decoder['byte_index_b']] = \
-								decoder['buffer'][i]
-							decoder['byte_index_b'] += 1
-
-
-						decoder['block_index'] += 1
-
-						# for byte in decoder['buffer'][:decoder['block_size']]:
-						# 	byte = int(byte)
-						# 	if (byte < 0x7F) and (byte > 0x1F):
-						# 		print(chr(int(byte)), end='')
-						# print("")
-
-						if decoder['block_fail']:
-							decoder['block_fail'] = False
-							decoder['state'] = 'sync_search'
-						elif decoder['block_index'] == decoder['big_blocks']:
-							if decoder['block_count'] > decoder['block_index']:
-								decoder['block_size'] -= 1
-								decoder['state'] = 'rx_smallblocks'
-							elif collect_crc:
-								decoder['state'] = 'rx_trailing_crc'
+							if rs_result < 0:
+								# RS decoding header failed
+								self.block_fail = True
 							else:
-								result.append(
-									decoder['working_packet'] \
-									[:decoder['byte_index_b']].copy()
-								)
-								decoder['state'] = 'sync_search'
+								self.bytes_corrected += rs_result
 
-			elif decoder['state'] ==  'rx_smallblocks':
-				get_a_bit(decoder, 0xFF)
-				if decoder['bit_index'] == 8:
-					decoder['bit_index'] = 0
-					decoder['buffer'][decoder['byte_index_a']] = decoder['working_word']
-					decoder['byte_index_a'] += 1
-					if decoder['byte_index_a'] == decoder['block_size'] + decoder['num_roots']:
-						# do reed-solomon error correction
-						rs_result = rs_functions.decode(
-								decoder['block_rs'],
-								decoder['buffer'],
-								decoder['byte_index_a'],
-								min_distance
-						)
-						if rs_result < 0:
-							# RS decoding failed
-							decoder['block_fail'] = True
-						else:
-							decoder['bytes_corrected'] += rs_result
-
-						# de-descramble
-						decoder['lfsr']['shift_register'] = 0x1F0
-						decoder['buffer'][:decoder['byte_index_a']] = \
-							lf.stream_unscramble_8bit(
-								decoder['lfsr'],
-								decoder['buffer'][:decoder['byte_index_a']]
+							# descramble header
+							self.lfsr['shift_register'] = 0x1F0
+							self.buffer[:13] = lf.stream_unscramble_8bit(
+									self.lfsr,
+									self.buffer[:13]
 							)
 
-						decoder['block_index'] += 1
+							# Unpack IL2P header
+							self.header = \
+								unpack_header(self.buffer[:13])
 
-						for i in range(decoder['block_size']):
-							decoder['working_packet'][decoder['byte_index_b']] = \
-								decoder['buffer'][i]
-							decoder['byte_index_b'] += 1
+							self.block_index = 0
+							self.block_byte_count = 0
 
-						decoder['byte_index_a'] = 0
+							# re-assemble AX.25 header in working_packet:
+							# First add the destination callsign and SSID
+							for i in range(6):
+								self.working_packet[self.byte_index_b] = \
+												self.header['dest'][i] << 1
+								self.byte_index_b += 1
+							# Now add the destination SSID and bits
+							self.working_packet[self.byte_index_b] = \
+												self.header['dest'][6] << 1
+							# Set RR bits
+							self.working_packet[self.byte_index_b] += 0x60
+							# Set C/R bit per AX.25 2.2
+							# Command is indicated by Dest 1 Src 0
+							# Response is indicated by Dest 0 Src 1
+							if self.header['Cbit'] == True:
+								self.working_packet[self.byte_index_b] += 0x80
+							self.byte_index_b += 1
 
-						# for byte in decoder['buffer'][:decoder['block_size']]:
-						# 	byte = int(byte)
-						# 	if (byte < 0x7F) and (byte > 0x1F):
-						# 		print(chr(int(byte)), end='')
-						# print("")
+							# Now add source callsign and SSID
+							for i in range(6):
+								self.working_packet[self.byte_index_b] = \
+												self.header['source'][i] << 1
+								self.byte_index_b += 1
+							# Now add the destination SSID and bits
+							self.working_packet[self.byte_index_b] = \
+												self.header['source'][6] << 1
+							# Set RR bits
+							self.working_packet[self.byte_index_b] += 0x60
+							# Set C/R bit per AX.25 2.2
+							# Command is indicated by Dest 1 Src 0
+							# Response is indicated by Dest 0 Src 1
+							if self.header['Cbit'] == False:
+								self.working_packet[self.byte_index_b] += 0x80
+							# Set callsign extension bit
+							self.working_packet[self.byte_index_b] += 1
+							self.byte_index_b += 1
 
-						if decoder['block_fail']:
-							decoder['block_fail'] = False
-							decoder['state'] = 'sync_search'
-						elif decoder['block_index'] == decoder['block_count']:
-							if collect_crc:
-								decoder['state'] = 'rx_trailing_crc'
+							# add the Control byte:
+							self.working_packet[self.byte_index_b] = \
+											reform_control_byte(self.header)
+							self.byte_index_b += 1
+
+							# add the PID byte, if applicable
+							if (self.header['type'] == 'AX25_I') or \
+									(self.header['type'] == 'AX25_UI'):
+								self.working_packet[self.byte_index_b] = \
+													self.header['AX25_PID']
+								self.byte_index_b += 1
+
+							# print(self.header)
+							# for byte in self.working_packet[:self.byte_index_b]:
+							# 	print(hex(int(byte)), end = ' ')
+
+							if self.block_fail:
+								self.block_fail = False
+								self.state = 'sync_search'
+							elif self.header['count'] > 0:
+								self.block_count = int(ceil(
+										self.header['count'] / 239
+									))
+								self.block_size = int(
+										self.header['count']
+										/ self.block_count
+									)
+								self.big_blocks = \
+									int(self.header['count'] - (
+										self.block_count
+										* self.block_size
+									))
+								if self.big_blocks > 0:
+									# there are big blocks in this frame, collect those first.
+									self.block_size += 1
+									self.bit_index = 0
+									self.state = 'rx_bigblocks'
+								else:
+									self.bit_index = 0
+									# there are only small blocks in this frame, collect.
+									self.state = 'rx_smallblocks'
+
 							else:
-								result.append(
-									decoder['working_packet'] \
-									[:decoder['byte_index_b']].copy()
+								# this frame is only a header, dispose of it
+								#print(self.working_packet[self.byte_index_b])
+								if self.crc:
+									self.state = 'rx_trailing_crc'
+								else:
+									result.append(
+										self.working_packet \
+										[:self.byte_index_b].copy()
+									)
+									self.state = 'sync_search'
+
+				elif self.state == 'rx_bigblocks':
+					get_a_bit(decoder, 0xFF)
+					if self.bit_index == 8:
+						self.bit_index = 0
+						self.buffer[self.byte_index_a] = \
+						 									self.working_word
+						self.byte_index_a += 1
+						if self.byte_index_a == self.block_size + self.num_roots:
+							# this block is completely collected
+							# do reed-solomon error correction
+							rs_result = rs_functions.decode(
+									self.block_rs,
+									self.buffer,
+									self.byte_index_a,
+									min_distance
+							)
+							if rs_result < 0:
+								# RS decoding failed
+								self.block_fail = True
+							else:
+								self.bytes_corrected += rs_result
+
+							# de-scramble
+							self.lfsr['shift_register'] = 0x1F0
+							self.buffer[:self.byte_index_a] = \
+								lf.stream_unscramble_8bit(
+									self.lfsr,
+									self.buffer[:self.byte_index_a]
 								)
-								decoder['state'] = 'sync_search'
-			elif decoder['state'] == 'rx_trailing_crc':
-				get_a_bit(decoder, 0xFF)
-				if decoder['bit_index'] == 8:
-					decoder['bit_index'] = 0
-					decoder['buffer'][decoder['byte_index_a']] = \
-														decoder['working_word']
-					decoder['byte_index_a'] += 1
-					if decoder['byte_index_a'] == 4:
-						decoder['byte_index_a'] = 0
-						# complete trailing crc has been received
-						# Apply hamming correction and compute CRC
-						trailing_crc = 0
-						for i in range(4):
-							trailing_crc += \
-									hamming_decode(decoder['buffer'][i]) << \
-																(12 - (i * 4))
-						decoder['working_packet'][decoder['byte_index_b']] = \
-															trailing_crc & 0xFF
-						decoder['byte_index_b'] += 1
-						decoder['working_packet'][decoder['byte_index_b']] = \
-															trailing_crc >> 8
-						decoder['byte_index_b'] += 1
-						result.append(
-							decoder['working_packet'] \
-											[:decoder['byte_index_b']].copy()
-						)
-						decoder['state'] = 'sync_search'
-	return result
+							self.byte_index_a = 0
+
+							for i in range(self.block_size):
+								self.working_packet[self.byte_index_b] = \
+									self.buffer[i]
+								self.byte_index_b += 1
+
+
+							self.block_index += 1
+
+							# for byte in self.buffer[:self.block_size]:
+							# 	byte = int(byte)
+							# 	if (byte < 0x7F) and (byte > 0x1F):
+							# 		print(chr(int(byte)), end='')
+							# print("")
+
+							if self.block_fail:
+								self.block_fail = False
+								self.state = 'sync_search'
+							elif self.block_index == self.big_blocks:
+								if self.block_count > self.block_index:
+									self.block_size -= 1
+									self.state = 'rx_smallblocks'
+								elif self.crc:
+									self.state = 'rx_trailing_crc'
+								else:
+									result.append(
+										self.working_packet \
+										[:self.byte_index_b].copy()
+									)
+									self.state = 'sync_search'
+
+				elif self.state ==  'rx_smallblocks':
+					self.get_a_bit(0xFF)
+					if self.bit_index == 8:
+						self.bit_index = 0
+						self.buffer[self.byte_index_a] = self.working_word
+						self.byte_index_a += 1
+						if self.byte_index_a == self.block_size + self.num_roots:
+							# do reed-solomon error correction
+							rs_result = rs_functions.decode(
+									self.block_rs,
+									self.buffer,
+									self.byte_index_a,
+									min_distance
+							)
+							if rs_result < 0:
+								# RS decoding failed
+								self.block_fail = True
+							else:
+								self.bytes_corrected += rs_result
+
+							# de-descramble
+							self.lfsr['shift_register'] = 0x1F0
+							self.buffer[:self.byte_index_a] = \
+								lf.stream_unscramble_8bit(
+									self.lfsr,
+									self.buffer[:self.byte_index_a]
+								)
+
+							self.block_index += 1
+
+							for i in range(self.block_size):
+								self.working_packet[self.byte_index_b] = \
+									self.buffer[i]
+								self.byte_index_b += 1
+
+							self.byte_index_a = 0
+
+							# for byte in self.buffer[:self.block_size]:
+							# 	byte = int(byte)
+							# 	if (byte < 0x7F) and (byte > 0x1F):
+							# 		print(chr(int(byte)), end='')
+							# print("")
+
+							if self.block_fail:
+								self.block_fail = False
+								self.state = 'sync_search'
+							elif self.block_index == self.block_count:
+								if self.crc:
+									self.state = 'rx_trailing_crc'
+								else:
+									result.append(
+										self.working_packet \
+										[:self.byte_index_b].copy()
+									)
+									self.state = 'sync_search'
+				elif self.state == 'rx_trailing_crc':
+					self.get_a_bit(0xFF)
+					if self.bit_index == 8:
+						self.bit_index = 0
+						self.buffer[self.byte_index_a] = \
+															self.working_word
+						self.byte_index_a += 1
+						if self.byte_index_a == 4:
+							self.byte_index_a = 0
+							# complete trailing crc has been received
+							# Apply hamming correction and compute CRC
+							trailing_crc = 0
+							for i in range(4):
+								trailing_crc += \
+										hamming_decode(self.buffer[i]) << \
+																	(12 - (i * 4))
+							self.working_packet[self.byte_index_b] = \
+																trailing_crc & 0xFF
+							self.byte_index_b += 1
+							self.working_packet[self.byte_index_b] = \
+																trailing_crc >> 8
+							self.byte_index_b += 1
+							result.append(
+								self.working_packet \
+												[:self.byte_index_b].copy()
+							)
+							self.state = 'sync_search'
+		return result
