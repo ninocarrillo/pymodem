@@ -4,8 +4,10 @@
 # Nino Carrillo
 # 1 Apr 2024
 
-from lfsr import LFSR
+from packet_meta import PacketMeta
+from lfsr import LFSRnoaddr
 import rs_functions
+import copy
 
 from data_classes import AddressedData
 
@@ -213,6 +215,7 @@ class IL2PCodec:
 	def __init__(self, **kwargs):
 
 		self.crc = kwargs.get('crc', True)
+		self.identifier = kwargs.get('ident', 1)
 
 		self.state = 'sync_search'
 		self.working_word = int(0xFFFFFF)
@@ -220,14 +223,14 @@ class IL2PCodec:
 		self.buffer = []
 		for i in range(255):
 			self.buffer.append(0)
-		self.working_packet = []
+		self.working_packet = PacketMeta()
 		self.bit_index = 0
 		self.byte_index_a = 0
 		self.byte_index_b = 0
 		self.block_index = 0
 		self.num_roots = 16
 		# IL2P Scrambling Polynomial x^9 + x^4 + 1
-		self.lfsr = LFSR(poly=0x211, invert=False)
+		self.lfsr = LFSRnoaddr(poly=0x211, invert=False)
 		rs_firstroot = 0
 		rs_header_numroots = 2
 		rs_block_numroots = 16
@@ -254,6 +257,8 @@ class IL2PCodec:
 			min_distance = 1
 		for stream_byte in data:
 			self.input_byte = int(stream_byte.data)
+			self.working_packet.streamaddress = stream_byte.address
+			self.working_packet.SourceDecoder = self.identifier
 			for input_bit_index in range(8):
 				if self.state == 'sync_search':
 					self.get_a_bit(0xFFFFFF)
@@ -298,50 +303,62 @@ class IL2PCodec:
 							# re-assemble AX.25 header in working_packet:
 							# First add the destination callsign and SSID
 							for i in range(6):
-								self.working_packet[self.byte_index_b] = \
+								#self.working_packet[self.byte_index_b] = \
+								self.working_packet.data.append(
 												self.header['dest'][i] << 1
+								)
 								self.byte_index_b += 1
 							# Now add the destination SSID and bits
-							self.working_packet[self.byte_index_b] = \
+							#self.working_packet[self.byte_index_b] = \
+							self.working_packet.data.append(
 												self.header['dest'][6] << 1
+							)
 							# Set RR bits
-							self.working_packet[self.byte_index_b] += 0x60
+							self.working_packet.data[-1] += 0x60
 							# Set C/R bit per AX.25 2.2
 							# Command is indicated by Dest 1 Src 0
 							# Response is indicated by Dest 0 Src 1
 							if self.header['Cbit'] == True:
-								self.working_packet[self.byte_index_b] += 0x80
+								self.working_packet.data[-1] += 0x80
 							self.byte_index_b += 1
 
 							# Now add source callsign and SSID
 							for i in range(6):
-								self.working_packet[self.byte_index_b] = \
+								#self.working_packet[self.byte_index_b] = \
+								self.working_packet.data.append(
 												self.header['source'][i] << 1
+								)
 								self.byte_index_b += 1
 							# Now add the destination SSID and bits
-							self.working_packet[self.byte_index_b] = \
+							#self.working_packet[self.byte_index_b] = \
+							self.working_packet.data.append(
 												self.header['source'][6] << 1
+							)
 							# Set RR bits
-							self.working_packet[self.byte_index_b] += 0x60
+							self.working_packet.data[-1] += 0x60
 							# Set C/R bit per AX.25 2.2
 							# Command is indicated by Dest 1 Src 0
 							# Response is indicated by Dest 0 Src 1
 							if self.header['Cbit'] == False:
-								self.working_packet[self.byte_index_b] += 0x80
+								self.working_packet.data[-1] += 0x80
 							# Set callsign extension bit
-							self.working_packet[self.byte_index_b] += 1
+							self.working_packet.data[-1] += 1
 							self.byte_index_b += 1
 
 							# add the Control byte:
-							self.working_packet[self.byte_index_b] = \
+							#self.working_packet[self.byte_index_b] = \
+							self.working_packet.data.append(
 											reform_control_byte(self.header)
+							)
 							self.byte_index_b += 1
 
 							# add the PID byte, if applicable
 							if (self.header['type'] == 'AX25_I') or \
 									(self.header['type'] == 'AX25_UI'):
-								self.working_packet[self.byte_index_b] = \
+								#self.working_packet[self.byte_index_b] = \
+								self.working_packet.data.append(
 													self.header['AX25_PID']
+								)
 								self.byte_index_b += 1
 
 							# print(self.header)
@@ -351,6 +368,7 @@ class IL2PCodec:
 							if self.block_fail:
 								self.block_fail = False
 								self.state = 'sync_search'
+								self.working_packet = PacketMeta()
 							elif self.header['count'] > 0:
 								self.block_count = int(ceil(
 										self.header['count'] / 239
@@ -380,15 +398,14 @@ class IL2PCodec:
 								if self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
-									self.working_packet.streamaddress = stream_byte.address
 									result.append(
-										self.working_packet \
-										[:self.byte_index_b].copy()
+										copy.copy(self.working_packet)
 									)
+									self.working_packet = PacketMeta()
 									self.state = 'sync_search'
 
 				elif self.state == 'rx_bigblocks':
-					get_a_bit(decoder, 0xFF)
+					self.get_a_bit(0xFF)
 					if self.bit_index == 8:
 						self.bit_index = 0
 						self.buffer[self.byte_index_a] = \
@@ -416,8 +433,7 @@ class IL2PCodec:
 							self.byte_index_a = 0
 
 							for i in range(self.block_size):
-								self.working_packet[self.byte_index_b] = \
-									self.buffer[i]
+								self.working_packet.data.append(self.buffer[i])
 								self.byte_index_b += 1
 
 
@@ -431,6 +447,7 @@ class IL2PCodec:
 
 							if self.block_fail:
 								self.block_fail = False
+								self.working_packet = PacketMeta()
 								self.state = 'sync_search'
 							elif self.block_index == self.big_blocks:
 								if self.block_count > self.block_index:
@@ -440,9 +457,9 @@ class IL2PCodec:
 									self.state = 'rx_trailing_crc'
 								else:
 									result.append(
-										self.working_packet \
-										[:self.byte_index_b].copy()
+										copy.copy(self.working_packet)
 									)
+									self.working_packet = PacketMeta()
 									self.state = 'sync_search'
 
 				elif self.state ==  'rx_smallblocks':
@@ -475,8 +492,7 @@ class IL2PCodec:
 							self.block_index += 1
 
 							for i in range(self.block_size):
-								self.working_packet[self.byte_index_b] = \
-									self.buffer[i]
+								self.working_packet.data.append(self.buffer[i])
 								self.byte_index_b += 1
 
 							self.byte_index_a = 0
@@ -489,15 +505,16 @@ class IL2PCodec:
 
 							if self.block_fail:
 								self.block_fail = False
+								self.working_packet = PacketMeta()
 								self.state = 'sync_search'
 							elif self.block_index == self.block_count:
 								if self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
 									result.append(
-										self.working_packet \
-										[:self.byte_index_b].copy()
+										copy.copy(self.working_packet)
 									)
+									self.working_packet = PacketMeta()
 									self.state = 'sync_search'
 				elif self.state == 'rx_trailing_crc':
 					self.get_a_bit(0xFF)
@@ -515,16 +532,11 @@ class IL2PCodec:
 								trailing_crc += \
 										hamming_decode(self.buffer[i]) << \
 																	(12 - (i * 4))
-							self.working_packet[self.byte_index_b] = \
-																trailing_crc & 0xFF
+							self.working_packet.data.append(trailing_crc & 0xFF)
 							self.byte_index_b += 1
-							self.working_packet[self.byte_index_b] = \
-																trailing_crc >> 8
+							self.working_packet.data.append(trailing_crc >> 8)
 							self.byte_index_b += 1
-							self.working_packet.streamaddress = stream_byte.address
-							result.append(
-								self.working_packet \
-												[:self.byte_index_b].copy()
-							)
+							result.append(copy.copy(self.working_packet))
+							self.working_packet = PacketMeta()
 							self.state = 'sync_search'
 		return result
