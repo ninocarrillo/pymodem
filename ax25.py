@@ -13,6 +13,7 @@ class AX25Codec:
 
 		self.min_packet_length = kwargs.get('min_packet_length', 18)
 		self.max_packet_length = kwargs.get('max_packet_length', 1023)
+		self.identifier = kwargs.get('ident', 1)
 
 		self.working_byte = 0
 		self.working_packet = PacketMeta()
@@ -80,6 +81,7 @@ class AX25Codec:
 								)
 						):
 							self.working_packet.bitaddress = self.absolute_bit_index
+							self.working_packet.SourceDecoder = self.identifier
 							result.append(
 								copy.copy(self.working_packet)
 							)
