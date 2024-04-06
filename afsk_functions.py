@@ -183,9 +183,6 @@ class AFSK_modem:
 		self.space_correlator_i = self.space_gain * cos(space_indices)
 		self.space_correlator_q = self.space_gain * sin(space_indices)
 
-
-
-
 	def demod(self, input_audio):
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
