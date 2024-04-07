@@ -28,6 +28,13 @@ class BinarySlicer:
 
 		self.tune()
 
+	def retune(self, **kwargs):
+		self.symbol_rate = kwargs.get('symbol_rate', self.symbol_rate)
+		self.lock_rate = kwargs.get('lock_rate', self.lock_rate)
+		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+
+		self.tune()
+
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate

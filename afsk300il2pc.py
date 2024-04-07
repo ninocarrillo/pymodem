@@ -34,51 +34,47 @@ def main():
 
 	print("Demodulating audio.")
 
-	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	demod_audio_1 = modem_1.demod(input_audio)
+	modems = []
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems[-1].retune(correlator_offset=-10)
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems[-1].retune(correlator_offset=10)
+	# append more modems as desired
 
-	modem_2 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	modem_2.retune(correlator_offset=-10)
-	demod_audio_2 = modem_2.demod(input_audio)
-
-	modem_3 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	modem_3.retune(correlator_offset=+10)
-	demod_audio_3 = modem_3.demod(input_audio)
-
+	demod_audios = []
+	for modem in modems:
+		demod_audios.append(modem.demod(input_audio))
 
 	print("Slicing bits.")
 
-	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_1 = slicer_1.slice(demod_audio_1)
-
-	slicer_2 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_2 = slicer_2.slice(demod_audio_2)
-
-	slicer_3 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_3 = slicer_3.slice(demod_audio_3)
+	slicers = []
+	sliced_datas = []
+	for demod_audio in demod_audios:
+		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
+		slicers[-1].retune(lock_rate=0.90)
+		sliced_datas.append(slicers[-1].slice(demod_audio))
 
 	print("IL2P Decoding.")
 
-	il2p_codec_1 = IL2PCodec(ident='il2pc 300 +0', crc=True)
-	il2p_decoded_data_1 = il2p_codec_1.decode(sliced_data_1)
-
-	il2p_codec_2 = IL2PCodec(ident='il2pc 300 -10', crc=True)
-	il2p_decoded_data_2 = il2p_codec_2.decode(sliced_data_2)
-
-	il2p_codec_3 = IL2PCodec(ident='il2pc 300 +10', crc=True)
-	il2p_decoded_data_3 = il2p_codec_3.decode(sliced_data_3)
+	il2p_codecs = []
+	decoded_datas = []
+	i = 0
+	for sliced_data in sliced_datas:
+		il2p_codecs.append(IL2PCodec(ident=i, crc=True))
+		i += 1
+		decoded_datas.append(il2p_codecs[-1].decode(sliced_data))
 
 	print("Correlating results.")
 
 	results = PacketMetaArray()
-	results.add(il2p_decoded_data_1)
-	results.add(il2p_decoded_data_2)
-	results.add(il2p_decoded_data_3)
+	for decoded_data in decoded_datas:
+		results.add(decoded_data)
+
 	results.CalcCRCs()
 	results.Correlate(address_distance=input_sample_rate/4)
 
-
-	# now print the IL2P+CRC results
+	# now print results
 	good_count = 0
 	for packet in results.unique_packet_array:
 		if packet.ValidCRC:
