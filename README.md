@@ -19,9 +19,9 @@ Several sample audio files are included in AX.25, IL2P and IL2P+CRC format. The 
 
 ## Usage
 ```
-python3 afsk300il2pc.py afsk_300_il2pc_noise.wav
-python3 afsk300ax25.py afsk_300_ax25_noise.wav
-python3 afsk1200ax25.py afsk_1200_ax25_noise.wav
-python3 afsk1200il2p.py afsk_1200_il2p_noise.wav
+python3 afsk300il2pc.py audio_samples/afsk_300_il2pc_noise.wav
+python3 afsk300ax25.py audio_samples/afsk_300_ax25_noise.wav
+python3 afsk1200ax25.py audio_samples/afsk_1200_ax25_noise.wav
+python3 afsk1200il2p.py audio_samples/afsk_1200_il2p_noise.wav
 
 ```

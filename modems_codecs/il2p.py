@@ -216,6 +216,8 @@ class IL2PCodec:
 
 		self.crc = kwargs.get('crc', True)
 		self.identifier = kwargs.get('ident', 1)
+		self.min_distance = kwargs.get('min_dist', 0)
+		self.disable_rs = kwargs.get('disable_rs', False)
 
 		self.state = 'sync_search'
 		self.working_word = int(0xFFFFFF)
@@ -251,10 +253,6 @@ class IL2PCodec:
 
 	def decode(self, data):
 		result = []
-		if self.crc:
-			min_distance = 0
-		else:
-			min_distance = 1
 		for stream_byte in data:
 			self.input_byte = int(stream_byte.data)
 			self.working_packet.streamaddress = stream_byte.address
@@ -277,12 +275,15 @@ class IL2PCodec:
 						if self.byte_index_a == 15:
 							self.byte_index_a = 0
 							# do reed-solomon error correction
-							rs_result = rs_functions.decode(
-									self.header_rs,
-									self.buffer,
-									15, # block size
-									min_distance
-							)
+							if self.disable_rs:
+								rs_result = 0
+							else:
+								rs_result = rs_functions.decode(
+										self.header_rs,
+										self.buffer,
+										15, # block size
+										self.min_distance
+								)
 							if rs_result < 0:
 								# RS decoding header failed
 								self.block_fail = True
@@ -415,12 +416,15 @@ class IL2PCodec:
 						if self.byte_index_a == self.block_size + self.num_roots:
 							# this block is completely collected
 							# do reed-solomon error correction
-							rs_result = rs_functions.decode(
-									self.block_rs,
-									self.buffer,
-									self.byte_index_a,
-									min_distance
-							)
+							if self.disable_rs:
+								rs_result = 0
+							else:
+								rs_result = rs_functions.decode(
+										self.block_rs,
+										self.buffer,
+										self.byte_index_a,
+										self.min_distance
+								)
 							if rs_result < 0:
 								# RS decoding failed
 								self.block_fail = True
@@ -471,12 +475,15 @@ class IL2PCodec:
 						self.byte_index_a += 1
 						if self.byte_index_a == self.block_size + self.num_roots:
 							# do reed-solomon error correction
-							rs_result = rs_functions.decode(
-									self.block_rs,
-									self.buffer,
-									self.byte_index_a,
-									min_distance
-							)
+							if self.disable_rs:
+								rs_result = 0
+							else:
+								rs_result = rs_functions.decode(
+										self.block_rs,
+										self.buffer,
+										self.byte_index_a,
+										self.min_distance
+								)
 							if rs_result < 0:
 								# RS decoding failed
 								self.block_fail = True

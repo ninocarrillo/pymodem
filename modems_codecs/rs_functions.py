@@ -96,7 +96,7 @@ def decode(rs, data, block_size, min_distance):
 			# found an error here
 			error_locations[error_count] = j
 			error_count += 1
-	if (error_count <= (rs['num_roots'] // 2) - min_distance):
+	if error_count <= ((rs['num_roots'] // 2) - min_distance):
 		# Forney algorithm to determine error values
 		for i in range(error_count):
 			correction_poly[i] = syndromes[rs['first_root'] + i]
@@ -138,13 +138,13 @@ def decode(rs, data, block_size, min_distance):
 			y = rs['gf']['table'][y]
 			error_magnitudes[i] = gf_functions.mul(rs['gf'], y, z)
 			data[error_locations[i]] ^= error_magnitudes[i]
-		# error correction is complete, now check for success by calculating syndromes on the corrected data
-		for i in range(rs['num_roots']):
-			syndromes[i] = 0
-			x = rs['gf']['table'][rs['first_root'] + i]
-			for j in range(block_size - 1):
-				syndromes[i] = gf_functions.mul(rs['gf'], syndromes[i] ^ data[j], x)
-			syndromes[i] ^= data[block_size - 1]
-			if syndromes[i] != 0:
-				error_count = -1
+	# error correction is complete, now check for success by calculating syndromes on the corrected data
+	for i in range(rs['num_roots']):
+		syndromes[i] = 0
+		x = rs['gf']['table'][rs['first_root'] + i]
+		for j in range(block_size - 1):
+			syndromes[i] = gf_functions.mul(rs['gf'], syndromes[i] ^ data[j], x)
+		syndromes[i] ^= data[block_size - 1]
+		if syndromes[i] != 0:
+			return -1
 	return error_count
