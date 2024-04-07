@@ -4,8 +4,8 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from packet_meta import PacketMeta
-from data_classes import AddressedData
+from modems_codecs.packet_meta import PacketMeta
+from modems_codecs.data_classes import AddressedData
 import copy
 
 class AX25Codec:

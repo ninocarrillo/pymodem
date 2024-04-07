@@ -6,7 +6,7 @@
 
 from scipy.signal import firwin
 from math import ceil
-from numpy import arange, array, sin, cos, pi, convolve, sqrt
+from numpy import arange, sin, cos, pi, convolve, sqrt
 
 class AFSKModem:
 

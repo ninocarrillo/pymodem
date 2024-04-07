@@ -4,12 +4,12 @@
 # Nino Carrillo
 # 1 Apr 2024
 
-from packet_meta import PacketMeta
-from lfsr import LFSRnoaddr
-import rs_functions
+from modems_codecs.data_classes import AddressedData
+from modems_codecs.packet_meta import PacketMeta
+from modems_codecs.lfsr import LFSRnoaddr
+import modems_codecs.rs_functions as rs_functions
 import copy
 
-from data_classes import AddressedData
 
 def ceil(arg):
 	return int(arg) + (arg % 1 > 0)

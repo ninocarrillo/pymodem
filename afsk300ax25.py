@@ -9,12 +9,12 @@
 
 import sys
 from scipy.io.wavfile import read as readwav
-from afsk import AFSKModem
-from slicer import BinarySlicer
-from il2p import IL2PCodec
-from lfsr import LFSR
-from ax25 import AX25Codec
-from packet_meta import PacketMeta, PacketMetaArray
+from modems_codecs.afsk import AFSKModem
+from modems_codecs.slicer import BinarySlicer
+from modems_codecs.data_classes import AddressedData
+from modems_codecs.lfsr import LFSR
+from modems_codecs.ax25 import AX25Codec
+from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 
 def main():
 	# check correct version of Python
@@ -55,7 +55,7 @@ def main():
 		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
 		slicers[-1].retune(lock_rate=0.90)
 		sliced_datas.append(slicers[-1].slice(demod_audio))
-		
+
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
 	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3

@@ -9,12 +9,12 @@
 
 import sys
 from scipy.io.wavfile import read as readwav
-from afsk import AFSKModem
-from slicer import BinarySlicer
-from il2p import IL2PCodec
-from lfsr import LFSR
-from ax25 import AX25Codec
-from packet_meta import PacketMeta, PacketMetaArray
+from modems_codecs.afsk import AFSKModem
+from modems_codecs.slicer import BinarySlicer
+from modems_codecs.il2p import IL2PCodec
+from modems_codecs.lfsr import LFSR
+from modems_codecs.ax25 import AX25Codec
+from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 
 def main():
 	# check correct version of Python

@@ -3,7 +3,7 @@
 # Nino Carrillo
 # 6 Apr 2024
 
-import crc_functions
+import modems_codecs.crc_functions as crc_functions
 
 class PacketMeta:
 

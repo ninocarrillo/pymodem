@@ -4,11 +4,11 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from data_classes import AddressedData
+from modems_codecs.data_classes import AddressedData
 
 class LFSR:
 	def __init__(self, **kwargs):
-		
+
 		self.polynomial = kwargs.get('poly', 0x3)
 		self.invert = kwargs.get('invert', True)
 
@@ -48,7 +48,7 @@ class LFSR:
 
 class LFSRnoaddr:
 	def __init__(self, **kwargs):
-		
+
 		self.polynomial = kwargs.get('poly', 0x3)
 		self.invert = kwargs.get('invert', True)
 

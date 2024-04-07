@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 30 Mar 2024
 
-from data_classes import AddressedData
+from modems_codecs.data_classes import AddressedData
 
 class BinarySlicer:
 

@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 4 Apr 2024
 
-import gf_functions
+import modems_codecs.gf_functions as gf_functions
 
 def initialize(first_root, num_roots, gf_power, gf_poly):
 	rs = {}
