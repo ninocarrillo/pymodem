@@ -86,7 +86,7 @@ def bit_distance_24(data_a, data_b):
 def unpack_header(data):
 	header = {}
 	# get header type
-	header['type'] = (int(data[1]) & 0x80) >> 7
+	header['il2p_type'] = (int(data[1]) & 0x80) >> 7
 	# get reserved bit
 	header['reserved'] = (int(data[0]) & 0x80) >> 7
 	# get byte count
@@ -95,7 +95,7 @@ def unpack_header(data):
 		if int(data[i + 2]) & 0x80:
 			header['count'] |= 0x200 >> i
 
-	if header['type'] == 1:
+	if header['il2p_type'] == 1:
 		# translated AX.25
 		# extract destination callsign
 		header['dest'] = [0, 0, 0, 0, 0, 0, 0]
@@ -300,70 +300,71 @@ class IL2PCodec:
 							self.block_index = 0
 							self.block_byte_count = 0
 
-							# re-assemble AX.25 header in working_packet:
-							# First add the destination callsign and SSID
-							for i in range(6):
+							if self.header['il2p_type'] == 1:
+								# re-assemble AX.25 header in working_packet:
+								# First add the destination callsign and SSID
+								for i in range(6):
+									#self.working_packet[self.byte_index_b] = \
+									self.working_packet.data.append(
+													self.header['dest'][i] << 1
+									)
+									self.byte_index_b += 1
+								# Now add the destination SSID and bits
 								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
-												self.header['dest'][i] << 1
+													self.header['dest'][6] << 1
 								)
+								# Set RR bits
+								self.working_packet.data[-1] += 0x60
+								# Set C/R bit per AX.25 2.2
+								# Command is indicated by Dest 1 Src 0
+								# Response is indicated by Dest 0 Src 1
+								if self.header['Cbit'] == True:
+									self.working_packet.data[-1] += 0x80
 								self.byte_index_b += 1
-							# Now add the destination SSID and bits
-							#self.working_packet[self.byte_index_b] = \
-							self.working_packet.data.append(
-												self.header['dest'][6] << 1
-							)
-							# Set RR bits
-							self.working_packet.data[-1] += 0x60
-							# Set C/R bit per AX.25 2.2
-							# Command is indicated by Dest 1 Src 0
-							# Response is indicated by Dest 0 Src 1
-							if self.header['Cbit'] == True:
-								self.working_packet.data[-1] += 0x80
-							self.byte_index_b += 1
 
-							# Now add source callsign and SSID
-							for i in range(6):
+								# Now add source callsign and SSID
+								for i in range(6):
+									#self.working_packet[self.byte_index_b] = \
+									self.working_packet.data.append(
+													self.header['source'][i] << 1
+									)
+									self.byte_index_b += 1
+								# Now add the destination SSID and bits
 								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
-												self.header['source'][i] << 1
+													self.header['source'][6] << 1
 								)
+								# Set RR bits
+								self.working_packet.data[-1] += 0x60
+								# Set C/R bit per AX.25 2.2
+								# Command is indicated by Dest 1 Src 0
+								# Response is indicated by Dest 0 Src 1
+								if self.header['Cbit'] == False:
+									self.working_packet.data[-1] += 0x80
+								# Set callsign extension bit
+								self.working_packet.data[-1] += 1
 								self.byte_index_b += 1
-							# Now add the destination SSID and bits
-							#self.working_packet[self.byte_index_b] = \
-							self.working_packet.data.append(
-												self.header['source'][6] << 1
-							)
-							# Set RR bits
-							self.working_packet.data[-1] += 0x60
-							# Set C/R bit per AX.25 2.2
-							# Command is indicated by Dest 1 Src 0
-							# Response is indicated by Dest 0 Src 1
-							if self.header['Cbit'] == False:
-								self.working_packet.data[-1] += 0x80
-							# Set callsign extension bit
-							self.working_packet.data[-1] += 1
-							self.byte_index_b += 1
 
-							# add the Control byte:
-							#self.working_packet[self.byte_index_b] = \
-							self.working_packet.data.append(
-											reform_control_byte(self.header)
-							)
-							self.byte_index_b += 1
-
-							# add the PID byte, if applicable
-							if (self.header['type'] == 'AX25_I') or \
-									(self.header['type'] == 'AX25_UI'):
+								# add the Control byte:
 								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
-													self.header['AX25_PID']
+												reform_control_byte(self.header)
 								)
 								self.byte_index_b += 1
 
-							# print(self.header)
-							# for byte in self.working_packet[:self.byte_index_b]:
-							# 	print(hex(int(byte)), end = ' ')
+								# add the PID byte, if applicable
+								if (self.header['type'] == 'AX25_I') or \
+										(self.header['type'] == 'AX25_UI'):
+									#self.working_packet[self.byte_index_b] = \
+									self.working_packet.data.append(
+														self.header['AX25_PID']
+									)
+									self.byte_index_b += 1
+
+								# print(self.header)
+								# for byte in self.working_packet[:self.byte_index_b]:
+								# 	print(hex(int(byte)), end = ' ')
 
 							if self.block_fail:
 								self.block_fail = False

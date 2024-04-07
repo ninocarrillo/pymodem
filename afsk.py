@@ -65,6 +65,22 @@ class AFSKModem:
 
 		self.tune()
 
+	def retune(self, **kwargs):
+		self.symbol_rate = kwargs.get('symbol_rate', self.symbol_rate)
+		self.input_bpf_low_cutoff = kwargs.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff)
+		self.input_bpf_high_cutoff = kwargs.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff)
+		self.input_bpf_span = kwargs.get('input_bpf_span', self.input_bpf_span)
+		self.mark_freq = kwargs.get('mark_freq', self.mark_freq)
+		self.space_freq = kwargs.get('space_freq', self.space_freq)
+		self.space_gain = kwargs.get('space_gain', self.space_gain)
+		self.output_lpf_cutoff = kwargs.get('output_lpf_cutoff', self.output_lpf_cutoff)
+		self.output_lpf_span = kwargs.get('output_lpf_span', self.output_lpf_span)
+		self.correlator_span = kwargs.get('correlator_span', self.correlator_span)
+		self.correlator_offset = kwargs.get('correlator_offset', self.correlator_offset)
+		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+
+		self.tune()
+
 	def tune(self):
 		self.input_bpf_tap_count = round(
 			self.sample_rate * self.input_bpf_span / self.symbol_rate
