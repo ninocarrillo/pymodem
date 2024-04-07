@@ -9,6 +9,7 @@
 
 import sys
 from scipy.io.wavfile import read as readwav
+from scipy.io.wavfile import write as writewav
 from modems_codecs.afsk import AFSKModem
 from modems_codecs.slicer import BinarySlicer
 from modems_codecs.il2p import IL2PCodec
@@ -36,8 +37,8 @@ def main():
 	searching = True
 	# add some more noise to the audio
 	while searching:
-		noise = numpy.random.rand(len(input_audio)) * max(input_audio)
-		new_audio = input_audio + (noise * 0.5)
+		noise = (numpy.random.rand(len(input_audio)) - 0.5) * max(input_audio)
+		new_audio = input_audio + (noise * 2.0)
 
 		print("Demodulating audio.")
 
@@ -86,7 +87,7 @@ def main():
 			total_packets += 1
 			print("Total Packets: ", total_packets, "Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 			print("source decoders: ", packet.CorrelatedDecoders)
-			if len(packet.CorrelatedDecoders) == 1:
+			if len(packet.CorrelatedDecoders) < 2:
 				searching = False
 			for byte in packet.data[:-2]:
 				byte = int(byte)
@@ -95,6 +96,8 @@ def main():
 				else:
 					print(f'<{byte}>', end='')
 			print(" ")
+
+	writewav("broken_il2p.wav", input_sample_rate, new_audio / max(new_audio))
 
 
 if __name__ == "__main__":
