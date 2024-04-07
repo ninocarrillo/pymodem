@@ -32,31 +32,30 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(3)
 
+
 	print("Demodulating audio.")
 
-	modem_1 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	demod_audio_1 = modem_1.demod(input_audio)
+	modems = []
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems[-1].retune(correlator_offset=-10)
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	modems[-1].retune(correlator_offset=10)
+	# append more modems as desired
 
-	modem_2 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	modem_2.retune(correlator_offset=-10)
-	demod_audio_2 = modem_2.demod(input_audio)
-
-	modem_3 = AFSKModem(sample_rate=input_sample_rate, config='300')
-	modem_3.retune(correlator_offset=+10)
-	demod_audio_3 = modem_3.demod(input_audio)
-
+	demod_audios = []
+	for modem in modems:
+		demod_audios.append(modem.demod(input_audio))
 
 	print("Slicing bits.")
 
-	slicer_1 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_1 = slicer_1.slice(demod_audio_1)
-
-	slicer_2 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_2 = slicer_2.slice(demod_audio_2)
-
-	slicer_3 = BinarySlicer(sample_rate=input_sample_rate, config='300')
-	sliced_data_3 = slicer_3.slice(demod_audio_3)
-
+	slicers = []
+	sliced_datas = []
+	for demod_audio in demod_audios:
+		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
+		slicers[-1].retune(lock_rate=0.90)
+		sliced_datas.append(slicers[-1].slice(demod_audio))
+		
 	# Apply differential decoding through a linear feedback shift register.
 	# The same method can be used for de-scrambling.
 	# For simple differential decoding, the polynomial is x + 1 or 0b11 or 0x3
@@ -69,38 +68,34 @@ def main():
 
 	print("Applying LFSR.")
 
-	LFSR_1 = LFSR(poly=0x3, invert=True)
-	descrambled_data_1 = LFSR_1.stream_unscramble_8bit(sliced_data_1)
-
-	LFSR_2 = LFSR(poly=0x3, invert=True)
-	descrambled_data_2 = LFSR_2.stream_unscramble_8bit(sliced_data_2)
-
-	LFSR_3 = LFSR(poly=0x3, invert=True)
-	descrambled_data_3 = LFSR_3.stream_unscramble_8bit(sliced_data_3)
+	Descramblers = []
+	descrambled_datas = []
+	for sliced_data in sliced_datas:
+		Descramblers.append(LFSR(poly=0x3, invert=True))
+		descrambled_datas.append(Descramblers[-1].stream_unscramble_8bit(sliced_data))
 
 	# Attempt AX.25 packet decoding on the descrambled data.
 
 	print("AX25 Decoding.")
 
-	ax25_codec_1 = AX25Codec(ident='ax25 300 +0')
-	ax25_decoded_data_1 = ax25_codec_1.decode(descrambled_data_1)
-
-	ax25_codec_2 = AX25Codec(ident='ax25 300 -10')
-	ax25_decoded_data_2 = ax25_codec_2.decode(descrambled_data_2)
-
-	ax25_codec_3 = AX25Codec(ident='ax25 300 +10')
-	ax25_decoded_data_3 = ax25_codec_3.decode(descrambled_data_3)
+	ax25_codecs = []
+	decoded_datas = []
+	i = 0
+	for descrambled_data in descrambled_datas:
+		ax25_codecs.append(AX25Codec(ident=i))
+		i += 1
+		decoded_datas.append(ax25_codecs[-1].decode(descrambled_data))
 
 	print("Correlating results.")
 
 	results = PacketMetaArray()
-	results.add(ax25_decoded_data_1)
-	results.add(ax25_decoded_data_2)
-	results.add(ax25_decoded_data_3)
+	for decoded_data in decoded_datas:
+		results.add(decoded_data)
+
 	results.CalcCRCs()
 	results.Correlate(address_distance=input_sample_rate/4)
 
-	# now print the results
+	# now print results
 	good_count = 0
 	for packet in results.unique_packet_array:
 		if packet.ValidCRC:
