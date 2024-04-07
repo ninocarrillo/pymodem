@@ -8,6 +8,7 @@ from modems_codecs.data_classes import AddressedData
 from modems_codecs.packet_meta import PacketMeta
 from modems_codecs.lfsr import LFSRnoaddr
 import modems_codecs.rs_functions as rs_functions
+from modems_codecs.crc_functions import AppendCRC
 import copy
 
 
@@ -401,8 +402,9 @@ class IL2PCodec:
 									self.state = 'rx_trailing_crc'
 								else:
 									# put a blank CRC here
-									self.working_packet.data.append(0)
-									self.working_packet.data.append(0)
+									AppendCRC(self.working_packet.data)
+									#self.working_packet.data.append(0)
+									#self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)
@@ -465,8 +467,9 @@ class IL2PCodec:
 									self.state = 'rx_trailing_crc'
 								else:
 									# put a blank CRC here
-									self.working_packet.data.append(0)
-									self.working_packet.data.append(0)
+									AppendCRC(self.working_packet.data)
+									#self.working_packet.data.append(0)
+									#self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)
@@ -526,8 +529,9 @@ class IL2PCodec:
 									self.state = 'rx_trailing_crc'
 								else:
 									# put a blank CRC here
-									self.working_packet.data.append(0)
-									self.working_packet.data.append(0)
+									AppendCRC(self.working_packet.data)
+									#self.working_packet.data.append(0)
+									#self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)

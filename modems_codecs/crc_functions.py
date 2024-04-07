@@ -23,3 +23,18 @@ def CheckCRC(packet):
 		return [packet_crc, calculated_crc, True]
 	else:
 		return [packet_crc, calculated_crc, False]
+
+def AppendCRC(packet):
+	calculated_crc = 0xFFFF
+	CRC_poly = 0x8408
+	for byte in packet:
+		byte = int(byte)
+		for i in range(8):
+			if (calculated_crc & 1) != (byte & 1):
+				calculated_crc = (calculated_crc >> 1) ^ CRC_poly
+			else:
+				calculated_crc >>= 1
+			byte >>= 1
+	calculated_crc ^= 0xFFFF
+	packet.append(calculated_crc & 0xFF)
+	packet.append(calculated_crc >> 8)

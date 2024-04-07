@@ -59,7 +59,7 @@ def main():
 	decoded_datas = []
 	i = 0
 	for sliced_data in sliced_datas:
-		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=False))
+		il2p_codecs.append(IL2PCodec(ident=i, crc=False, min_dist=1, disable_rs=False))
 		i += 1
 		decoded_datas.append(il2p_codecs[-1].decode(sliced_data))
 

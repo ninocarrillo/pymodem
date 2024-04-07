@@ -76,16 +76,17 @@ def main():
 	# now print results
 	good_count = 0
 	for packet in results.unique_packet_array:
-		good_count += 1
-		print("Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
-		print("source decoders: ", packet.CorrelatedDecoders)
-		for byte in packet.data[:-2]:
-			byte = int(byte)
-			if (byte < 0x7F) and (byte > 0x1F):
-				print(chr(int(byte)), end='')
-			else:
-				print(f'<{byte}>', end='')
-		print(" ")
+		if packet.ValidCRC:
+			good_count += 1
+			print("Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
+			print("source decoders: ", packet.CorrelatedDecoders)
+			for byte in packet.data[:-2]:
+				byte = int(byte)
+				if (byte < 0x7F) and (byte > 0x1F):
+					print(chr(int(byte)), end='')
+				else:
+					print(f'<{byte}>', end='')
+			print(" ")
 
 
 
