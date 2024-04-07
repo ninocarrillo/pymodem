@@ -45,7 +45,7 @@ class PacketMetaArray:
 
 	def Correlate(self, **kwargs):
 		self.address_distance = kwargs.get('address_distance', 10000)
-		# Identify unique and duplicate packets based on bitaddress and CalculatedCRC
+		# Identify unique and duplicate packets based on stream address and CalculatedCRC
 		first_array = True
 		for raw_packet_array in self.raw_packet_arrays:
 			for raw_packet in raw_packet_array:

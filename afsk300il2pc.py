@@ -70,6 +70,23 @@ def main():
 		results.add(decoded_data)
 
 	results.CalcCRCs()
+
+	# Look for CRC saves
+	bad_count = 0
+	for packet_array in results.raw_packet_arrays:
+		for packet in packet_array:
+			if packet.ValidCRC == False:
+				bad_count += 1
+				print("Valid IL2P Decode with Invalid CRC:")
+				print("Packet number: ", bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
+				print("source decoder: ", packet.SourceDecoder)
+				for byte in packet.data[:-2]:
+					byte = int(byte)
+					if (byte < 0x7F) and (byte > 0x1F):
+						print(chr(int(byte)), end='')
+					else:
+						print(f'<{byte}>', end='')
+				print("")
 	results.Correlate(address_distance=input_sample_rate/4)
 
 	# now print results
