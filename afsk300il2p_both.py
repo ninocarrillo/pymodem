@@ -33,71 +33,61 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(3)
 
-	total_packets = 0
-	searching = True
-	# add some more noise to the audio
-	while searching:
-		noise = (numpy.random.rand(len(input_audio)) - 0.5) * max(input_audio)
-		new_audio = input_audio + (noise * 2.0)
+	print("Demodulating audio.")
 
-		print("Demodulating audio.")
+	modems = []
+	modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
+	# append more modems as desired
 
-		modems = []
-		modems.append(AFSKModem(sample_rate=input_sample_rate, config='300'))
-		# append more modems as desired
+	demod_audios = []
+	for modem in modems:
+		demod_audios.append(modem.demod(input_audio))
 
-		demod_audios = []
-		for modem in modems:
-			demod_audios.append(modem.demod(new_audio))
+	print("Slicing bits.")
 
-		print("Slicing bits.")
+	slicers = []
+	sliced_datas = []
+	for demod_audio in demod_audios:
+		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
+		slicers[-1].retune(lock_rate=0.90)
+		sliced_datas.append(slicers[-1].slice(demod_audio))
 
-		slicers = []
-		sliced_datas = []
-		for demod_audio in demod_audios:
-			slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
-			slicers[-1].retune(lock_rate=0.90)
-			sliced_datas.append(slicers[-1].slice(demod_audio))
+	print("IL2P Decoding.")
 
-		print("IL2P Decoding.")
+	il2p_codecs = []
 
-		il2p_codecs = []
+	il2p_codecs.append(IL2PCodec(ident='with CRC', crc=True, min_dist=0, disable_rs=False))
+	il2p_codecs.append(IL2PCodec(ident='without CRC', crc=False, min_dist=0, disable_rs=False))
 
-		il2p_codecs.append(IL2PCodec(ident='with CRC', crc=True, min_dist=0, disable_rs=False))
-		il2p_codecs.append(IL2PCodec(ident='without CRC', crc=False, min_dist=0, disable_rs=False))
+	decoded_datas = []
+	for sliced_data in sliced_datas:
+		for codec in il2p_codecs:
+			decoded_datas.append(codec.decode(sliced_data))
 
-		decoded_datas = []
-		for sliced_data in sliced_datas:
-			for codec in il2p_codecs:
-				decoded_datas.append(codec.decode(sliced_data))
+	print("Correlating results.")
 
-		print("Correlating results.")
+	results = PacketMetaArray()
+	for decoded_data in decoded_datas:
+		results.add(decoded_data)
 
-		results = PacketMetaArray()
-		for decoded_data in decoded_datas:
-			results.add(decoded_data)
+	results.CalcCRCs()
+	results.Correlate(address_distance=input_sample_rate/4)
 
-		results.CalcCRCs()
-		results.Correlate(address_distance=input_sample_rate/4)
+	# now print results
+	good_count = 0
+	for packet in results.unique_packet_array:
+		good_count += 1
+		total_packets += 1
+		print("Total Packets: ", total_packets, "Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
+		print("source decoders: ", packet.CorrelatedDecoders)
+		for byte in packet.data[:-2]:
+			byte = int(byte)
+			if (byte < 0x7F) and (byte > 0x1F):
+				print(chr(int(byte)), end='')
+			else:
+				print(f'<{byte}>', end='')
+		print(" ")
 
-		# now print results
-		good_count = 0
-		for packet in results.unique_packet_array:
-			good_count += 1
-			total_packets += 1
-			print("Total Packets: ", total_packets, "Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
-			print("source decoders: ", packet.CorrelatedDecoders)
-			if len(packet.CorrelatedDecoders) < 2:
-				searching = False
-			for byte in packet.data[:-2]:
-				byte = int(byte)
-				if (byte < 0x7F) and (byte > 0x1F):
-					print(chr(int(byte)), end='')
-				else:
-					print(f'<{byte}>', end='')
-			print(" ")
-
-	writewav("broken_il2p.wav", input_sample_rate, new_audio / max(new_audio))
 
 
 if __name__ == "__main__":
