@@ -400,6 +400,9 @@ class IL2PCodec:
 								if self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
+									# put a blank CRC here
+									self.working_packet.data.append(0)
+									self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)
@@ -461,6 +464,9 @@ class IL2PCodec:
 								elif self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
+									# put a blank CRC here
+									self.working_packet.data.append(0)
+									self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)
@@ -519,6 +525,9 @@ class IL2PCodec:
 								if self.crc:
 									self.state = 'rx_trailing_crc'
 								else:
+									# put a blank CRC here
+									self.working_packet.data.append(0)
+									self.working_packet.data.append(0)
 									result.append(
 										copy.copy(self.working_packet)
 									)
