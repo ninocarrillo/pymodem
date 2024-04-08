@@ -96,100 +96,77 @@ def unpack_header(data):
 		if int(data[i + 2]) & 0x80:
 			header['IL2P_count_subfield'] |= 0x200 >> i
 
-	if header['IL2P_type_subfield'] == 1:
-		# translated AX.25
-		# extract destination callsign
-		header['dest'] = [0, 0, 0, 0, 0, 0, 0]
-		for i in range(6):
-			header['dest'][i] = (int(data[i]) & 0x3F) + 0x20
-		header['dest'][6] = (int(data[i]) & 0xF)
+	header['IL2P_PID_subfield'] = 0
+	for i in range(4):
+		if int(data[i + 1]) & 0x40:
+			header['IL2P_PID_subfield'] |= 0x8 >> i
 
-		# extract source callsign
-		header['source'] = [0, 0, 0, 0, 0, 0, 0]
-		for i in range(6):
-			header['source'][i] = (int(data[i + 6]) & 0x3F) + 0x20
-		header['source'][6] = ((int(data[i]) & 0xF) >> 4)
+	header['IL2P_control_subfield'] = 0
+	for i in range(7):
+		if (int(data[i + 5]) & 0x40):
+			header['IL2P_control_subfield'] |= 0x40 >> i
 
-		# Extract IL2P PID data. This has meaning even if the AX.25 PID doesn't
-		# exist.
-		header['IL2P_PID_subfield'] = 0
-		for i in range(4):
-			if int(data[i + 1]) & 0x40:
-				header['IL2P_PID_subfield'] |= 0x8 >> i
+	# extract destination callsign
+	header['dest'] = [0, 0, 0, 0, 0, 0, 0]
+	for i in range(6):
+		header['dest'][i] = (int(data[i]) & 0x3F) + 0x20
+	header['dest'][6] = (int(data[i]) & 0xF)
 
-		header['IL2P_control_subfield'] = 0
-		for i in range(7):
-			if (int(data[i + 5]) & 0x40):
-				header['IL2P_control_subfield'] |= 0x40 >> i
+	# extract source callsign
+	header['source'] = [0, 0, 0, 0, 0, 0, 0]
+	for i in range(6):
+		header['source'][i] = (int(data[i + 6]) & 0x3F) + 0x20
+	header['source'][6] = ((int(data[i]) & 0xF) >> 4)
 
-		header['AX25_type'] = 'unknown'
-		# extract UI frame indicator
-		if int(data[0]) & 0x40:
-			# This is a UI frame
-			header['AX25_type'] = 'AX25_UI'
-			# UI frames have a PID
-		else:
-			# this is either an I frame, S frame, or Unnumbered (non-UI) frame
-			if header['IL2P_PID_subfield'] == 0x0:
-				# AX.25 Supervisory Frame, no PID
-				header['AX25_type'] = 'AX25_S'
-			elif header['IL2P_PID_subfield'] == 0x1:
-				# AX.25 Unnumbered Frame (non-UI), no PID
-				header['AX25_type'] = 'AX25_U'
-			else:
-				# this frame defaults to an Information frame, has PID
-				header['AX25_type'] = 'AX25_I'
-
-		# convert IL2P PID to AX.25 PID, if applicable
-		header['AX25_PID_byte'] = 0
-		if (header['AX25_type'] == 'AX25_UI') or (header['AX25_type'] == 'AX25_I'):
-			if header['IL2P_PID_subfield'] == 0x2:
-				header['AX25_PID_byte'] = 0x20
-			elif header['IL2P_PID_subfield'] == 0x3:
-				header['AX25_PID_byte'] = 0x01
-			elif header['IL2P_PID_subfield'] == 0x4:
-				header['AX25_PID_byte'] = 0x06
-			elif header['IL2P_PID_subfield'] == 0x5:
-				header['AX25_PID_byte'] = 0x07
-			elif header['IL2P_PID_subfield'] == 0x6:
-				header['AX25_PID_byte'] = 0x08
-			elif header['IL2P_PID_subfield'] == 0xB:
-				header['AX25_PID_byte'] = 0xCC
-			elif header['IL2P_PID_subfield'] == 0xC:
-				header['AX25_PID_byte'] = 0xCD
-			elif header['IL2P_PID_subfield'] == 0xD:
-				header['AX25_PID_byte'] = 0xCE
-			elif header['IL2P_PID_subfield'] == 0xE:
-				header['AX25_PID_byte'] = 0xCF
-			elif header['IL2P_PID_subfield'] == 0xF:
-				header['AX25_PID_byte'] = 0xF0
-
-		header['AX25_PFbit'] = False
-		header['AX25_Cbit'] = False
-		header['AX25_NR'] = 0
-		header['AX25_NS'] = 0
-		header['control_opcode'] = 0
-		# translate IL2P control field
-		if header['AX25_type'] == 'AX25_I':
-			if header['IL2P_control_subfield'] & 0x40:
-				header['AX25_PFbit'] = True
-			header['AX25_NS'] = header['IL2P_control_subfield'] & 0x7
-			header['AX25_NR'] = (header['IL2P_control_subfield'] >> 3) & 0x7
-			header['AX25_Cbit'] = True # all I frames are commands
-		elif header['AX25_type'] == 'AX25_S':
-			header['AX25_NR'] = (header['IL2P_control_subfield'] >> 3) & 0x7
-			if header['IL2P_control_subfield'] & 0x4:
-				header['AX25_Cbit'] = True
-			header['control_opcode'] = header['IL2P_control_subfield'] & 0x3
-		elif (header['AX25_type'] == 'AX25_U') or (header['AX25_type'] == 'AX25_UI'):
-			if (header['IL2P_control_subfield'] >> 6) & 0x1:
-				header['AX25_PFbit'] = True
-			if header['IL2P_control_subfield'] & 0x4:
-				header['AX25_Cbit'] = True
-			header['control_opcode'] = (header['IL2P_control_subfield'] >> 3) & 0x7
+	header['AX25_type'] = 'unknown'
+	# extract UI frame indicator
+	if int(data[0]) & 0x40:
+		# This is a UI frame
+		header['AX25_type'] = 'AX25_UI'
+		# UI frames have a PID
 	else:
-		# transparent encapsulation
-		pass
+		# this is either an I frame, S frame, or Unnumbered (non-UI) frame
+		if header['IL2P_PID_subfield'] == 0x0:
+			# AX.25 Supervisory Frame, no PID
+			header['AX25_type'] = 'AX25_S'
+		elif header['IL2P_PID_subfield'] == 0x1:
+			# AX.25 Unnumbered Frame (non-UI), no PID
+			header['AX25_type'] = 'AX25_U'
+		else:
+			# this frame defaults to an Information frame, has PID
+			header['AX25_type'] = 'AX25_I'
+
+	# convert IL2P PID to AX.25 PID, if applicable
+	header['AX25_PID_byte'] = 0
+	# returns 0 to signal "omit PID byte"
+	IL2P_to_AX25_PID_table = [0, 0, 0x10, 0x01, 0x06, 0x07, 0x08, 0xC3, 0xC4, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xF0]
+	if (header['AX25_type'] == 'AX25_UI') or (header['AX25_type'] == 'AX25_I'):
+		header['AX25_PID_byte'] = IL2P_to_AX25_PID_table[header['IL2P_PID_subfield']]
+
+	header['AX25_PFbit'] = False
+	header['AX25_Cbit'] = False
+	header['AX25_NR'] = 0
+	header['AX25_NS'] = 0
+	header['control_opcode'] = 0
+	# translate IL2P control field
+	if header['AX25_type'] == 'AX25_I':
+		if header['IL2P_control_subfield'] & 0x40:
+			header['AX25_PFbit'] = True
+		header['AX25_NS'] = header['IL2P_control_subfield'] & 0x7
+		header['AX25_NR'] = (header['IL2P_control_subfield'] >> 3) & 0x7
+		header['AX25_Cbit'] = True # all I frames are commands
+	elif header['AX25_type'] == 'AX25_S':
+		header['AX25_NR'] = (header['IL2P_control_subfield'] >> 3) & 0x7
+		if header['IL2P_control_subfield'] & 0x4:
+			header['AX25_Cbit'] = True
+		header['control_opcode'] = header['IL2P_control_subfield'] & 0x3
+	elif (header['AX25_type'] == 'AX25_U') or (header['AX25_type'] == 'AX25_UI'):
+		if (header['IL2P_control_subfield'] >> 6) & 0x1:
+			header['AX25_PFbit'] = True
+		if header['IL2P_control_subfield'] & 0x4:
+			header['AX25_Cbit'] = True
+		header['control_opcode'] = (header['IL2P_control_subfield'] >> 3) & 0x7
+
 	return header
 
 def reform_control_byte(header):
@@ -347,24 +324,17 @@ class IL2PCodec:
 								self.byte_index_b += 1
 
 								# add the Control byte:
-								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
 												reform_control_byte(self.header)
 								)
 								self.byte_index_b += 1
 
 								# add the PID byte, if applicable
-								if (self.header['AX25_type'] == 'AX25_I') or \
-										(self.header['AX25_type'] == 'AX25_UI'):
-									#self.working_packet[self.byte_index_b] = \
+								if (self.header['AX25_PID_byte'] != 0):
 									self.working_packet.data.append(
 														self.header['AX25_PID_byte']
 									)
 									self.byte_index_b += 1
-
-								# print(self.header)
-								# for byte in self.working_packet[:self.byte_index_b]:
-								# 	print(hex(int(byte)), end = ' ')
 							else:
 								# Type 0 Transparent Encapsulation
 								pass
