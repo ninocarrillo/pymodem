@@ -87,6 +87,9 @@ def main():
 					else:
 						print(f'<{byte}>', end='')
 				print("")
+				for byte in packet.data[:-2]:
+					print(hex(int(byte)), end=" ")
+				print(" ")
 	results.Correlate(address_distance=input_sample_rate/4)
 
 	# now print results
@@ -102,6 +105,9 @@ def main():
 					print(chr(int(byte)), end='')
 				else:
 					print(f'<{byte}>', end='')
+			print(" ")
+			for byte in packet.data[:-2]:
+				print(hex(int(byte)), end=" ")
 			print(" ")
 
 

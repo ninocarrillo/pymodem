@@ -146,9 +146,9 @@ def unpack_header(data):
 	header['AX25_NS'] = 0
 	header['control_opcode'] = 0
 	# translate IL2P control field
+	if header['IL2P_control_subfield'] & 0x40:
+		header['AX25_PFbit'] = True
 	if header['AX25_type'] == 'AX25_I':
-		if header['IL2P_control_subfield'] & 0x40:
-			header['AX25_PFbit'] = True
 		header['AX25_NS'] = header['IL2P_control_subfield'] & 0x7
 		header['AX25_NR'] = (header['IL2P_control_subfield'] >> 3) & 0x7
 		header['AX25_Cbit'] = True # all I frames are commands
@@ -158,8 +158,6 @@ def unpack_header(data):
 			header['AX25_Cbit'] = True
 		header['control_opcode'] = header['IL2P_control_subfield'] & 0x3
 	elif (header['AX25_type'] == 'AX25_U') or (header['AX25_type'] == 'AX25_UI'):
-		if (header['IL2P_control_subfield'] >> 6) & 0x1:
-			header['AX25_PFbit'] = True
 		if header['IL2P_control_subfield'] & 0x4:
 			header['AX25_Cbit'] = True
 		header['control_opcode'] = (header['IL2P_control_subfield'] >> 3) & 0x7
