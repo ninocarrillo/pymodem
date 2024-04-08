@@ -86,10 +86,10 @@ def bit_distance_24(data_a, data_b):
 
 def unpack_header(data):
 	header = {}
-	# get header type
-	header['IL2P_type_subfield'] = (int(data[1]) & 0x80) >> 7
 	# get reserved bit
 	header['IL2P_reserved_subfield'] = (int(data[0]) & 0x80) >> 7
+	# get header type
+	header['IL2P_type_subfield'] = (int(data[1]) & 0x80) >> 7
 	# get byte count
 	header['IL2P_count_subfield'] = 0
 	for i in range(10):
@@ -110,13 +110,13 @@ def unpack_header(data):
 	header['dest'] = [0, 0, 0, 0, 0, 0, 0]
 	for i in range(6):
 		header['dest'][i] = (int(data[i]) & 0x3F) + 0x20
-	header['dest'][6] = (int(data[i]) & 0xF)
+	header['dest'][6] = int(data[12]) >> 4
 
 	# extract source callsign
 	header['source'] = [0, 0, 0, 0, 0, 0, 0]
 	for i in range(6):
 		header['source'][i] = (int(data[i + 6]) & 0x3F) + 0x20
-	header['source'][6] = ((int(data[i]) & 0xF) >> 4)
+	header['source'][6] = int(data[12]) & 0xF
 
 	header['AX25_type'] = 'unknown'
 	# extract UI frame indicator
@@ -136,12 +136,9 @@ def unpack_header(data):
 			# this frame defaults to an Information frame, has PID
 			header['AX25_type'] = 'AX25_I'
 
-	# convert IL2P PID to AX.25 PID, if applicable
-	header['AX25_PID_byte'] = 0
 	# returns 0 to signal "omit PID byte"
 	IL2P_to_AX25_PID_table = [0, 0, 0x10, 0x01, 0x06, 0x07, 0x08, 0xC3, 0xC4, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xF0]
-	if (header['AX25_type'] == 'AX25_UI') or (header['AX25_type'] == 'AX25_I'):
-		header['AX25_PID_byte'] = IL2P_to_AX25_PID_table[header['IL2P_PID_subfield']]
+	header['AX25_PID_byte'] = IL2P_to_AX25_PID_table[header['IL2P_PID_subfield']]
 
 	header['AX25_PFbit'] = False
 	header['AX25_Cbit'] = False
