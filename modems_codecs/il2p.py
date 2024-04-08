@@ -201,7 +201,6 @@ class IL2PCodec:
 		self.working_packet = PacketMeta()
 		self.bit_index = 0
 		self.byte_index_a = 0
-		self.byte_index_b = 0
 		self.block_index = 0
 		self.num_roots = 16
 		# IL2P Scrambling Polynomial x^9 + x^4 + 1
@@ -236,7 +235,6 @@ class IL2PCodec:
 					if bit_distance_24(self.working_word, 0xF15E48) <= \
 														self.sync_tolerance:
 						self.bit_index = 0
-						self.byte_index_b = 0
 						self.state = 'rx_header'
 				elif self.state == 'rx_header':
 					self.get_a_bit(0xFF)
@@ -276,13 +274,10 @@ class IL2PCodec:
 								# re-assemble AX.25 header in working_packet:
 								# First add the destination callsign and SSID
 								for i in range(6):
-									#self.working_packet[self.byte_index_b] = \
 									self.working_packet.data.append(
 													self.header['dest'][i] << 1
 									)
-									self.byte_index_b += 1
 								# Now add the destination SSID and bits
-								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
 													self.header['dest'][6] << 1
 								)
@@ -293,17 +288,13 @@ class IL2PCodec:
 								# Response is indicated by Dest 0 Src 1
 								if self.header['AX25_Cbit'] == True:
 									self.working_packet.data[-1] += 0x80
-								self.byte_index_b += 1
 
 								# Now add source callsign and SSID
 								for i in range(6):
-									#self.working_packet[self.byte_index_b] = \
 									self.working_packet.data.append(
 													self.header['source'][i] << 1
 									)
-									self.byte_index_b += 1
 								# Now add the destination SSID and bits
-								#self.working_packet[self.byte_index_b] = \
 								self.working_packet.data.append(
 													self.header['source'][6] << 1
 								)
@@ -316,20 +307,17 @@ class IL2PCodec:
 									self.working_packet.data[-1] += 0x80
 								# Set callsign extension bit
 								self.working_packet.data[-1] += 1
-								self.byte_index_b += 1
 
 								# add the Control byte:
 								self.working_packet.data.append(
 												reform_control_byte(self.header)
 								)
-								self.byte_index_b += 1
 
 								# add the PID byte, if applicable
 								if (self.header['AX25_PID_byte'] != 0):
 									self.working_packet.data.append(
 														self.header['AX25_PID_byte']
 									)
-									self.byte_index_b += 1
 							else:
 								# Type 0 Transparent Encapsulation
 								pass
@@ -408,7 +396,6 @@ class IL2PCodec:
 
 							for i in range(self.block_size):
 								self.working_packet.data.append(self.buffer[i])
-								self.byte_index_b += 1
 
 
 							self.block_index += 1
@@ -474,7 +461,6 @@ class IL2PCodec:
 
 							for i in range(self.block_size):
 								self.working_packet.data.append(self.buffer[i])
-								self.byte_index_b += 1
 
 							self.byte_index_a = 0
 
@@ -518,9 +504,7 @@ class IL2PCodec:
 										hamming_decode(self.buffer[i]) << \
 																	(12 - (i * 4))
 							self.working_packet.data.append(trailing_crc & 0xFF)
-							self.byte_index_b += 1
 							self.working_packet.data.append(trailing_crc >> 8)
-							self.byte_index_b += 1
 							result.append(copy.copy(self.working_packet))
 							self.working_packet = PacketMeta()
 							self.state = 'sync_search'
