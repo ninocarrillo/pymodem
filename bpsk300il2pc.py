@@ -56,7 +56,9 @@ def main():
 	for demod_audio in demod_audios:
 		plt.figure()
 		plt.plot(demod_audios[0])
-		plt.plot(modems[i].envelope_buffer)
+		plt.plot(modems[i].AGC.envelope_buffer)
+		plt.plot(modems[i].i_oscillator_output)
+		plt.plot(modems[i].q_oscillator_output)
 		#plt.plot(modems[i].original_sample_buffer)
 		plt.show()
 		writewav(f"FilteredSignal_{i}.wav", input_sample_rate, demod_audio / 10000)
