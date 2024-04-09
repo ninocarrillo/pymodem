@@ -17,10 +17,13 @@ class PI_control:
 		self.proportional = 0.0
 	
 	def update_reset(self, sample):
-		self.proportional = self.p_rate * self.sample
-		self.integral += self.i_rate * self.sample
+		self.proportional = self.p_rate * sample
+		self.integral += self.i_rate * sample
 		if self.integral > self.i_limit:
 			self.integral = 0.0
+		self.output = self.proportional + self.integral
+	
+		return self.output
 		
 
 class IIR_1:
@@ -177,6 +180,7 @@ class BPSKModem:
 			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.max_freq_offset = 50.0
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -194,6 +198,11 @@ class BPSKModem:
 				filter_type='lpf',
 				cutoff=100.0,
 				gain=2.0
+			)
+			self.FeedbackController = PI_control(
+				p= 0.05,
+				i= 0.0001,
+				i_limit=self.max_freq_offset
 			)
 	
 		self.oscillator_amplitude = 1.0
@@ -213,6 +222,8 @@ class BPSKModem:
 			set_frequency = self.carrier_freq,
 			wavetable_size = 256
 		)
+		
+
 		
 		self.tune()
 
@@ -268,6 +279,7 @@ class BPSKModem:
 		self.i_output = []
 		self.q_output = []
 		self.loop_output = []
+		demod_audio = []
 		# This is a costas loop
 		for sample in audio:
 			self.NCO.update()
@@ -285,14 +297,16 @@ class BPSKModem:
 			loop_mixer = self.I_LPF.output * self.Q_LPF.output
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
-			self.loop_output.append(self.Loop_LPF.output)
 			# use a P-I control feedback arrangement to update the oscillator frequency
+			self.NCO.control = 50 * self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.loop_output.append(self.NCO.control)
+			demod_audio.append(self.I_LPF.output)
 			
 	
 
 		# Apply the output filter:
-		#audio = convolve(audio, self.output_lpf, 'valid')
-		return audio
+		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		return demod_audio
 
 
 

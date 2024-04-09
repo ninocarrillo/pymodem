@@ -55,11 +55,8 @@ def main():
 	i = 0
 	for demod_audio in demod_audios:
 		plt.figure()
-		plt.plot(demod_audios[0])
-		plt.plot(modems[i].i_output)
-		plt.plot(modems[i].q_output)
+		plt.plot(demod_audio)
 		plt.plot(modems[i].loop_output)
-		#plt.plot(modems[i].original_sample_buffer)
 		plt.show()
 		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
 		slicers[-1].retune(lock_rate=0.90)
