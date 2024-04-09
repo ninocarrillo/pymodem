@@ -5,8 +5,69 @@
 # 9 Apr 2024
 
 from scipy.signal import firwin
-from math import ceil, sin, pi
+from math import ceil, tan,sin, pi
 from numpy import convolve
+
+class PI_control:
+	def __init__(self, **kwargs):
+		self.p_rate = kwargs.get('p', 0.1)
+		self.i_rate = kwargs.get('i', 0.1)
+		self.i_limit = kwargs.get('i_limit', 100.0)
+		self.integral = 0.0
+		self.proportional = 0.0
+	
+	def update_reset(self, sample):
+		self.proportional = self.p_rate * self.sample
+		self.integral += self.i_rate * self.sample
+		if self.integral > self.i_limit:
+			self.integral = 0.0
+		
+
+class IIR_1:
+	def __init__(self, **kwargs):
+		self.sample_rate = kwargs.get('sample_rate', 8000.0)
+		self.filter_type = kwargs.get('filter_type', 'lpf')
+		self.cutoff_freq = kwargs.get('cutoff', 100.0)
+		self.gain = kwargs.get('gain', 2.0)
+		
+		radian_cutoff = 2.0 * pi * self.cutoff_freq
+		
+		if self.filter_type == 'lpf':
+			# prewarp the cutoff frequency for bilinear Z transform
+			warp_cutoff = 2.0 * self.sample_rate * tan(radian_cutoff / (2.0 * self.sample_rate))
+			# calculate an intermediate value for bilinear Z transform
+			omega_T = warp_cutoff / self.sample_rate
+			# calculate denominator value
+			a1 = (2.0 - omega_T) / (2.0 + omega_T)
+			# calculate numerator values
+			b0 = omega_T / (2.0 + omega_T)
+			b1 = b0
+			# save the coefs
+			self.b_coefs = [self.gain * b0, self.gain * b1]
+			self.a_coefs = [0.0, a1]
+		
+		self.output = 0.0
+		self.X = [0.0, 0.0]
+		self.Y = [0.0, 0.0]
+		self.order = 1
+
+	def update(self, sample):
+		# Update the input delay registers
+		for index in range(self.order, 0, -1):
+			self.X[index] = self.X[index - 1]
+		self.X[0] = sample
+		# Calculate the intermediate sum
+		v = 0
+		for index in range(self.order + 1):
+			v += (self.X[index] * self.b_coefs[index])
+		# Update the output delay registers
+		for index in range(self.order, 0, -1):
+			self.Y[index] = self.Y[index - 1]
+		# Calculate the final sum
+		for index in range(1, self.order + 1):
+			v += (self.Y[index] * self.a_coefs[index]) 
+		self.Y[0] = v
+		self.output = v
 
 class NCO:
 	def __init__(self, **kwargs):
@@ -116,8 +177,26 @@ class BPSKModem:
 			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.I_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=300.0,
+				gain=4.0
+			)
+			self.Q_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=300.0,
+				gain=4.0
+			)
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=100.0,
+				gain=2.0
+			)
 	
-		self.oscillator_amplitude = 10000.0
+		self.oscillator_amplitude = 1.0
 
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
@@ -186,13 +265,29 @@ class BPSKModem:
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
 
-		self.i_oscillator_output = []
-		self.q_oscillator_output = []
+		self.i_output = []
+		self.q_output = []
+		self.loop_output = []
+		# This is a costas loop
 		for sample in audio:
 			self.NCO.update()
-			self.i_oscillator_output.append(self.NCO.in_phase_output)
-			self.q_oscillator_output.append(self.NCO.quadrature_phase_output)
-			# do the costas loop
+			# mix the in phase oscillator output with the input signal
+			i_mixer = sample * self.NCO.in_phase_output
+			# low pass filter this product
+			self.I_LPF.update(i_mixer)
+			self.i_output.append(self.I_LPF.output)
+			# mix the quadrature phase oscillator output with the input signal
+			q_mixer = sample * self.NCO.quadrature_phase_output
+			# low pass filter this product
+			self.Q_LPF.update(q_mixer)
+			self.q_output.append(self.Q_LPF.output)
+			# mix the I and Q products to create the phase detector
+			loop_mixer = self.I_LPF.output * self.Q_LPF.output
+			# low pass filter this product
+			self.Loop_LPF.update(loop_mixer)
+			self.loop_output.append(self.Loop_LPF.output)
+			# use a P-I control feedback arrangement to update the oscillator frequency
+			
 	
 
 		# Apply the output filter:
