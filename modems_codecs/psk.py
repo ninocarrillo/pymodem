@@ -16,9 +16,9 @@ class BPSKModem:
 
 		if self.definition == '300':
 			# set some default values for 300 bps AFSK:
-			self.agc_attack_rate = 0.001		# Normalized to 1.0 / sec
-			self.agc_sustain_time = 0.001		# sec
-			self.agc_decay_rate = 0.001			# Normalized to 1.0 / sec
+			self.agc_attack_rate = 5.0		# Normalized to 1.0 / sec
+			self.agc_sustain_time = 0.001	# sec
+			self.agc_decay_rate = 500.0			# Normalized to 1.0 / sec
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1100.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
@@ -72,12 +72,21 @@ class BPSKModem:
 			fs=self.sample_rate
 		)
 
+		self.envelope = 0
+		# adjust the agc attack and decay rates to per-sample values
+		self.scaled_agc_attack_rate = self.agc_attack_rate / self.sample_rate
+		self.scaled_agc_decay_rate = self.agc_decay_rate / self.sample_rate
+		self.sustain_increment = self.agc_sustain_time / self.sample_rate
+		print(self.sustain_increment)
+		print(self.scaled_agc_attack_rate)
+		print(self.scaled_agc_decay_rate)
+
 
 	def demod(self, input_audio):
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 
-		self.do_agc()
+		self.do_agc(audio)
 
 		for sample in audio:
 			# do the costas loop
@@ -87,5 +96,34 @@ class BPSKModem:
 		audio = convolve(audio, self.output_lpf, 'valid')
 		return audio
 
-	def do_agc(self):
+	def peak_detect(self, sample):
+		compare_value = abs(sample)
+		if compare_value > self.envelope:
+			self.envelope += (self.scaled_agc_attack_rate * self.agc_normal)
+			if self.envelope > compare_value:
+				self.envelope = compare_value
+			self.sustain_count = 0
+		if self.sustain_count >= self.agc_sustain_time:
+			self.envelope -= (self.scaled_agc_decay_rate * self.agc_normal)
+			if self.envelope < 0:
+				self.envelope = 0
+		self.sustain_count += self.sustain_increment
+
+	def do_agc(self, buffer):
+		# This routine applies a scaling factor to each sample in buffer.
+		# The scaling factor is determined by the detected envelope.
+
+		# For the agc attack and decay rates to makes sense, we need to have
+		# some pre-knowledge about the maximum possible value of the data stream.
+		self.agc_normal = 32768.0
+		print(max(buffer))
+
+		i = 0
+		for sample in buffer:
+			# detect the Envelope
+			self.peak_detect(sample)
+			# scale the sample
+			# This will drive the signal stream to an amplitude of 0.5
+			buffer[i] =  sample / (self.envelope)
+			i += 1
 		pass
