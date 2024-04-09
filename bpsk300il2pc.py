@@ -16,6 +16,9 @@ from modems_codecs.slicer import BinarySlicer
 from modems_codecs.il2p import IL2PCodec
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 
+
+import matplotlib.pyplot as plt
+
 def main():
 	# check correct version of Python
 	if sys.version_info < (3, 0):
@@ -43,6 +46,7 @@ def main():
 		demod_audios.append(modem.demod(input_audio))
 
 
+	
 
 	print("Slicing bits.")
 
@@ -50,8 +54,12 @@ def main():
 	sliced_datas = []
 	i = 0
 	for demod_audio in demod_audios:
-		print(max(demod_audio))
-		writewav(f"FilteredSignal_{i}.wav", input_sample_rate, demod_audio / 4)
+		plt.figure()
+		plt.plot(demod_audios[0])
+		plt.plot(modems[i].envelope_buffer)
+		#plt.plot(modems[i].original_sample_buffer)
+		plt.show()
+		writewav(f"FilteredSignal_{i}.wav", input_sample_rate, demod_audio / 10000)
 		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
 		slicers[-1].retune(lock_rate=0.90)
 		sliced_datas.append(slicers[-1].slice(demod_audio))
