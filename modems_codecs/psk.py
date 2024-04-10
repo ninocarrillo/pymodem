@@ -185,23 +185,63 @@ class BPSKModem:
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
-				gain=4.0
+				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
-				gain=4.0
+				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=100.0,
-				gain=2.0
+				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.05,
-				i= 0.0001,
+				p= 80.0,
+				i= 0.16,
+				i_limit=self.max_freq_offset
+			)
+		elif self.definition == '1200':
+			# set some default values for 300 bps AFSK:
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 1.0	# sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.symbol_rate = 1200.0			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.carrier_freq = 1500.0				# carrier tone frequency
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+											# output signal after I/Q demodulation
+			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.max_freq_offset = 100.0
+			self.I_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=1200.0,
+				gain=1.0
+			)
+			self.Q_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=1200.0,
+				gain=1.0
+			)
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=200.0,
+				gain=1.0
+			)
+			self.FeedbackController = PI_control(
+				p= 80.0,
+				i= 0.16,
 				i_limit=self.max_freq_offset
 			)
 
@@ -298,7 +338,7 @@ class BPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = 50 * self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			demod_audio.append(self.I_LPF.output)
 

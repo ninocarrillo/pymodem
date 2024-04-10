@@ -76,7 +76,7 @@ def main():
 	decoded_datas = []
 	i = 0
 	for descrambled_data in descrambled_datas:
-		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=True))
+		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=False))
 		i += 1
 		decoded_datas.append(il2p_codecs[-1].decode(descrambled_data))
 
