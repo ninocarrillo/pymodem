@@ -14,6 +14,7 @@ from scipy.io.wavfile import write as writewav
 from modems_codecs.psk import BPSKModem
 from modems_codecs.slicer import BinarySlicer
 from modems_codecs.il2p import IL2PCodec
+from modems_codecs.lfsr import LFSR
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 
 
@@ -45,9 +46,6 @@ def main():
 	for modem in modems:
 		demod_audios.append(modem.demod(input_audio))
 
-
-	
-
 	print("Slicing bits.")
 
 	slicers = []
@@ -63,15 +61,24 @@ def main():
 		sliced_datas.append(slicers[-1].slice(demod_audio))
 		i += 1
 
+
+	print("Applying LFSR.")
+
+	Descramblers = []
+	descrambled_datas = []
+	for sliced_data in sliced_datas:
+		Descramblers.append(LFSR(poly=0x3, invert=True))
+		descrambled_datas.append(Descramblers[-1].stream_unscramble_8bit(sliced_data))
+
 	print("IL2P Decoding.")
 
 	il2p_codecs = []
 	decoded_datas = []
 	i = 0
-	for sliced_data in sliced_datas:
-		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=False))
+	for descrambled_data in descrambled_datas:
+		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=True))
 		i += 1
-		decoded_datas.append(il2p_codecs[-1].decode(sliced_data))
+		decoded_datas.append(il2p_codecs[-1].decode(descrambled_data))
 
 	print("Correlating results.")
 

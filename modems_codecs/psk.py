@@ -15,16 +15,16 @@ class PI_control:
 		self.i_limit = kwargs.get('i_limit', 100.0)
 		self.integral = 0.0
 		self.proportional = 0.0
-	
+
 	def update_reset(self, sample):
 		self.proportional = self.p_rate * sample
 		self.integral += self.i_rate * sample
 		if self.integral > self.i_limit:
 			self.integral = 0.0
 		self.output = self.proportional + self.integral
-	
+
 		return self.output
-		
+
 
 class IIR_1:
 	def __init__(self, **kwargs):
@@ -32,9 +32,9 @@ class IIR_1:
 		self.filter_type = kwargs.get('filter_type', 'lpf')
 		self.cutoff_freq = kwargs.get('cutoff', 100.0)
 		self.gain = kwargs.get('gain', 2.0)
-		
+
 		radian_cutoff = 2.0 * pi * self.cutoff_freq
-		
+
 		if self.filter_type == 'lpf':
 			# prewarp the cutoff frequency for bilinear Z transform
 			warp_cutoff = 2.0 * self.sample_rate * tan(radian_cutoff / (2.0 * self.sample_rate))
@@ -48,7 +48,7 @@ class IIR_1:
 			# save the coefs
 			self.b_coefs = [self.gain * b0, self.gain * b1]
 			self.a_coefs = [0.0, a1]
-		
+
 		self.output = 0.0
 		self.X = [0.0, 0.0]
 		self.Y = [0.0, 0.0]
@@ -68,7 +68,7 @@ class IIR_1:
 			self.Y[index] = self.Y[index - 1]
 		# Calculate the final sum
 		for index in range(1, self.order + 1):
-			v += (self.Y[index] * self.a_coefs[index]) 
+			v += (self.Y[index] * self.a_coefs[index])
 		self.Y[0] = v
 		self.output = v
 
@@ -78,24 +78,24 @@ class NCO:
 		self.amplitude = kwargs.get('amplitude', 10000.0)
 		self.set_frequency = kwargs.get('set_frequency', 1500.0)
 		self.wavetable_size = kwargs.get('wavetable_size', 256)
-		
+
 		# control is the frequency adjustment input
 		self.control = 0.0
-		
+
 		# instantaneous phase of the oscillator in degrees
 		self.phase_accumulator = 0.0
-		
+
 		self.wavetable=[]
 		for i in range(self.wavetable_size):
 			self.wavetable.append(self.amplitude * sin(i * 2.0 * pi / self.wavetable_size))
-		
+
 		# Calculate the phase accumulator to wavetable index scaling factor
 		self.index_scaling_factor = self.wavetable_size / (2.0 * pi)
-		
-		# During each update of the NCO (once per sample), it will be advanced according to 
+
+		# During each update of the NCO (once per sample), it will be advanced according to
 		# set_frequency + control. Calculate the scaling factor for phase advance.
 		self.phase_scaling_factor = 2.0 * pi / self.sample_rate
-		
+
 	def update(self):
 		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
 		while self.phase_accumulator >= 2.0 * pi:
@@ -103,10 +103,10 @@ class NCO:
 		in_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
 		self.in_phase_output = self.wavetable[in_phase_index]
 		quadrature_phase_index = int(in_phase_index + (self.wavetable_size / 4.0))
-		while quadrature_phase_index >= self.wavetable_size:
+		while quadrature_phase_index >= 0 :
 			quadrature_phase_index -= self.wavetable_size
 		self.quadrature_phase_output = self.wavetable[quadrature_phase_index]
-		
+
 class AGC:
 	def __init__(self, **kwargs):
 		self.attack_rate = kwargs.get('attack_rate', 500.0)
@@ -154,9 +154,9 @@ class AGC:
 				buffer[i] =  self.target_amplitude * sample / (self.envelope)
 			if self.record_envelope:
 				self.envelope_buffer.append(self.envelope)
-			
+
 			i += 1
-		
+
 
 class BPSKModem:
 
@@ -204,7 +204,7 @@ class BPSKModem:
 				i= 0.0001,
 				i_limit=self.max_freq_offset
 			)
-	
+
 		self.oscillator_amplitude = 1.0
 
 		self.AGC = AGC(
@@ -215,16 +215,16 @@ class BPSKModem:
 			target_amplitude = self.oscillator_amplitude,
 			record_envelope = True
 		)
-		
+
 		self.NCO = NCO(
 			sample_rate = self.sample_rate,
 			amplitude = self.oscillator_amplitude,
 			set_frequency = self.carrier_freq,
 			wavetable_size = 256
 		)
-		
 
-		
+
+
 		self.tune()
 
 	def retune(self, **kwargs):
@@ -301,12 +301,9 @@ class BPSKModem:
 			self.NCO.control = 50 * self.FeedbackController.update_reset(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			demod_audio.append(self.I_LPF.output)
-			
-	
+
+
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		return demod_audio
-
-
-
