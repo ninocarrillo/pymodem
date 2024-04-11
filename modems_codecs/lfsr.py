@@ -16,7 +16,12 @@ class LFSR:
 
 	def StringOptionsRetune(self, options):
 		self.polynomial = int(options.get('poly', 0x1), 16)
-		self.invert = options.get('invert', False)
+		if options.get('invert') == "yes" or options.get('invert') == True:
+			self.invert = True
+		else:
+			self.invert = False
+		print('from file', options.get('invert'))
+		print(self.invert)
 
 	def stream_unscramble_8bit(self, data):
 		# this method creates one output byte for each input byte

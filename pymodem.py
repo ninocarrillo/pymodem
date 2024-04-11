@@ -89,6 +89,7 @@ def main():
 			print(f"Invalid 'stream' in {line['chain_name']}.")
 			stream = []
 		stack[i].append(stream)
+		print(stream.invert)
 		try:
 			codec = modems_codecs.chain_builder.CodecConfigurator(
 				line['codec'],
@@ -115,12 +116,14 @@ def main():
 		except:
 			print("skipped slicer")
 			pass
+		print(sliced_data[0].data)
 		try:
 			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
 		except:
 			descrambled_data = sliced_data
 			print("skipped stream")
 			pass
+		print(descrambled_data[0].data)
 		try:
 			decoded_datas.append(chain[4].decode(descrambled_data))
 		except:
