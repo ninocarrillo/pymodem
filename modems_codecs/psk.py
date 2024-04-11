@@ -324,8 +324,6 @@ class BPSKModem:
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
 
-		self.i_output = []
-		self.q_output = []
 		self.loop_output = []
 		demod_audio = []
 		# This is a costas loop
@@ -335,12 +333,10 @@ class BPSKModem:
 			i_mixer = sample * self.NCO.in_phase_output
 			# low pass filter this product
 			self.I_LPF.update(i_mixer)
-			self.i_output.append(self.I_LPF.output)
 			# mix the quadrature phase oscillator output with the input signal
 			q_mixer = sample * self.NCO.quadrature_phase_output
 			# low pass filter this product
 			self.Q_LPF.update(q_mixer)
-			self.q_output.append(self.Q_LPF.output)
 			# mix the I and Q products to create the phase detector
 			loop_mixer = self.I_LPF.output * self.Q_LPF.output
 			# low pass filter this product

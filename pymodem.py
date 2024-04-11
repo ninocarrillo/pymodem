@@ -5,7 +5,8 @@
 # Exit codes
 # 1 Wrong Python version
 # 2 Wrong argument count
-# 3 Unable to open audio file
+# 3 Unable to open config file
+# 4 Unable to open audio file
 
 import sys
 from scipy.io.wavfile import read as readwav
@@ -29,7 +30,6 @@ def main():
 	# try to open configuration json
 	try:
 		configfile = open(sys.argv[1], 'r')
-		#stack_plan = json.load(configfile)
 		stack_plan = []
 		for line in configfile:
 			stack_plan.append(json.loads(line))
@@ -42,44 +42,46 @@ def main():
 		input_sample_rate, input_audio = readwav(sys.argv[2])
 	except:
 		print('Unable to open audio file.')
-		sys.exit(3)
+		sys.exit(4)
 
-	print("Building stack from config json")
+	print("Building processing stacks from config json")
 
-	stack = []
-	i = 0
+	demod_stack = []
+	report_stack = []
+	demod_stack_index = 0
+	report_stack_index = 0
+	line_number = 0
 	for line in stack_plan:
-		stack.append([])
+		line_number += 1
 		try:
-			stack[i].append(line['chain_name'])
-			print(f"Line {i+1}: {stack[i][0]}")
+			object_type = line.get('object_type')
+			print(f"Found object_type: {object_type}")
 		except:
-			print(f"Missing 'chain_name' in {sys.argv[1]} line {i+1}, skipping this chain.")
-			i += 1
-			# go to the next iteration of the for loop
+			print(f"Missing 'object_type' in {sys.argv[1]} line {line_number}, skipping this chain.")
 			continue
 
-		try:
-			chain_type = line.get('chain_type')
-			print(f"chain_type: {chain_type}")
-		except:
-			print(f"Missing 'chain_type' in {sys.argv[1]} line {i+1}, skipping this chain.")
-			i += 1
-			continue
-
-		# append the modem object to this chain
-		if chain_type == 'demod':
+		if object_type == 'demod_chain':
+			demod_stack.append([])
+			try:
+				demod_stack[demod_stack_index].append(line['object_name'])
+				print(f"Line {line_number}: {demod_stack[demod_stack_index][0]}")
+			except:
+				print(f"Missing 'object_name' in {sys.argv[1]} line {line_number}, skipping this chain.")
+				demod_stack_index += 1
+				# go to the next iteration of the for loop
+				continue
+			# append the modem object to this chain
 			try:
 				modem = modems_codecs.chain_builder.ModemConfigurator(
 					input_sample_rate,
 					line['modem'],
 				)
 			except:
-				print(f"Invalid or missing 'modem' in {line['chain_name']}.")
+				print(f"Invalid or missing 'modem' in {line['object_name']}.")
 				modem = []
-			stack[i].append(modem)
+			demod_stack[demod_stack_index].append(modem)
 			try:
-				slicer_sample_rate = stack[i][1].output_sample_rate
+				slicer_sample_rate = demod_stack[demod_stack_index][1].output_sample_rate
 			except:
 				slicer_sample_rate = input_sample_rate
 			try:
@@ -88,30 +90,46 @@ def main():
 					line['slicer']
 				)
 			except:
-				print(f"Invalid or missing 'slicer' in {line['chain_name']}.")
+				print(f"Invalid or missing 'slicer' in {line['object_name']}.")
 				slicer = []
-			stack[i].append(slicer)
+			demod_stack[demod_stack_index].append(slicer)
 			try:
 				stream = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
 			except:
-				print(f"Invalid or missing 'stream' in {line['chain_name']}.")
+				print(f"Invalid or missing 'stream' in {line['object_name']}.")
 				stream = []
-			stack[i].append(stream)
+			demod_stack[demod_stack_index].append(stream)
 			try:
 				codec = modems_codecs.chain_builder.CodecConfigurator(
 					line['codec'],
-					line['chain_name']
+					line['object_name']
 				)
 			except:
-				print(f"Invalid or missing 'codec' in {line['chain_name']}.")
+				print(f"Invalid or missing 'codec' in {line['object_name']}.")
 				codec = []
-			stack[i].append(codec)
-			i += 1
+			demod_stack[demod_stack_index].append(codec)
+			demod_stack_index += 1
+		elif object_type == 'report':
+			report_stack.append([])
+			try:
+				report_stack[report_stack_index].append(line['object_name'])
+				print(f"Line {line_number}: {report_stack[report_stack_index][0]}")
+			except:
+				print(f"Missing 'object_name' in {sys.argv[1]} line {line_number}, skipping this reporter.")
+				report_stack_index += 1
+				# go to the next iteration of the for loop
+				continue
+			# append the report style object to this chain
+			try:
+				report = modems_codecs.packet_meta.ReportStyle(line['options'])
+			except:
+				print(f"Invalid or missing 'style' in {line['object_name']}.")
+				report = []
+			report_stack[report_stack_index].append(report)
 
-
-	print("Executing stack plan.")
+	print("Executing demod stack plan.")
 	decoded_datas = []
-	for chain in stack:
+	for chain in demod_stack:
 		print(f"Processing chain: {chain[0]}")
 		try:
 			demod_audio = chain[1].demod(input_audio)
@@ -142,47 +160,11 @@ def main():
 		results.add(decoded_data)
 
 	results.CalcCRCs()
-
-	# Look for CRC saves
-	bad_count = 0
-	for packet_array in results.raw_packet_arrays:
-		for packet in packet_array:
-			if packet.ValidCRC == False:
-				bad_count += 1
-				print("Valid IL2P Decode with Invalid CRC:")
-				print("Packet number: ", bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
-				print("source decoder: ", packet.SourceDecoder)
-				for byte in packet.data[:-2]:
-					byte = int(byte)
-					if (byte < 0x7F) and (byte > 0x1F):
-						print(chr(int(byte)), end='')
-					else:
-						print(f'<{byte}>', end='')
-				print("")
-				for byte in packet.data[:-2]:
-					print(hex(int(byte)), end=" ")
-				print(" ")
-
-
 	results.Correlate(address_distance=input_sample_rate/4)
 
-	# now print results
-	good_count = 0
-	for packet in results.unique_packet_array:
-		if packet.ValidCRC:
-			good_count += 1
-			print("Packet number: ", good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
-			print("source decoders: ", packet.CorrelatedDecoders)
-			for byte in packet.data[:-2]:
-				byte = int(byte)
-				if (byte < 0x7F) and (byte > 0x1F):
-					print(chr(int(byte)), end='')
-				else:
-					print(f'<{byte}>', end='')
-			print(" ")
-			for byte in packet.data[:-2]:
-				print(hex(int(byte)), end=" ")
-			print(" ")
+	for report_order in report_stack:
+		print(f"Generating {report_order[0]}")
+		print(results.Report(report_order[1]))
 
 
 if __name__ == "__main__":

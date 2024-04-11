@@ -1,5 +1,5 @@
 # Python3
-# Functions for demodulating PSK
+# Functions for assembling signal processing chains
 # Nino Carrillo
 # 9 Apr 2024
 
@@ -11,6 +11,7 @@ import modems_codecs.slicer
 import modems_codecs.il2p
 import modems_codecs.ax25
 from modems_codecs.string_ops import check_boolean
+
 
 def ModemConfigurator(arg_sample_rate, input_args):
 	new_object = []

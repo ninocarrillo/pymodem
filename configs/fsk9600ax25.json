@@ -1,1 +1,2 @@
-{"chain_name": "FSK 9600 AX.25", "chain_type": "demod", "modem": {"type": "fsk",  "config": "9600", "options": {}}, "slicer": {"type": "binary", "config": "9600", "options": {"lock_rate": "0.88"}}, "stream": {"type": "lfsr", "options": {"poly": "0x63003", "invert": "yes"}}, "codec": {"type": "ax25"}}
+{"object_name": "FSK 9600 AX.25", "object_type": "demod_chain", "modem": {"type": "fsk",  "config": "9600", "options": {}}, "slicer": {"type": "binary", "config": "9600", "options": {"lock_rate": "0.88"}}, "stream": {"type": "lfsr", "options": {"poly": "0x63003", "invert": "yes"}}, "codec": {"type": "ax25"}}
+{"object_name": "Raw packet report", "object_type": "report", "options": {"style": "raw", "destination": "std_out"}}
