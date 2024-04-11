@@ -118,6 +118,7 @@ def main():
 		try:
 			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
 		except:
+			descrambled_data = sliced_data
 			print("skipped stream")
 			pass
 		try:
@@ -125,6 +126,7 @@ def main():
 		except:
 			print("skipped codec")
 			pass
+
 
 	print("Correlating results.")
 
