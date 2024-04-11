@@ -1,4 +1,3 @@
-# afsk
 # Python3
 # Functions for demodulating PSK
 # Nino Carrillo
@@ -247,22 +246,6 @@ class BPSKModem:
 
 		self.oscillator_amplitude = 1.0
 
-		self.AGC = AGC(
-			sample_rate = self.sample_rate,
-			attack_rate = self.agc_attack_rate,
-			sustain_time = self.agc_sustain_time,
-			decay_rate = self.agc_decay_rate,
-			target_amplitude = self.oscillator_amplitude,
-			record_envelope = True
-		)
-
-		self.NCO = NCO(
-			sample_rate = self.sample_rate,
-			amplitude = self.oscillator_amplitude,
-			set_frequency = self.carrier_freq,
-			wavetable_size = 256
-		)
-
 
 
 		self.tune()
@@ -272,11 +255,21 @@ class BPSKModem:
 		self.input_bpf_low_cutoff = kwargs.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff)
 		self.input_bpf_high_cutoff = kwargs.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff)
 		self.input_bpf_span = kwargs.get('input_bpf_span', self.input_bpf_span)
-		self.mark_freq = kwargs.get('mark_freq', self.mark_freq)
 		self.output_lpf_cutoff = kwargs.get('output_lpf_cutoff', self.output_lpf_cutoff)
 		self.output_lpf_span = kwargs.get('output_lpf_span', self.output_lpf_span)
 		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+		self.carrier_freq = kwargs.get('carrier_freq', self.carrier_freq)
+		self.tune()
 
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = float(options.get('symbol_rate', self.symbol_rate))
+		self.input_bpf_low_cutoff = float(options.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff))
+		self.input_bpf_high_cutoff = float(options.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff))
+		self.input_bpf_span = float(options.get('input_bpf_span', self.input_bpf_span))
+		self.output_lpf_cutoff = float(options.get('output_lpf_cutoff', self.output_lpf_cutoff))
+		self.output_lpf_span = float(options.get('output_lpf_span', self.output_lpf_span))
+		self.sample_rate = float(options.get('sample_rate', self.sample_rate))
+		self.carrier_freq = float(options.get('carrier_freq', self.carrier_freq))
 		self.tune()
 
 	def tune(self):
@@ -306,7 +299,22 @@ class BPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
+		self.AGC = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.agc_attack_rate,
+			sustain_time = self.agc_sustain_time,
+			decay_rate = self.agc_decay_rate,
+			target_amplitude = self.oscillator_amplitude,
+			record_envelope = True
+		)
 
+		self.NCO = NCO(
+			sample_rate = self.sample_rate,
+			amplitude = self.oscillator_amplitude,
+			set_frequency = self.carrier_freq,
+			wavetable_size = 256
+		)
+		self.output_sample_rate = self.sample_rate
 
 
 	def demod(self, input_audio):

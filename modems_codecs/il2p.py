@@ -112,7 +112,7 @@ class IL2PCodec:
 		self.identifier = kwargs.get('ident', 1)
 		self.min_distance = kwargs.get('min_dist', 0)
 		self.disable_rs = kwargs.get('disable_rs', False)
-		self.sync_tolerance = kwargs.get('sync_tol', 1)
+		self.sync_tolerance = kwargs.get('sync_tol', 0)
 
 		self.state = 'sync_search'
 		self.working_word = int(0xFFFFFF)

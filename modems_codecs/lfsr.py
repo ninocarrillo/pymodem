@@ -9,8 +9,8 @@ from modems_codecs.data_classes import AddressedData
 class LFSR:
 	def __init__(self, **kwargs):
 
-		self.polynomial = kwargs.get('poly', 0x3)
-		self.invert = kwargs.get('invert', True)
+		self.polynomial = kwargs.get('poly', 0x1)
+		self.invert = kwargs.get('invert', False)
 
 		self.shift_register = 0
 

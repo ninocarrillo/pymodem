@@ -1,4 +1,3 @@
-{"element_type": "input_file"}
-{"element_type": "split_stream"}
-{"element_type": "BPSKModem"}
-{"element_type": "BPSKModem"}
+{"chain_name": "BPSK 300 IL2P+CRC, 1500 Hz", "chain_type": "demod", "modem": {"type": "bpsk",  "config": "300", "options": {"carrier_freq": "1500.0"}}, "slicer": {"type": "binary", "config": "300", "options": {"lock_rate": "0.90"}}, "lfsr": {"poly": "0x3", "invert": "True"}, "codec": {"type": "IL2P", "crc": "True"}}
+{"chain_name": "BPSK 300 IL2P+CRC, 1525 Hz", "chain_type": "demod", "modem": {"type": "bpsk",  "config": "300", "options": {"carrier_freq": "1525.0"}}, "slicer": {"type": "binary", "config": "300", "options": {"lock_rate": "0.90"}}, "lfsr": {"poly": "0x3", "invert": "True"}, "codec": {"type": "IL2P", "crc": "True"}}
+{"chain_name": "BPSK 300 IL2P+CRC, 1475 Hz", "chain_type": "demod", "modem": {"type": "bpsk",  "config": "300", "options": {"carrier_freq": "1475.0"}}, "slicer": {"type": "binary", "config": "300", "options": {"lock_rate": "0.90"}}, "lfsr": {"poly": "0x3", "invert": "True"}, "codec": {"type": "IL2P", "crc": "True"}}

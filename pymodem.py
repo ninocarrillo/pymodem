@@ -16,6 +16,7 @@ from modems_codecs.slicer import BinarySlicer
 from modems_codecs.il2p import IL2PCodec
 from modems_codecs.lfsr import LFSR
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
+import modems_codecs.chain_builder
 import json
 
 
@@ -39,7 +40,7 @@ def main():
 			stack_plan.append(json.loads(line))
 		configfile.close()
 	except:
-		print('Unable to open json file.')
+		print('Unable to open config json file.')
 		sys.exit(3)
 	# try to open audio file
 	try:
@@ -48,55 +49,57 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(3)
 
-	print("Building stack from json")
-	print(stack_plan)
-
-	print("Demodulating audio.")
+	print("Building stack from config json")
 
 	stack = []
-
-
-	modems = []
-	modems.append(BPSKModem(sample_rate=input_sample_rate, config='300'))
-	# append more modems as desired
-
-	demod_audios = []
-	for modem in modems:
-		demod_audios.append(modem.demod(input_audio))
-
-	print("Slicing bits.")
-
-	slicers = []
-	sliced_datas = []
 	i = 0
-	for demod_audio in demod_audios:
-		#plt.figure()
-		#plt.plot(demod_audio)
-		#plt.plot(modems[i].loop_output)
-		#plt.show()
-		slicers.append(BinarySlicer(sample_rate=input_sample_rate, config='300'))
-		slicers[-1].retune(lock_rate=0.90)
-		sliced_datas.append(slicers[-1].slice(demod_audio))
+	for line in stack_plan:
+		stack.append([])
+		try:
+			stack[i].append(line['chain_name'])
+			print(f"Line {i+1}: {stack[i][0]}.")
+		except:
+			print(f"Missing 'chain_name' in {sys.argv[1]} line {i+1}, skipping this chain.")
+			i += 1
+			# go to the next iteration of the for loop
+			continue
+
+		# append the modem object to this chain
+		stack[i].append(
+			modems_codecs.chain_builder.ModemConfigurator(
+				input_sample_rate,
+				line['modem'],
+			)
+
+		)
+		stack[i].append(
+			modems_codecs.chain_builder.SlicerConfigurator(
+				stack[i][1].output_sample_rate,
+				line['slicer']
+			)
+		)
+		stack[i].append(
+			modems_codecs.chain_builder.LFSRConfigurator(line['lfsr'])
+		)
+		stack[i].append(
+			modems_codecs.chain_builder.CodecConfigurator(
+				line['codec'],
+				line['chain_name']
+			)
+		)
 		i += 1
 
 
-	print("Applying LFSR.")
-
-	Descramblers = []
-	descrambled_datas = []
-	for sliced_data in sliced_datas:
-		Descramblers.append(LFSR(poly=0x3, invert=True))
-		descrambled_datas.append(Descramblers[-1].stream_unscramble_8bit(sliced_data))
-
-	print("IL2P Decoding.")
-
-	il2p_codecs = []
+	print("Executing stack plan.")
 	decoded_datas = []
-	i = 0
-	for descrambled_data in descrambled_datas:
-		il2p_codecs.append(IL2PCodec(ident=i, crc=True, min_dist=0, disable_rs=False))
-		i += 1
-		decoded_datas.append(il2p_codecs[-1].decode(descrambled_data))
+	for chain in stack:
+		print(chain[0])
+		demod_audio = chain[1].demod(input_audio)
+		sliced_data = chain[2].slice(demod_audio)
+		descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
+		decoded_datas.append(chain[4].decode(descrambled_data))
+
+
 
 	print("Correlating results.")
 
