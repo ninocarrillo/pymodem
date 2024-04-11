@@ -4,6 +4,7 @@
 # 6 Apr 2024
 
 import modems_codecs.crc_functions as crc_functions
+from collections import Counter
 
 
 # I found this 'print_to_string' function on stack overflow
@@ -221,6 +222,14 @@ class PacketMetaArray:
 			first_array = False
 		# now sort the unique list:
 		self.unique_packet_array = sorted(self.unique_packet_array, key=lambda packet: packet.streamaddress)
+		# now count unique contributions of each decoder
+		decoder_unique_list = []
+		for packet in self.unique_packet_array:
+			if len(packet.CorrelatedDecoders) == 1:
+				decoder_unique_list.append(packet.SourceDecoder)
+		self.DecoderHistogram = Counter(decoder_unique_list)
+				
+		
 	
 	def CountBad(self):
 		self.bad_count = 0
@@ -303,4 +312,5 @@ class PacketMetaArray:
 						string_output +=print_to_string(chr(int(byte)), end='')
 			string_output += print_to_string("Valid packets: ", self.CountGood())
 			string_output += print_to_string("CRC saves: ", self.CountBad())
+			string_output += print_to_string("Decoder Unique Contributions: ", self.DecoderHistogram)
 		return string_output
