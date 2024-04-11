@@ -15,7 +15,6 @@ from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
 import json
 
-
 import matplotlib.pyplot as plt
 
 def main():
@@ -53,58 +52,67 @@ def main():
 		stack.append([])
 		try:
 			stack[i].append(line['chain_name'])
-			print(f"Line {i+1}: {stack[i][0]}.")
+			print(f"Line {i+1}: {stack[i][0]}")
 		except:
 			print(f"Missing 'chain_name' in {sys.argv[1]} line {i+1}, skipping this chain.")
 			i += 1
 			# go to the next iteration of the for loop
 			continue
 
+		try:
+			chain_type = line.get('chain_type')
+			print(f"chain_type: {chain_type}")
+		except:
+			print(f"Missing 'chain_type' in {sys.argv[1]} line {i+1}, skipping this chain.")
+			i += 1
+			continue
+
 		# append the modem object to this chain
-		try:
-			modem = modems_codecs.chain_builder.ModemConfigurator(
-				input_sample_rate,
-				line['modem'],
-			)
-		except:
-			print(f"Invalid 'modem' in {line['chain_name']}.")
-			modem = []
-		stack[i].append(modem)
-		try:
-			slicer_sample_rate = stack[i][1].output_sample_rate
-		except:
-			slicer_sample_rate = input_sample_rate
-		try:
-			slicer = modems_codecs.chain_builder.SlicerConfigurator(
-				slicer_sample_rate,
-				line['slicer']
-			)
-		except:
-			print(f"Invalid 'slicer' in {line['chain_name']}.")
-			slicer = []
-		stack[i].append(slicer)
-		try:
-			stream = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
-		except:
-			print(f"Invalid 'stream' in {line['chain_name']}.")
-			stream = []
-		stack[i].append(stream)
-		try:
-			codec = modems_codecs.chain_builder.CodecConfigurator(
-				line['codec'],
-				line['chain_name']
-			)
-		except:
-			print(f"Invalid 'codec' in {line['chain_name']}.")
-			codec = []
-		stack[i].append(codec)
-		i += 1
+		if chain_type == 'demod':
+			try:
+				modem = modems_codecs.chain_builder.ModemConfigurator(
+					input_sample_rate,
+					line['modem'],
+				)
+			except:
+				print(f"Invalid or missing 'modem' in {line['chain_name']}.")
+				modem = []
+			stack[i].append(modem)
+			try:
+				slicer_sample_rate = stack[i][1].output_sample_rate
+			except:
+				slicer_sample_rate = input_sample_rate
+			try:
+				slicer = modems_codecs.chain_builder.SlicerConfigurator(
+					slicer_sample_rate,
+					line['slicer']
+				)
+			except:
+				print(f"Invalid or missing 'slicer' in {line['chain_name']}.")
+				slicer = []
+			stack[i].append(slicer)
+			try:
+				stream = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
+			except:
+				print(f"Invalid or missing 'stream' in {line['chain_name']}.")
+				stream = []
+			stack[i].append(stream)
+			try:
+				codec = modems_codecs.chain_builder.CodecConfigurator(
+					line['codec'],
+					line['chain_name']
+				)
+			except:
+				print(f"Invalid or missing 'codec' in {line['chain_name']}.")
+				codec = []
+			stack[i].append(codec)
+			i += 1
 
 
 	print("Executing stack plan.")
 	decoded_datas = []
 	for chain in stack:
-		print(chain[0])
+		print(f"Processing chain: {chain[0]}")
 		try:
 			demod_audio = chain[1].demod(input_audio)
 		except:
@@ -118,7 +126,6 @@ def main():
 		try:
 			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
 		except:
-			descrambled_data = sliced_data
 			print("skipped stream")
 			pass
 		try:
