@@ -78,7 +78,21 @@ class AFSKModem:
 		self.correlator_span = kwargs.get('correlator_span', self.correlator_span)
 		self.correlator_offset = kwargs.get('correlator_offset', self.correlator_offset)
 		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+		self.tune()
 
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = float(options.get('symbol_rate', self.symbol_rate))
+		self.input_bpf_low_cutoff = float(options.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff))
+		self.input_bpf_high_cutoff = float(options.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff))
+		self.input_bpf_span = float(options.get('input_bpf_span', self.input_bpf_span))
+		self.output_lpf_cutoff = float(options.get('output_lpf_cutoff', self.output_lpf_cutoff))
+		self.output_lpf_span = float(options.get('output_lpf_span', self.output_lpf_span))
+		self.sample_rate = float(options.get('sample_rate', self.sample_rate))
+		self.space_gain = float(options.get('space_gain', self.space_gain))
+		self.mark_freq = float(options.get('mark_freq', self.mark_freq))
+		self.space_freq = float(options.get('space_freq', self.space_freq))
+		self.correlator_span = float(options.get('correlator_span', self.correlator_span))
+		self.correlator_offset = float(options.get('correlator_offset', self.correlator_offset))
 		self.tune()
 
 	def tune(self):

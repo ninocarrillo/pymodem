@@ -11,10 +11,6 @@ import sys
 from scipy.io.wavfile import read as readwav
 from scipy.io.wavfile import write as writewav
 
-from modems_codecs.psk import BPSKModem
-from modems_codecs.slicer import BinarySlicer
-from modems_codecs.il2p import IL2PCodec
-from modems_codecs.lfsr import LFSR
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
 import json
@@ -65,28 +61,40 @@ def main():
 			continue
 
 		# append the modem object to this chain
-		stack[i].append(
-			modems_codecs.chain_builder.ModemConfigurator(
+		try:
+			modem = modems_codecs.chain_builder.ModemConfigurator(
 				input_sample_rate,
 				line['modem'],
 			)
-
-		)
-		stack[i].append(
-			modems_codecs.chain_builder.SlicerConfigurator(
-				stack[i][1].output_sample_rate,
+		except:
+			modem = []
+		stack[i].append(modem)
+		print(stack[i][1])
+		try:
+			slicer_sample_rate = stack[i][1].output_sample_rate
+		except:
+			slicer_sample_rate = input_sample_rate
+		try:
+			slicer = modems_codecs.chain_builder.SlicerConfigurator(
+				slicer_sample_rate,
 				line['slicer']
 			)
-		)
-		stack[i].append(
-			modems_codecs.chain_builder.LFSRConfigurator(line['lfsr'])
-		)
-		stack[i].append(
-			modems_codecs.chain_builder.CodecConfigurator(
+		except:
+			slicer = []
+		stack[i].append(slicer)
+		try:
+			slicer = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
+		except:
+			slicer = []
+		stack[i].append(slicer)
+		try:
+			codec = modems_codecs.chain_builder.CodecConfigurator(
 				line['codec'],
 				line['chain_name']
 			)
-		)
+		except:
+			codec = []
+		stack[i].append(codec)
 		i += 1
 
 
@@ -94,12 +102,22 @@ def main():
 	decoded_datas = []
 	for chain in stack:
 		print(chain[0])
-		demod_audio = chain[1].demod(input_audio)
-		sliced_data = chain[2].slice(demod_audio)
-		descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
-		decoded_datas.append(chain[4].decode(descrambled_data))
-
-
+		try:
+			demod_audio = chain[1].demod(input_audio)
+		except:
+			pass
+		try:
+			sliced_data = chain[2].slice(demod_audio)
+		except:
+			pass
+		try:
+			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
+		except:
+			pass
+		try:
+			decoded_datas.append(chain[4].decode(descrambled_data))
+		except:
+			pass
 
 	print("Correlating results.")
 

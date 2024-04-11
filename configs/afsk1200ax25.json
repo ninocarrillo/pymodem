@@ -1,0 +1,1 @@
+{"chain_name": "AFSK 1200 AX.25 flat", "chain_type": "demod", "modem": {"type": "afsk",  "config": "1200", "options": {"space_gain": "1.0"}}, "slicer": {"type": "binary", "config": "1200", "options": {"lock_rate": "0.72"}}, "stream": {"type": "lfsr", "options": {"poly": "0x3", "invert": "True"}}, "codec": {"type": "ax25"}}

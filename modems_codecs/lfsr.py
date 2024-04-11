@@ -14,6 +14,10 @@ class LFSR:
 
 		self.shift_register = 0
 
+	def StringOptionsRetune(self, options):
+		self.polynomial = int(options.get('poly', 0x1), 16)
+		self.invert = options.get('invert', False)
+
 	def stream_unscramble_8bit(self, data):
 		# this method creates one output byte for each input byte
 		# The lfsr is free-running and arbitrarily initialized, so valid data
