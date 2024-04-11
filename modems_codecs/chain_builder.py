@@ -10,6 +10,7 @@ import modems_codecs.lfsr
 import modems_codecs.slicer
 import modems_codecs.il2p
 import modems_codecs.ax25
+from modems_codecs.string_ops import check_boolean
 
 def ModemConfigurator(arg_sample_rate, input_args):
 	new_object = []
@@ -42,18 +43,9 @@ def StreamConfigurator(input_args):
 
 def CodecConfigurator(input_args, name):
 	new_object = []
-	if input_args['type'] == 'il2p' or input_args['type'] == 'IL2P':
+	if input_args['type'].lower() == 'il2p':
 		new_object = modems_codecs.il2p.IL2PCodec(ident=name)
-		crc = input_args.get('crc', True)
-		disable_rs = input_args.get('disable_rs')
-		if crc:
-			new_object.collect_trailing_crc = True
-		else:
-			new_object.collect_trailing_crc = False
-		if disable_rs:
-			new_object.disable_rs = True
-		else:
-			new_object.disable_rs = False
-	elif input_args['type'] == 'ax25' or input_args['type'] == 'AX25':
+		new_object.StringOptionsRetune(input_args['options'])
+	elif input_args['type'].lower() == 'ax25':
 		new_object = modems_codecs.ax25.AX25Codec(ident=name)
 	return new_object

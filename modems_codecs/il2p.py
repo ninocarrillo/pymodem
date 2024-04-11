@@ -9,6 +9,7 @@ from modems_codecs.packet_meta import PacketMeta
 from modems_codecs.lfsr import LFSRnoaddr
 import modems_codecs.rs_functions as rs_functions
 from modems_codecs.crc_functions import AppendCRC
+from modems_codecs.string_ops import check_boolean
 import copy
 
 
@@ -135,6 +136,12 @@ class IL2PCodec:
 		self.block_rs = rs_functions.initialize(rs_firstroot, rs_block_numroots, rs_gf_power, rs_gf_poly)
 		self.bytes_corrected = 0
 		self.block_fail = False
+
+	def StringOptionsRetune(self, options):
+		self.collect_trailing_crc = check_boolean(options.get('crc', 'yes'))
+		self.disable_rs = check_boolean(options.get('disable_rs', 'no'))
+		self.min_distance = int(options.get('min_dist', self.min_distance))
+		self.sync_tolerance = int(options.get('sync_tol', self.sync_tolerance))
 
 	def get_a_bit(self, word_mask):
 		self.working_word <<= 1

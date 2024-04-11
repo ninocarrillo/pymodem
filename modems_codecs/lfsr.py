@@ -5,6 +5,7 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
+from modems_codecs.string_ops import check_boolean
 
 class LFSR:
 	def __init__(self, **kwargs):
@@ -16,12 +17,7 @@ class LFSR:
 
 	def StringOptionsRetune(self, options):
 		self.polynomial = int(options.get('poly', 0x1), 16)
-		if options.get('invert') == "yes" or options.get('invert') == True:
-			self.invert = True
-		else:
-			self.invert = False
-		print('from file', options.get('invert'))
-		print(self.invert)
+		self.invert = check_boolean(options.get('invert', "false"))
 
 	def stream_unscramble_8bit(self, data):
 		# this method creates one output byte for each input byte
