@@ -1,0 +1,1 @@
+{"chain_name": "AFSK 300 Il2P+CRC +0Hz", "chain_type": "demod", "modem": {"type": "afsk",  "config": "300", "options": {"correlator_offset": "0.0"}}, "slicer": {"type": "binary", "config": "300", "options": {"lock_rate": "0.90"}}, "stream": {"type": "lfsr", "options": {"poly": "0x1", "invert": "False"}}, "codec": {"type": "il2p", "crc": "True"}}

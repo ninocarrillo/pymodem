@@ -67,9 +67,9 @@ def main():
 				line['modem'],
 			)
 		except:
+			print(f"Invalid 'modem' in {line['chain_name']}.")
 			modem = []
 		stack[i].append(modem)
-		print(stack[i][1])
 		try:
 			slicer_sample_rate = stack[i][1].output_sample_rate
 		except:
@@ -80,19 +80,22 @@ def main():
 				line['slicer']
 			)
 		except:
+			print(f"Invalid 'slicer' in {line['chain_name']}.")
 			slicer = []
 		stack[i].append(slicer)
 		try:
-			slicer = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
+			stream = modems_codecs.chain_builder.StreamConfigurator(line['stream'])
 		except:
-			slicer = []
-		stack[i].append(slicer)
+			print(f"Invalid 'stream' in {line['chain_name']}.")
+			stream = []
+		stack[i].append(stream)
 		try:
 			codec = modems_codecs.chain_builder.CodecConfigurator(
 				line['codec'],
 				line['chain_name']
 			)
 		except:
+			print(f"Invalid 'codec' in {line['chain_name']}.")
 			codec = []
 		stack[i].append(codec)
 		i += 1
@@ -105,18 +108,22 @@ def main():
 		try:
 			demod_audio = chain[1].demod(input_audio)
 		except:
+			print("skipped modem")
 			pass
 		try:
 			sliced_data = chain[2].slice(demod_audio)
 		except:
+			print("skipped slicer")
 			pass
 		try:
 			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
 		except:
+			print("skipped stream")
 			pass
 		try:
 			decoded_datas.append(chain[4].decode(descrambled_data))
 		except:
+			print("skipped codec")
 			pass
 
 	print("Correlating results.")
