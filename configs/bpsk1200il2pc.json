@@ -1,0 +1,1 @@
+{"chain_name": "BPSK 1200 IL2P+CRC, 1500 Hz", "chain_type": "demod", "modem": {"type": "bpsk",  "config": "1200", "options": {"carrier_freq": "1500.0"}}, "slicer": {"type": "binary", "config": "1200", "options": {"lock_rate": "0.90"}}, "lfsr": {"poly": "0x3", "invert": "True"}, "codec": {"type": "IL2P", "crc": "True"}}

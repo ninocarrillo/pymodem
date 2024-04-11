@@ -29,7 +29,7 @@ def main():
 		sys.exit(1)
 	# check correct number of parameters were passed to command line
 	if len(sys.argv) != 3:
-		print("Not enough arguments. Usage: python3 decode.py <config json> <sound file>")
+		print("Not enough arguments. Usage: python3 pymodem.py <config json> <sound file>")
 		sys.exit(2)
 	# try to open configuration json
 	try:
