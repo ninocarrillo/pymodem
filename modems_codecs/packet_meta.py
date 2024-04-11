@@ -310,7 +310,7 @@ class PacketMetaArray:
 					for i in range(header_info[0], len(packet.data)-2):
 						byte = packet.data[i]
 						string_output +=print_to_string(chr(int(byte)), end='')
-			string_output += print_to_string("Valid packets: ", self.CountGood())
+			string_output += print_to_string("\nValid packets: ", self.CountGood())
 			string_output += print_to_string("CRC saves: ", self.CountBad())
 			string_output += print_to_string("Decoder Unique Contributions: ", self.DecoderHistogram)
 		return string_output

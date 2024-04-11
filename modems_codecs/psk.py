@@ -199,10 +199,11 @@ class BPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 80.0,
-				i= 0.16,
+				p= 0.05,
+				i= 0.0001,
 				i_limit=self.max_freq_offset
 			)
+			self.loop_gain = 1600.0
 		elif self.definition == '1200':
 			# set some default values for 300 bps AFSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
@@ -239,10 +240,11 @@ class BPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 80.0,
-				i= 0.16,
+				p= 0.25,
+				i= 0.00025,
 				i_limit=self.max_freq_offset
 			)
+			self.loop_gain = 1600.0
 
 		self.oscillator_amplitude = 1.0
 
@@ -342,7 +344,7 @@ class BPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.loop_gain * self.FeedbackController.update_reset(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			demod_audio.append(self.I_LPF.output)
 
