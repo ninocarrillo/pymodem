@@ -22,6 +22,8 @@ Arbitrary modes can be described for all modems in the configuration .json passe
 IL2P decoder options can be specified in the configuration .json as well.
 
 ## Program Architecture
+Pymodem is modular and configurable.
+
 Pymodem reads the configuration file to build any number of signal processing chains. Each line in the config.json file is one json object. Signal processing chains are identified as 'demod_chain' objects, and consist of the following obects in order:
 ### 'demod_chain' object composition
 Every demod chain is arranged the same way, and consists of four blocks in this order:
