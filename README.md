@@ -1,6 +1,8 @@
 # pymodem
 Pymodem is a packet radio decoding program which can demodulate and decode a variety of packet formats from audio files. This is a work in progress! I plan to add more modems (including QPSK), more report options, the ability to save binary or kiss packet data to an output file, and the ability to save correlated packet audio to inidividual output audio files.
 
+All signal processing blocks in Pymodem are implemented in plain Python code. This is done for ease of understanding as well as ease of modification. Because of this, Pymodem isn't the *fastest* offline packet radio decoder. Faster execution would be possible by porting Pymodem to a compiler-based language and compiling for each platform. However, this approach makes Pymodem easy to modify, analyze, and adapt. 
+
 The operation of Pymodem is specified at runtime by a config file. The config file specifies details about the modems and decoders to be used to process the audio file. It also includes instructions for generating reports after processing is complete. Config files are composed of json objects, stored one-object-per-line in the file.
 
 ## Requirements
