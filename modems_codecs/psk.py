@@ -6,19 +6,21 @@
 from scipy.signal import firwin
 from math import ceil, tan,sin, pi
 from numpy import convolve
+import matplotlib.pyplot as plt
 
 class PI_control:
 	def __init__(self, **kwargs):
 		self.p_rate = kwargs.get('p', 0.1)
 		self.i_rate = kwargs.get('i', 0.1)
 		self.i_limit = kwargs.get('i_limit', 100.0)
+		self.gain = kwargs.get('gain', 1000.0)
 		self.integral = 0.0
 		self.proportional = 0.0
 
 	def update_reset(self, sample):
-		self.proportional = self.p_rate * sample
-		self.integral += self.i_rate * sample
-		if self.integral > self.i_limit:
+		self.proportional = self.gain * self.p_rate * sample
+		self.integral += self.gain * (self.i_rate * sample)
+		if abs(self.integral) > self.i_limit:
 			self.integral = 0.0
 		self.output = self.proportional + self.integral
 
@@ -179,7 +181,7 @@ class BPSKModem:
 			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 50.0
+			self.max_freq_offset = 37.5
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -201,9 +203,9 @@ class BPSKModem:
 			self.FeedbackController = PI_control(
 				p= 0.05,
 				i= 0.0001,
-				i_limit=self.max_freq_offset
+				i_limit=self.max_freq_offset,
+				gain= 7031.0
 			)
-			self.loop_gain = 1600.0
 		elif self.definition == '1200':
 			# set some default values for 300 bps AFSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
@@ -220,7 +222,7 @@ class BPSKModem:
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 100.0
+			self.max_freq_offset = 87.5
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -240,11 +242,11 @@ class BPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.25,
-				i= 0.00025,
-				i_limit=self.max_freq_offset
+				p= 0.24,
+				i= 0.0003,
+				i_limit=self.max_freq_offset,
+				gain= 7031.0
 			)
-			self.loop_gain = 1600.0
 
 		self.oscillator_amplitude = 1.0
 
@@ -344,7 +346,7 @@ class BPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.loop_gain * self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			demod_audio.append(self.I_LPF.output)
 
@@ -352,4 +354,7 @@ class BPSKModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		plt.figure()
+		plt.plot(self.loop_output)
+		plt.show()
 		return demod_audio

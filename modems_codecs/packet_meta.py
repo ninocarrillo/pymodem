@@ -25,7 +25,6 @@ def print_ax25_header_to_string(frame, delimiter):
 	if (count > 15):
 		valid_header = 1
 		address_extension_bit = 0
-		index = 1
 		subfield_character_index = 0
 		subfield_index = 0
 		# Print address information
@@ -228,9 +227,9 @@ class PacketMetaArray:
 			if len(packet.CorrelatedDecoders) == 1:
 				decoder_unique_list.append(packet.SourceDecoder)
 		self.DecoderHistogram = Counter(decoder_unique_list)
-				
-		
-	
+
+
+
 	def CountBad(self):
 		self.bad_count = 0
 		for packet_array in self.raw_packet_arrays:
@@ -238,7 +237,7 @@ class PacketMetaArray:
 				if packet.ValidCRC == False:
 					self.bad_count += 1
 		return self.bad_count
-	
+
 	def PrintRawBad(self):
 		string_output = ''
 		self.bad_count = 0
@@ -260,7 +259,7 @@ class PacketMetaArray:
 						string_output += print_to_string(hex(int(byte)), end=" ")
 					string_output += print_to_string(" ")
 		return string_output
-	
+
 	def CountGood(self):
 		# now print results
 		self.good_count = 0
@@ -268,7 +267,7 @@ class PacketMetaArray:
 			if packet.ValidCRC:
 				self.good_count += 1
 		return self.good_count
-	
+
 	def PrintRawGood(self):
 		string_output = ''
 		# now print results

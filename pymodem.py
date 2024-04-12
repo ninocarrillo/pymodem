@@ -16,7 +16,6 @@ from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
 import json
 
-import matplotlib.pyplot as plt
 
 def main():
 	# check correct version of Python
