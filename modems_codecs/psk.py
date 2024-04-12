@@ -6,7 +6,7 @@
 from scipy.signal import firwin
 from math import ceil, tan,sin, pi
 from numpy import convolve
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 class PI_control:
 	def __init__(self, **kwargs):
@@ -354,7 +354,7 @@ class BPSKModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
-		plt.figure()
-		plt.plot(self.loop_output)
-		plt.show()
+		# plt.figure()
+		# plt.plot(self.loop_output)
+		# plt.show()
 		return demod_audio
