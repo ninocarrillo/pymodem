@@ -1,0 +1,2 @@
+{"object_name": "BPSK 1200 IL2P+CRC, 1500 Hz sync_tol 2", "object_type": "demod_chain", "modem": {"type": "bpsk",  "config": "1200", "options": {"carrier_freq": "1500.0"}}, "slicer": {"type": "binary", "config": "1200", "options": {"lock_rate": "0.90"}}, "stream": {"type": "lfsr", "options": {"poly": "0x3", "invert": "True"}}, "codec": {"type": "il2p", "options": {"crc": "yes", "disable_rs": "no", "min_dist": "0", "sync_tol": "2"}}}
+{"object_name": "Decoded header report", "object_type": "report", "options": {"style": "decoded_headers", "destination": "std_out"}}

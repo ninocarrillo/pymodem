@@ -1,4 +1,3 @@
-# afsk
 # Python3
 # Functions for demodulating PSK
 # Nino Carrillo
@@ -7,19 +6,22 @@
 from scipy.signal import firwin
 from math import ceil, tan,sin, pi
 from numpy import convolve
+from modems_codecs.agc import AGC
+#import matplotlib.pyplot as plt
 
 class PI_control:
 	def __init__(self, **kwargs):
 		self.p_rate = kwargs.get('p', 0.1)
 		self.i_rate = kwargs.get('i', 0.1)
 		self.i_limit = kwargs.get('i_limit', 100.0)
+		self.gain = kwargs.get('gain', 1000.0)
 		self.integral = 0.0
 		self.proportional = 0.0
 
 	def update_reset(self, sample):
-		self.proportional = self.p_rate * sample
-		self.integral += self.i_rate * sample
-		if self.integral > self.i_limit:
+		self.proportional = self.gain * self.p_rate * sample
+		self.integral += self.gain * (self.i_rate * sample)
+		if abs(self.integral) > self.i_limit:
 			self.integral = 0.0
 		self.output = self.proportional + self.integral
 
@@ -107,57 +109,6 @@ class NCO:
 			quadrature_phase_index -= self.wavetable_size
 		self.quadrature_phase_output = self.wavetable[quadrature_phase_index]
 
-class AGC:
-	def __init__(self, **kwargs):
-		self.attack_rate = kwargs.get('attack_rate', 500.0)
-		self.decay_rate = kwargs.get('decay_rate', 50.0)
-		self.sustain_time = kwargs.get('sustain_time', 1.0)
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
-		self.target_amplitude = kwargs.get('target_amplitude', 10000.0)
-		self.record_envelope = kwargs.get('record_envelope', False)
-		# adjust the agc attack and decay rates to per-sample values
-		self.scaled_attack_rate = self.attack_rate / self.sample_rate
-		self.scaled_decay_rate = self.decay_rate / self.sample_rate
-		self.sustain_increment = self.sustain_time / self.sample_rate
-		self.envelope = 0
-		self.normal = 1.0
-		self.envelope_buffer = []
-
-	def peak_detect(self, sample):
-		compare_value = abs(sample)
-		if compare_value > self.envelope:
-			self.envelope += (self.scaled_attack_rate * self.normal)
-			if self.envelope > compare_value:
-				self.envelope = compare_value
-			self.sustain_count = 0.0
-		if self.sustain_count >= self.sustain_time:
-			self.envelope -= (self.scaled_decay_rate * self.normal)
-			if self.envelope < 0:
-				self.envelope = 0
-		self.sustain_count += self.sustain_increment
-
-	def apply(self, buffer):
-		# This routine applies a scaling factor to each sample in buffer.
-		# The scaling factor is determined by the detected envelope.
-
-		# For the agc attack and decay rates to makes sense, we need to have
-		# some pre-knowledge about the maximum possible value of the data stream.
-		self.normal = max(buffer)
-		self.envelope_buffer = []
-		i = 0
-		for sample in buffer:
-			# detect the Envelope
-			self.peak_detect(sample)
-			# scale the sample
-			# This will drive the signal stream to match the local oscillator amplitude
-			if self.envelope!= 0:
-				buffer[i] =  self.target_amplitude * sample / (self.envelope)
-			if self.record_envelope:
-				self.envelope_buffer.append(self.envelope)
-
-			i += 1
-
-
 class BPSKModem:
 
 	def __init__(self, **kwargs):
@@ -180,7 +131,7 @@ class BPSKModem:
 			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 50.0
+			self.max_freq_offset = 37.5
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -200,9 +151,10 @@ class BPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 80.0,
-				i= 0.16,
-				i_limit=self.max_freq_offset
+				p= 0.05,
+				i= 0.0001,
+				i_limit=self.max_freq_offset,
+				gain= 7031.0
 			)
 		elif self.definition == '1200':
 			# set some default values for 300 bps AFSK:
@@ -220,7 +172,7 @@ class BPSKModem:
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 100.0
+			self.max_freq_offset = 87.5
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -240,28 +192,13 @@ class BPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 80.0,
-				i= 0.16,
-				i_limit=self.max_freq_offset
+				p= 0.24,
+				i= 0.0003,
+				i_limit=self.max_freq_offset,
+				gain= 7031.0
 			)
 
 		self.oscillator_amplitude = 1.0
-
-		self.AGC = AGC(
-			sample_rate = self.sample_rate,
-			attack_rate = self.agc_attack_rate,
-			sustain_time = self.agc_sustain_time,
-			decay_rate = self.agc_decay_rate,
-			target_amplitude = self.oscillator_amplitude,
-			record_envelope = True
-		)
-
-		self.NCO = NCO(
-			sample_rate = self.sample_rate,
-			amplitude = self.oscillator_amplitude,
-			set_frequency = self.carrier_freq,
-			wavetable_size = 256
-		)
 
 
 
@@ -272,11 +209,21 @@ class BPSKModem:
 		self.input_bpf_low_cutoff = kwargs.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff)
 		self.input_bpf_high_cutoff = kwargs.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff)
 		self.input_bpf_span = kwargs.get('input_bpf_span', self.input_bpf_span)
-		self.mark_freq = kwargs.get('mark_freq', self.mark_freq)
 		self.output_lpf_cutoff = kwargs.get('output_lpf_cutoff', self.output_lpf_cutoff)
 		self.output_lpf_span = kwargs.get('output_lpf_span', self.output_lpf_span)
 		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+		self.carrier_freq = kwargs.get('carrier_freq', self.carrier_freq)
+		self.tune()
 
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = float(options.get('symbol_rate', self.symbol_rate))
+		self.input_bpf_low_cutoff = float(options.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff))
+		self.input_bpf_high_cutoff = float(options.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff))
+		self.input_bpf_span = float(options.get('input_bpf_span', self.input_bpf_span))
+		self.output_lpf_cutoff = float(options.get('output_lpf_cutoff', self.output_lpf_cutoff))
+		self.output_lpf_span = float(options.get('output_lpf_span', self.output_lpf_span))
+		self.sample_rate = float(options.get('sample_rate', self.sample_rate))
+		self.carrier_freq = float(options.get('carrier_freq', self.carrier_freq))
 		self.tune()
 
 	def tune(self):
@@ -306,7 +253,22 @@ class BPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
+		self.AGC = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.agc_attack_rate,
+			sustain_time = self.agc_sustain_time,
+			decay_rate = self.agc_decay_rate,
+			target_amplitude = self.oscillator_amplitude,
+			record_envelope = False
+		)
 
+		self.NCO = NCO(
+			sample_rate = self.sample_rate,
+			amplitude = self.oscillator_amplitude,
+			set_frequency = self.carrier_freq,
+			wavetable_size = 256
+		)
+		self.output_sample_rate = self.sample_rate
 
 
 	def demod(self, input_audio):
@@ -316,8 +278,6 @@ class BPSKModem:
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
 
-		self.i_output = []
-		self.q_output = []
 		self.loop_output = []
 		demod_audio = []
 		# This is a costas loop
@@ -327,12 +287,10 @@ class BPSKModem:
 			i_mixer = sample * self.NCO.in_phase_output
 			# low pass filter this product
 			self.I_LPF.update(i_mixer)
-			self.i_output.append(self.I_LPF.output)
 			# mix the quadrature phase oscillator output with the input signal
 			q_mixer = sample * self.NCO.quadrature_phase_output
 			# low pass filter this product
 			self.Q_LPF.update(q_mixer)
-			self.q_output.append(self.Q_LPF.output)
 			# mix the I and Q products to create the phase detector
 			loop_mixer = self.I_LPF.output * self.Q_LPF.output
 			# low pass filter this product
@@ -346,4 +304,7 @@ class BPSKModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		# plt.figure()
+		# plt.plot(self.loop_output)
+		# plt.show()
 		return demod_audio

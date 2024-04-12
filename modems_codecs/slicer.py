@@ -35,7 +35,12 @@ class BinarySlicer:
 		self.symbol_rate = kwargs.get('symbol_rate', self.symbol_rate)
 		self.lock_rate = kwargs.get('lock_rate', self.lock_rate)
 		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+		self.tune()
 
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = options.get('symbol_rate', self.symbol_rate)
+		self.sample_rate = options.get('sample_rate', self.sample_rate)
+		self.lock_rate = float(options.get('lock_rate', self.lock_rate))
 		self.tune()
 
 	def tune(self):

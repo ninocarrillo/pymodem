@@ -5,14 +5,19 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
+from modems_codecs.string_ops import check_boolean
 
 class LFSR:
 	def __init__(self, **kwargs):
 
-		self.polynomial = kwargs.get('poly', 0x3)
-		self.invert = kwargs.get('invert', True)
+		self.polynomial = kwargs.get('poly', 0x1)
+		self.invert = kwargs.get('invert', False)
 
 		self.shift_register = 0
+
+	def StringOptionsRetune(self, options):
+		self.polynomial = int(options.get('poly', 0x1), 16)
+		self.invert = check_boolean(options.get('invert', "false"))
 
 	def stream_unscramble_8bit(self, data):
 		# this method creates one output byte for each input byte
