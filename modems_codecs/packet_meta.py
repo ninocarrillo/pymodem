@@ -299,20 +299,21 @@ class PacketMetaArray:
 		if order.style == 'raw':
 			string_output += self.PrintRawBad()
 			string_output += self.PrintRawGood()
-			string_output += print_to_string("Valid packets: ", self.CountGood())
+			string_output += print_to_string("\nValid packets: ", self.CountGood())
 			string_output += print_to_string("CRC saves: ", self.CountBad())
 		elif order.style == 'decoded_headers':
 			for packet in self.unique_packet_array:
 				if packet.ValidCRC:
 					count += 1
-					string_output += print_to_string("Packet number: ", count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
-					string_output += print_to_string("source decoders: ", packet.CorrelatedDecoders)
+					string_output += print_to_string("\n\nPacket number: ", count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
+					string_output += print_to_string("Source decoders: ", packet.CorrelatedDecoders)
 					string_output += print_to_string("Packet byte count: ", len(packet.data))
 					header_info = print_ax25_header_to_string(packet.data, ', ')
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
 						byte = packet.data[i]
 						string_output +=print_to_string(chr(int(byte)), end='')
+
 			string_output += print_to_string("\nValid packets: ", self.CountGood())
 			string_output += print_to_string("CRC saves: ", self.CountBad())
 			string_output += print_to_string("Total Packets by Decoder: ", self.DecoderHistogram)
