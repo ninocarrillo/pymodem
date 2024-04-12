@@ -1,6 +1,6 @@
 # afsk
 # Python3
-# Functions for demodulating GFSK
+# Functions for demodulating FSK
 # Nino Carrillo
 # 29 Mar 2024
 
@@ -30,26 +30,8 @@ class FSKModem:
 			self.input_lpf_span = 1.5			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
-			self.invert = False
-		elif self.definition == '9600 inverted':
-			# set some default values for 9600 bps GFSK:
-			self.symbol_rate = 9600.0			# symbols per second (or baud)
-			self.input_lpf_cutoff = 6000.0		# low pass filter cutoff frequency for
-											# input signal
-			self.input_lpf_span = 1.5			# Number of symbols to span with the input
-											# filter. This is used with the sampling
-											# rate to determine the tap count.
-			self.invert = True
-		elif self.definition == '4800 inverted':
-			self.symbol_rate = 4800.0			# symbols per second (or baud)
-			self.input_lpf_cutoff = 3000.0		# low pass filter cutoff frequency for
-											# input signal
-			self.input_lpf_span = 1.5			# Number of symbols to span with the input
-											# filter. This is used with the sampling
-											# rate to determine the tap count.
-			self.invert = True
 		else:
-			# set some default values for 9600 bps GFSK:
+			# set some default values for 9600 bps FSK:
 			self.symbol_rate = 9600.0			# symbols per second (or baud)
 			self.input_lpf_cutoff = 6000.0		# low pass filter cutoff frequency for
 											# input signal
@@ -85,6 +67,4 @@ class FSKModem:
 	def demod(self, input_audio):
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_lpf, 'valid')
-		if self.invert:
-			audio = -audio
 		return audio

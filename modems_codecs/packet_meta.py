@@ -314,8 +314,8 @@ class PacketMetaArray:
 						byte = packet.data[i]
 						string_output +=print_to_string(chr(int(byte)), end='')
 
-			string_output += print_to_string("\nValid packets: ", self.CountGood())
-			string_output += print_to_string("CRC saves: ", self.CountBad())
-			string_output += print_to_string("Total Packets by Decoder: ", self.DecoderHistogram)
-			string_output += print_to_string("Unique Packets by Decoder: ", self.DecoderUniqueHistogram)
+			string_output += print_to_string("\n\nUnique, valid packets: ", self.CountGood())
+			string_output += print_to_string("Packets rejected from all decoders for CRC failure: ", self.CountBad())
+			string_output += print_to_string("Total packets by decoder: ", self.DecoderHistogram)
+			string_output += print_to_string("Unique packets by decoder: ", self.DecoderUniqueHistogram)
 		return string_output
