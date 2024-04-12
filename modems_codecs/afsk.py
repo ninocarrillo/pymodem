@@ -17,8 +17,8 @@ class AFSKModem:
 		if self.definition == '300':
 			# set some default values for 300 bps AFSK:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 1100.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 2300.0	# high cutoff frequency for input filter
+			self.input_bpf_low_cutoff = 1500.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 4.80			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.

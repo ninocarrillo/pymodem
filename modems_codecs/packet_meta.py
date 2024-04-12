@@ -223,10 +223,14 @@ class PacketMetaArray:
 		self.unique_packet_array = sorted(self.unique_packet_array, key=lambda packet: packet.streamaddress)
 		# now count unique contributions of each decoder
 		decoder_unique_list = []
+		decoder_list = []
 		for packet in self.unique_packet_array:
+			for decoder in packet.CorrelatedDecoders:
+				decoder_list.append(decoder)
 			if len(packet.CorrelatedDecoders) == 1:
 				decoder_unique_list.append(packet.SourceDecoder)
-		self.DecoderHistogram = Counter(decoder_unique_list)
+		self.DecoderUniqueHistogram = Counter(decoder_unique_list)
+		self.DecoderHistogram = Counter(decoder_list)
 
 
 
@@ -311,5 +315,6 @@ class PacketMetaArray:
 						string_output +=print_to_string(chr(int(byte)), end='')
 			string_output += print_to_string("\nValid packets: ", self.CountGood())
 			string_output += print_to_string("CRC saves: ", self.CountBad())
-			string_output += print_to_string("Decoder Unique Contributions: ", self.DecoderHistogram)
+			string_output += print_to_string("Total Packets by Decoder: ", self.DecoderHistogram)
+			string_output += print_to_string("Unique Packets by Decoder: ", self.DecoderUniqueHistogram)
 		return string_output
