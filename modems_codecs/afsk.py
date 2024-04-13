@@ -41,8 +41,8 @@ class AFSKModem:
 		else:
 			# set some default values for 1200 bps AFSK:
 			self.symbol_rate = 1200.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
+			self.input_bpf_low_cutoff = 700.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 4000.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 4.80			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
@@ -55,7 +55,7 @@ class AFSKModem:
 											# for de-emphasized audio.
 											# Implement multiple parallel demodulators
 											# to handle general cases.
-			self.output_lpf_cutoff = 850.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after correlators
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
