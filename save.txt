@@ -1,0 +1,12 @@
+Building processing stacks from config json
+Found object_type: demod_chain
+Line 1: AFSK 1200 AX.25 1600/1800 span 1.0 sg1.0
+Found object_type: demod_chain
+Line 2: AFSK 1200 AX.25 1300/2100 span 1.5 sg1.75
+Found object_type: report
+Line 3: Decoded header report
+Executing demod stack plan.
+Processing chain: AFSK 1200 AX.25 1600/1800 span 1.0 sg1.0
+-22, 35, 205, 607, 1299, 2235, 3256, 4131, 4638, 4638, 4131, 3256, 2235, 1299, 607, 205, 35, -22, Processing chain: AFSK 1200 AX.25 1300/2100 span 1.5 sg1.75
+-22, 35, 205, 607, 1299, 2235, 3256, 4131, 4638, 4638, 4131, 3256, 2235, 1299, 607, 205, 35, -22, Correlating results.
+Generating Decoded header report
