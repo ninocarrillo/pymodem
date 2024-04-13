@@ -161,6 +161,7 @@ class PacketMeta:
 		# it is measured to the last bit of the closing flag in the packet.
 		# this is used for comparing age of packets in multi-decoder systems
 		self.streamaddress = 0
+		self.source_sample_rate = 0.0
 		# the calculated CRC for the packet data
 		self.CalculatedCRC = 0
 		self.CarriedCRC = 0
