@@ -7,6 +7,8 @@
 from scipy.signal import firwin
 from math import ceil
 from numpy import arange, sin, cos, pi, convolve, sqrt
+from numpy import abs as npabs
+from numpy.fft import fft
 
 class AFSKModem:
 
