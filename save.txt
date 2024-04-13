@@ -1,0 +1,157 @@
+Building processing stacks from config json
+Found object_type: demod_chain
+Line 1: AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0
+Found object_type: demod_chain
+Line 2: AFSK 1200 AX.25 1300/2100 span1.5 sg1.75
+Found object_type: report
+Line 3: Decoded header report
+Executing demod stack plan.
+Processing chain: AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0
+-17, -26, -25, -15, -4, 0, -11, -31, -49, -51, -31, -1, 18, 10, -23, -56, -58, -12, 63, 123, 127, 73, 5, -12, 60, 195, 311, 324, 215, 54, -38, 23, 209, 387, 399, 185, -156, -417, -424, -175, 123, 185, -149, -767, -1318, -1436, -1015, -346, 21, -370, -1510, -2809, -3339, -2358, 199, 3553, 6391, 7500, 6391, 3553, 199, -2358, -3339, -2809, -1510, -370, 21, -346, -1015, -1436, -1318, -767, -149, 185, 123, -175, -424, -417, -156, 185, 399, 387, 209, 23, -38, 54, 215, 324, 311, 195, 60, -12, 5, 73, 127, 123, 63, -12, -58, -56, -23, 10, 18, -1, -31, -51, -49, -31, -11, 0, -4, -15, -25, -26, -17, Processing chain: AFSK 1200 AX.25 1300/2100 span1.5 sg1.75
+-17, -26, -25, -15, -4, 0, -11, -31, -49, -51, -31, -1, 18, 10, -23, -56, -58, -12, 63, 123, 127, 73, 5, -12, 60, 195, 311, 324, 215, 54, -38, 23, 209, 387, 399, 185, -156, -417, -424, -175, 123, 185, -149, -767, -1318, -1436, -1015, -346, 21, -370, -1510, -2809, -3339, -2358, 199, 3553, 6391, 7500, 6391, 3553, 199, -2358, -3339, -2809, -1510, -370, 21, -346, -1015, -1436, -1318, -767, -149, 185, 123, -175, -424, -417, -156, 185, 399, 387, 209, 23, -38, 54, 215, 324, 311, 195, 60, -12, 5, 73, 127, 123, 63, -12, -58, -56, -23, 10, 18, -1, -31, -51, -49, -31, -11, 0, -4, -15, -25, -26, -17, Correlating results.
+Generating Decoded header report
+
+
+Packet number:  1  CRC:  0xd1f1 stream address:  30498
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0', 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 1 tg.]o$m#:55c(@-{6:Zx&J$:6o2"wj['d_:(dn!`f
+
+Packet number:  2  CRC:  0xacb5 stream address:  74025
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0', 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 2 T;2PK#k5]j|3GN;2$kO:,sLw,6$sXaB{{i)pOGQ_w
+
+Packet number:  3  CRC:  0xa85f stream address:  117973
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0', 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 3 WqK:R|*@Bw4cGq;ID\`*K~%Tm^nm_TFghaIH$Ivr{
+
+Packet number:  4  CRC:  0xd628 stream address:  161759
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0', 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 4 5=Bo~6`Wr=`P@fkWa(8&;?$hVipz1S#Sdiv0C^|M{
+
+Packet number:  5  CRC:  0x80f0 stream address:  205547
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0', 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 5 )5U>HBe0T@a3i#,=nLX($gt[$K0G/,Cbc#ld.@V_,
+
+Packet number:  6  CRC:  0xc00f stream address:  249186
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 6 ]W@M{-`Do!:^;7f.i\{jyN z:s|5*M=_EGR!J6Wf>
+
+Packet number:  7  CRC:  0x50d stream address:  293159
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 7 .2X0nF^.V~-z^VGXLA~Dv6fkY}=lu~Sf]"T=NcK"l
+
+Packet number:  8  CRC:  0xdd89 stream address:  336734
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 8 %NA,hgk)D;}SA\*ij9l1.hW+y#Sx5z5S%FOm5@FMZ
+
+Packet number:  9  CRC:  0x6021 stream address:  380524
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 9  Gq{7H+tlQa. a_@^#DcI[qAD[%l.'|@@I_+zMQE<
+
+Packet number:  10  CRC:  0xdd5f stream address:  424115
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 10 B"@NjdHBl'45q~}W.'&1%-^)G4vHq0=jSH!fhS_c
+
+Packet number:  11  CRC:  0xf7d6 stream address:  467633
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 11 (3hFVI/*\en([X2Xh'YO]L V$:!fPc^]WHz*I~lO
+
+Packet number:  12  CRC:  0xce70 stream address:  511328
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 12 )~xy[4+X;hDEWw4%q'=8/!CWa+)[X&%d`s8>71gW
+
+Packet number:  13  CRC:  0xf532 stream address:  555119
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 13 W.@!0[2e~(H\EIMHM8 ysY<+P:bXaEbA)s7Ah$jv
+
+Packet number:  14  CRC:  0xb08d stream address:  599028
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 14 c"^c9@35CdT%0`vqKT7&xl[jawptC>jO)CWs?BxW
+
+Packet number:  15  CRC:  0xd96d stream address:  642837
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 15 Y8?5Tsp7WD >%}/\_?:@M?K*8-a#"s,V=GtiN ]O
+
+Packet number:  16  CRC:  0x6608 stream address:  686428
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 16 Gi-Qf~+9%f-Gl'$N|!31jDXJoBn=#Hn|q_HyYk`h
+
+Packet number:  17  CRC:  0xcbb stream address:  730217
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 17 v+r>[2@Bvp~i+bC-#)AZLZ3+^n(.{D}I}`od,y;C
+
+Packet number:  18  CRC:  0xd23c stream address:  774023
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 18 T=!M#oc09E&,W1kmZ7?F,Zwh-{ G{u^ecZ2Jp5$i
+
+Packet number:  19  CRC:  0x3ea6 stream address:  817736
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 19 <q"JUJ$!sMi_ugp+W+wpP98+ )(J7SHT\j'OwZ;6
+
+Packet number:  20  CRC:  0x3f1c stream address:  905105
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 21 Qw/V:ZB|=,ZSnDK!dSwR\D3gM_hvZ)'9w^qb/|)-
+
+Packet number:  21  CRC:  0x6dcd stream address:  992724
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 23 -wSg^5nO_]R~X[O@d+/~riu%:]|-}4( 'Zy!1p00
+
+Packet number:  22  CRC:  0x5156 stream address:  1036418
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 24 :h34&KCpLcGmjFYs"xZbVQYYye4suS|OA2`Tl66`
+
+Packet number:  23  CRC:  0xabea stream address:  1080152
+Source decoders:  ['AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0']
+Packet byte count:  68
+To:MODEM-0, From:NOISE-0, Control: 0x3 UI, PID: 0xf0 No Layer 3 
+packet 25 <ci<Tb86*E/QmG U&m0W;9>>&3\-(;N!GhA<mc&W
+
+Unique, valid packets:  23
+Packets rejected from all decoders for CRC failure:  27
+Total packets by decoder:  Counter({'AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0': 23, 'AFSK 1200 AX.25 1300/2100 span1.5 sg1.75': 5})
+Unique packets by decoder:  Counter({'AFSK 1200 AX.25 1650/1750 span 1.0 sg1.0': 18})
+
