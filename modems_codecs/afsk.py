@@ -55,7 +55,7 @@ class AFSKModem:
 											# for de-emphasized audio.
 											# Implement multiple parallel demodulators
 											# to handle general cases.
-			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 850.0		# low pass filter cutoff frequency for
 											# output signal after correlators
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
