@@ -161,6 +161,7 @@ class PacketMeta:
 		# it is measured to the last bit of the closing flag in the packet.
 		# this is used for comparing age of packets in multi-decoder systems
 		self.streamaddress = 0
+		self.source_sample_rate = 0.0
 		# the calculated CRC for the packet data
 		self.CalculatedCRC = 0
 		self.CarriedCRC = 0
@@ -316,6 +317,10 @@ class PacketMetaArray:
 
 			string_output += print_to_string("\n\nUnique, valid packets: ", self.CountGood())
 			string_output += print_to_string("Packets rejected from all decoders for CRC failure: ", self.CountBad())
-			string_output += print_to_string("Total packets by decoder: ", self.DecoderHistogram)
-			string_output += print_to_string("Unique packets by decoder: ", self.DecoderUniqueHistogram)
+			string_output += print_to_string("Total packets by decoder:")
+			for decoder, count in self.DecoderHistogram.most_common():
+				string_output += print_to_string(decoder, count)
+			string_output += print_to_string("Unique packets by decoder:")
+			for decoder, count in self.DecoderUniqueHistogram.most_common():
+				string_output += print_to_string(decoder, count)
 		return string_output

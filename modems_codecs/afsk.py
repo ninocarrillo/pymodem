@@ -7,6 +7,8 @@
 from scipy.signal import firwin
 from math import ceil
 from numpy import arange, sin, cos, pi, convolve, sqrt
+from numpy import abs as npabs
+from numpy.fft import fft
 
 class AFSKModem:
 
@@ -41,8 +43,8 @@ class AFSKModem:
 		else:
 			# set some default values for 1200 bps AFSK:
 			self.symbol_rate = 1200.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
+			self.input_bpf_low_cutoff = 700.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 4000.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 4.80			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
@@ -140,6 +142,8 @@ class AFSKModem:
 		self.space_correlator_q = self.space_gain * sin(space_indices)
 
 	def demod(self, input_audio):
+		#for tap in self.output_lpf:
+		#	print(f'{int(round(tap*32768))}, ', end='')
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 		# Create the correlation products.
