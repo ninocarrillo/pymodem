@@ -317,6 +317,10 @@ class PacketMetaArray:
 
 			string_output += print_to_string("\n\nUnique, valid packets: ", self.CountGood())
 			string_output += print_to_string("Packets rejected from all decoders for CRC failure: ", self.CountBad())
-			string_output += print_to_string("Total packets by decoder: ", self.DecoderHistogram)
-			string_output += print_to_string("Unique packets by decoder: ", self.DecoderUniqueHistogram)
+			string_output += print_to_string("Total packets by decoder:")
+			for decoder, count in self.DecoderHistogram.most_common():
+				string_output += print_to_string(decoder, count)
+			string_output += print_to_string("Unique packets by decoder:")
+			for decoder, count in self.DecoderUniqueHistogram.most_common():
+				string_output += print_to_string(decoder, count)
 		return string_output
