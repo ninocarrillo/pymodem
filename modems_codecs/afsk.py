@@ -59,7 +59,7 @@ class AFSKModem:
 											# to handle general cases.
 			self.output_lpf_cutoff = 1400.0		# low pass filter cutoff frequency for
 											# output signal after correlators
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.output_lpf_span = 2.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.correlator_span = 1.0		# correlator span in symbols
@@ -104,7 +104,7 @@ class AFSKModem:
 			self.sample_rate * self.input_bpf_span / self.symbol_rate
 		)
 		self.output_lpf_tap_count = round(
-			2 * self.sample_rate * self.output_lpf_span / self.symbol_rate
+			self.sample_rate * self.output_lpf_span / self.symbol_rate
 		)
 
 		# Use scipy.signal.firwin to generate taps for input bandpass filter.
@@ -146,8 +146,14 @@ class AFSKModem:
 		self.output_sample_rate = self.output_oversample*self.sample_rate
 
 	def demod(self, input_audio):
-		#for tap in self.output_lpf:
-		#	print(f'{int(round(tap*32768))}, ', end='')
+		print("\nLPF tap count: ", len(self.output_lpf))
+		print("\nLPF taps:")
+		for tap in self.output_lpf:
+			print(f'{int(round(tap*32768))}, ', end='')
+		print("\nBPF tap count: ", len(self.input_bpf))
+		print("\nBPF taps:")
+		for tap in self.input_bpf:
+			print(f'{int(round(tap*32768))}, ', end='')
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 		# Create the correlation products.
