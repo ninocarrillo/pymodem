@@ -4,7 +4,7 @@
 # Nino Carrillo
 # 29 Mar 2024
 
-from scipy.signal import firwin
+from scipy.signal import firwin, resample_poly
 from math import ceil
 from numpy import arange, sin, cos, pi, convolve, sqrt
 from numpy import abs as npabs
@@ -43,9 +43,9 @@ class AFSKModem:
 		else:
 			# set some default values for 1200 bps AFSK:
 			self.symbol_rate = 1200.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 700.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 4000.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_low_cutoff = 900.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 4.8			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -57,13 +57,15 @@ class AFSKModem:
 											# for de-emphasized audio.
 											# Implement multiple parallel demodulators
 											# to handle general cases.
-			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 1400.0		# low pass filter cutoff frequency for
 											# output signal after correlators
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.output_lpf_span = 2.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.correlator_span = 1.0		# correlator span in symbols
 			self.correlator_offset = 0.0		# frequency offset for correlator in hz
+
+		self.output_oversample = 1.0
 
 		self.tune()
 
@@ -120,7 +122,7 @@ class AFSKModem:
 		self.output_lpf = firwin(
 			self.output_lpf_tap_count,
 			self.output_lpf_cutoff,
-			fs=self.sample_rate
+			fs=self.output_oversample*self.sample_rate
 		)
 
 		# Create quadrature correlators for mark and space tones. Quadrature means
@@ -141,9 +143,17 @@ class AFSKModem:
 		self.space_correlator_i = self.space_gain * cos(space_indices)
 		self.space_correlator_q = self.space_gain * sin(space_indices)
 
+		self.output_sample_rate = self.output_oversample*self.sample_rate
+
 	def demod(self, input_audio):
-		#for tap in self.output_lpf:
-		#	print(f'{int(round(tap*32768))}, ', end='')
+		print("\nLPF tap count: ", len(self.output_lpf))
+		print("\nLPF taps:")
+		for tap in self.output_lpf:
+			print(f'{int(round(tap*32768))}, ', end='')
+		print("\nBPF tap count: ", len(self.input_bpf))
+		print("\nBPF taps:")
+		for tap in self.input_bpf:
+			print(f'{int(round(tap*32768))}, ', end='')
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 		# Create the correlation products.
@@ -158,5 +168,7 @@ class AFSKModem:
 		# The demodulated signal is mark-space:
 		audio = mark_rms - space_rms
 		# Apply the output filter:
+		if (self.output_oversample > 1.0):
+			audio = resample_poly(audio, self.output_oversample, 1)
 		audio = convolve(audio, self.output_lpf, 'valid')
 		return audio
