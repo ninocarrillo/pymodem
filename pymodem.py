@@ -11,6 +11,7 @@
 import sys
 from scipy.io.wavfile import read as readwav
 from scipy.io.wavfile import write as writewav
+import time
 
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
@@ -43,6 +44,8 @@ def main():
 	except:
 		print('Unable to open audio file.')
 		sys.exit(4)
+
+	start_time = time.time()
 
 	print("Building processing stacks from config json")
 
@@ -144,6 +147,9 @@ def main():
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
 		print(results.Report(report_order[1]))
+
+	end_time = time.time()
+	print(f"Elapsed time: {round(end_time-start_time, 2)} seconds.")
 
 
 if __name__ == "__main__":
