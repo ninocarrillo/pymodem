@@ -11,6 +11,8 @@
 import sys
 from scipy.io.wavfile import read as readwav
 from scipy.io.wavfile import write as writewav
+import subprocess
+from multiprocessing import Process, Queue
 import time
 
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
@@ -131,9 +133,44 @@ def main():
 			report_stack[report_stack_index].append(report)
 
 	print("Executing demod stack plan.")
-	decoded_datas = []
+
+	# Start the threaded processes.
+	# Each signal chain exists in its own thread.
+
+	decoded_data_queue = Queue()
+
+
+	#test_serial_thread = threading.Thread(target=vserial.ParseKISSFromPort, args=([test_serial_port_obj, test_serial_queue]))
+	chain_thread_list = []
+	thread_count = 0
 	for chain in demod_stack:
-		decoded_datas.append(modems_codecs.chain_execute.process_chain(chain, input_audio))
+		chain_thread_list.append(
+			Process(
+				target = modems_codecs.chain_execute.process_chain_thread,
+				args = ([chain, input_audio, decoded_data_queue])
+			)
+		)
+		chain_thread_list[thread_count].start()
+		print(f"started thread {thread_count}")
+		thread_count += 1
+
+	print(f"{thread_count} threads running")
+
+	decoded_datas = []
+	running_thread_count = thread_count
+	while running_thread_count > 0:
+		while not decoded_data_queue.empty():
+			decoded_datas.append(decoded_data_queue.get())
+			running_thread_count -= 1
+			print(f"{running_thread_count} threads running")
+
+	for i in range(thread_count):
+		chain_thread_list[i].join()
+
+
+
+	#for chain in demod_stack:
+	#	decoded_datas.append(modems_codecs.chain_execute.process_chain(chain, input_audio))
 
 	print("Correlating results.")
 
