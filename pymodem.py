@@ -14,6 +14,7 @@ from scipy.io.wavfile import write as writewav
 
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
+import modems_codecs.chain_execute
 import json
 
 
@@ -129,28 +130,7 @@ def main():
 	print("Executing demod stack plan.")
 	decoded_datas = []
 	for chain in demod_stack:
-		print(f"Processing chain: {chain[0]}")
-		try:
-			demod_audio = chain[1].demod(input_audio)
-		except:
-			print("skipped modem")
-			pass
-		try:
-			sliced_data = chain[2].slice(demod_audio)
-		except:
-			print("skipped slicer")
-			pass
-		try:
-			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
-		except:
-			print("skipped stream")
-			pass
-		try:
-			decoded_datas.append(chain[4].decode(descrambled_data))
-		except:
-			print("skipped codec")
-			pass
-
+		decoded_datas.append(modems_codecs.chain_execute.process_chain(chain, input_audio))
 
 	print("Correlating results.")
 
