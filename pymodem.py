@@ -11,9 +11,13 @@
 import sys
 from scipy.io.wavfile import read as readwav
 from scipy.io.wavfile import write as writewav
+import subprocess
+from multiprocessing import Process, Queue
+import time
 
 from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
+import modems_codecs.chain_execute
 import json
 
 
@@ -42,6 +46,8 @@ def main():
 	except:
 		print('Unable to open audio file.')
 		sys.exit(4)
+
+	start_time = time.time()
 
 	print("Building processing stacks from config json")
 
@@ -127,30 +133,44 @@ def main():
 			report_stack[report_stack_index].append(report)
 
 	print("Executing demod stack plan.")
-	decoded_datas = []
-	for chain in demod_stack:
-		print(f"Processing chain: {chain[0]}")
-		try:
-			demod_audio = chain[1].demod(input_audio)
-		except:
-			print("skipped modem")
-			pass
-		try:
-			sliced_data = chain[2].slice(demod_audio)
-		except:
-			print("skipped slicer")
-			pass
-		try:
-			descrambled_data = chain[3].stream_unscramble_8bit(sliced_data)
-		except:
-			print("skipped stream")
-			pass
-		try:
-			decoded_datas.append(chain[4].decode(descrambled_data))
-		except:
-			print("skipped codec")
-			pass
 
+	# Start the threaded processes.
+	# Each signal chain exists in its own thread.
+
+	decoded_data_queue = Queue()
+
+
+	#test_serial_thread = threading.Thread(target=vserial.ParseKISSFromPort, args=([test_serial_port_obj, test_serial_queue]))
+	chain_thread_list = []
+	thread_count = 0
+	for chain in demod_stack:
+		chain_thread_list.append(
+			Process(
+				target = modems_codecs.chain_execute.process_chain_thread,
+				args = ([chain, input_audio, decoded_data_queue])
+			)
+		)
+		chain_thread_list[thread_count].start()
+		print(f"started thread {thread_count}")
+		thread_count += 1
+
+	print(f"{thread_count} threads running")
+
+	decoded_datas = []
+	running_thread_count = thread_count
+	while running_thread_count > 0:
+		while not decoded_data_queue.empty():
+			decoded_datas.append(decoded_data_queue.get())
+			running_thread_count -= 1
+			print(f"{running_thread_count} threads running")
+
+	for i in range(thread_count):
+		chain_thread_list[i].join()
+
+
+
+	#for chain in demod_stack:
+	#	decoded_datas.append(modems_codecs.chain_execute.process_chain(chain, input_audio))
 
 	print("Correlating results.")
 
@@ -164,6 +184,9 @@ def main():
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
 		print(results.Report(report_order[1]))
+
+	end_time = time.time()
+	print(f"Elapsed time: {round(end_time-start_time, 2)} seconds.")
 
 
 if __name__ == "__main__":
