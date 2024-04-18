@@ -28,7 +28,6 @@ def process_chain(chain, input_audio):
 	return decoded_data
 
 def process_chain_thread(chain, input_audio, queue):
-	print(f"{chain[0]} process start")
 	try:
 		demod_audio = chain[1].demod(input_audio)
 	except:
