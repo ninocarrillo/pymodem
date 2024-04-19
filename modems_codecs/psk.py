@@ -293,6 +293,7 @@ class BPSKModem:
 			self.Q_LPF.update(q_mixer)
 			# mix the I and Q products to create the phase detector
 			loop_mixer = self.I_LPF.output * self.Q_LPF.output
+			#loop_mixer = i_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
