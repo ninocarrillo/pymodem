@@ -116,7 +116,7 @@ class BPSKModem:
 		self.sample_rate = kwargs.get('sample_rate', 8000.0)
 
 		if self.definition == '300':
-			# set some default values for 300 bps AFSK:
+			# set some default values for 300 bps BPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
@@ -272,17 +272,13 @@ class BPSKModem:
 			set_frequency = self.carrier_freq,
 			wavetable_size = 256
 		)
-
-
 		self.rrc = RRC(
 			sample_rate = self.sample_rate,
 			symbol_rate = self.symbol_rate,
 			symbol_span = self.rrc_span,
 			rolloff_rate = self.rrc_rolloff_rate
 		)
-
 		self.output_sample_rate = self.sample_rate
-
 
 	def demod(self, input_audio):
 		# Apply the input filter.
@@ -299,13 +295,15 @@ class BPSKModem:
 			# mix the in phase oscillator output with the input signal
 			i_mixer = sample * self.NCO.in_phase_output
 			# low pass filter this product
-			self.I_LPF.update(i_mixer)
+			#self.I_LPF.update(i_mixer)
+			# The branch low-pass filters might not be needed when using a
+			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
 			q_mixer = sample * self.NCO.quadrature_phase_output
 			# low pass filter this product
-			self.Q_LPF.update(q_mixer)
+			#self.Q_LPF.update(q_mixer)
 			# mix the I and Q products to create the phase detector
-			loop_mixer = self.I_LPF.output * self.Q_LPF.output
+			#loop_mixer = self.I_LPF.output * self.Q_LPF.output
 			loop_mixer = i_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
@@ -314,8 +312,6 @@ class BPSKModem:
 			self.loop_output.append(self.NCO.control)
 			#demod_audio.append(self.I_LPF.output)
 			demod_audio.append(i_mixer)
-
-
 
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
