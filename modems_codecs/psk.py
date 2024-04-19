@@ -131,6 +131,8 @@ class BPSKModem:
 			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.rrc_rolloff_rate = 0.6
+			self.rrc_span = 6
 			self.max_freq_offset = 37.5
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
@@ -173,6 +175,8 @@ class BPSKModem:
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 87.5
+			self.rrc_rolloff_rate = 0.9
+			self.rrc_span = 6
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -268,6 +272,15 @@ class BPSKModem:
 			set_frequency = self.carrier_freq,
 			wavetable_size = 256
 		)
+
+
+		self.rrc = RRC(
+			sample_rate = self.sample_rate,
+			symbol_rate = self.symbol_rate,
+			symbol_span = self.rrc_span,
+			rolloff_rate = self.rrc_rolloff_rate
+		)
+
 		self.output_sample_rate = self.sample_rate
 
 
@@ -293,17 +306,21 @@ class BPSKModem:
 			self.Q_LPF.update(q_mixer)
 			# mix the I and Q products to create the phase detector
 			loop_mixer = self.I_LPF.output * self.Q_LPF.output
+			loop_mixer = i_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
-			demod_audio.append(self.I_LPF.output)
+			#demod_audio.append(self.I_LPF.output)
+			demod_audio.append(i_mixer)
 
 
 
 		# Apply the output filter:
-		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		demod_audio = convolve(demod_audio, self.rrc.taps, 'valid')
+		#print(self.rrc)
 		# plt.figure()
 		# plt.plot(self.loop_output)
 		# plt.show()

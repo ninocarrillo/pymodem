@@ -146,7 +146,7 @@ def main():
 		sample_rate = 28800,
 		symbol_rate = 300,
 		symbol_span = 6,
-		rolloff_rate = 0.3
+		rolloff_rate = 0.6
 	)
 	plt.figure()
 	plt.plot(rrc.taps)
