@@ -3,9 +3,23 @@
 # Nino Carrillo
 # 9 Apr 2024
 
+import numpy as np
+
 class RRC:
 	def __init__(self, **kwargs):
-		
+		self.sample_rate = kwargs.get('sample_rate', 8000)
+		self.symbol_span = kwargs.get('symbol_span', 5)
+		self.symbol_span = kwargs.get('symbol_rate', 300)
+		self.rolloff_rate = kwargs.get('rolloff_rate', 0.3)
+		self.window = kwargs.get('window', "tukey")
+
+	def tune(self):
+		self.oversample = self.sample_rate / self.symbol_rate
+		self.tap_count = int(round(self.symbol_span * self.oversample, 0)) + 1
+		self.time_step = 1 / self.sample_rate
+		self.symbol_time = 1 / self.symbol_rate
+		self.time = np.arange(0, self.tap_count * self.time_step, self.time_step) - (self.tap_count * self.time_step / 2) + (self.time_step / 2)
+
 def InitRRCFilter(this):
 	this['Oversample'] = this['sample rate'] // this['symbol rate']
 	this['TapCount'] = this['symbol span'] * this['Oversample'] + 1
