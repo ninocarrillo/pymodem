@@ -19,6 +19,8 @@ from modems_codecs.packet_meta import PacketMeta, PacketMetaArray
 import modems_codecs.chain_builder
 import modems_codecs.chain_execute
 import json
+from modems_codecs.rrc import RRC
+import matplotlib.pyplot as plt
 
 
 def main():
@@ -139,6 +141,16 @@ def main():
 
 	decoded_data_queue = Queue()
 
+
+	rrc = RRC(
+		sample_rate = 28800,
+		symbol_rate = 300,
+		symbol_span = 6,
+		rolloff_rate = 0.3
+	)
+	plt.figure()
+	plt.plot(rrc.taps)
+	plt.show()
 
 	#test_serial_thread = threading.Thread(target=vserial.ParseKISSFromPort, args=([test_serial_port_obj, test_serial_queue]))
 	chain_thread_list = []
