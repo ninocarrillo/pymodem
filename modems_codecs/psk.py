@@ -410,10 +410,10 @@ class QPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.020,
-				i= 0.000031,
+				p= 0.03,
+				i= 0.0001,
 				i_limit=self.max_freq_offset,
-				gain= 7031.0
+				gain= 1717.0
 			)
 
 		self.oscillator_amplitude = 1.0
