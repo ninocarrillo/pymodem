@@ -102,3 +102,95 @@ class BinarySlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
 		return result
+
+class QuadratureSlicer:
+
+	def __init__(self, **kwargs):
+		self.sample_rate = kwargs.get('sample_rate', '8000')
+		self.definition = kwargs.get('config', '600')
+
+		# lock_rate should be between 0 and 1.0
+		# Lower numbers cause slicer to sync the bitstream faster,
+		# but increase jitter. Higher values are more stable,
+		# but sync the bitstream more slowly. Typically 0.65-0.95.
+
+		if self.definition == '600':
+			self.symbol_rate = 300
+			self.lock_rate = 0.9
+		elif self.definition == '2400':
+			self.symbol_rate = 1200
+			self.lock_rate = 0.9
+		else:
+			self.symbol_rate = 1200
+			self.lock_rate = 0.9
+
+		self.demap = [3,2,1,0,1,3,0,2,2,0,3,1,0,1,2,3]
+
+		self.tune()
+
+	def retune(self, **kwargs):
+		self.symbol_rate = kwargs.get('symbol_rate', self.symbol_rate)
+		self.lock_rate = kwargs.get('lock_rate', self.lock_rate)
+		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
+		self.tune()
+
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = options.get('symbol_rate', self.symbol_rate)
+		self.sample_rate = options.get('sample_rate', self.sample_rate)
+		self.lock_rate = float(options.get('lock_rate', self.lock_rate))
+		self.tune()
+
+	def tune(self):
+		self.phase_clock = 0.0
+		self.samples_per_symbol = self.sample_rate / self.symbol_rate
+		self.rollover_threshold = self.samples_per_symbol / 2.0
+		self.working_byte = 0
+		self.working_bit_count = 0
+		self.last_i_sample = 0.0
+		self.last_q_sample = 0.0
+		self.streamaddress = 0
+		self.state_register = 0
+
+	def slice(self, iq_samples):
+		result = []
+		result_index = 0
+		for i_sample, q_sample in zip(iq_samples.i_data, iq_samples.q_data):
+			self.streamaddress += 1
+			# increment phase_clock
+			self.phase_clock += 1.0
+			# check for symbol center
+			if self.phase_clock >= self.rollover_threshold:
+				# at or past symbol center, reset phase_clock
+				self.phase_clock -= self.samples_per_symbol
+				# make a bit decision
+				self.state_register = (self.state_register << 2) & 0xF
+				if i_sample >= 0:
+					self.state_register |= 2
+				if q_sample >= 0:
+					self.state_register |= 1
+				# shift the working byte
+				self.working_byte = self.working_byte << 2
+				self.working_byte |= self.demap[self.state_register]
+				# save this bit into the lsb of the working_byte
+				self.working_bit_count += 2
+				# after 8 bits, save this byte in the result array and reset bit
+				# count
+				if self.working_bit_count >= 8:
+					self.working_bit_count = 0
+					self.working_byte &= 0xFF
+					result.append(AddressedData(self.working_byte, self.streamaddress))
+			# check for zero-crossing in sample stream
+			if (
+					(self.last_i_sample < 0.0 and i_sample >= 0.0)
+					or (self.last_i_sample >= 0.0 and i_sample < 0.0)
+				) or (
+					(self.last_q_sample < 0.0 and q_sample >= 0.0)
+					or (self.last_q_sample >= 0.0 and q_sample < 0.0)
+
+				):
+				# zero crossing detected, adjust phase_clock
+				self.phase_clock = self.phase_clock * self.lock_rate
+			# save this sample to compare with the next for zero-crossing detect
+			self.last_i_sample = i_sample
+			self.last_q_sample = q_sample
+		return result

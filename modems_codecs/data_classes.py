@@ -10,3 +10,8 @@ class AddressedData:
 		# a unique address for later use
 		self.data = data
 		self.address = address
+
+class IQData:
+	def __init__(self):
+		self.i_data = []
+		self.q_data = []

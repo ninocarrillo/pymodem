@@ -139,7 +139,6 @@ def main():
 
 	decoded_data_queue = Queue()
 
-	#test_serial_thread = threading.Thread(target=vserial.ParseKISSFromPort, args=([test_serial_port_obj, test_serial_queue]))
 	chain_thread_list = []
 	thread_count = 0
 	for chain in demod_stack:

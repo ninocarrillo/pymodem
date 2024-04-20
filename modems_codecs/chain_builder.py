@@ -16,7 +16,10 @@ from modems_codecs.string_ops import check_boolean
 def ModemConfigurator(arg_sample_rate, input_args):
 	new_object = []
 	if input_args.get('type'):
-		if input_args['type'] == 'bpsk':
+		if input_args['type'] == 'qpsk':
+			new_object = modems_codecs.psk.QPSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
+		elif input_args['type'] == 'bpsk':
 			new_object = modems_codecs.psk.BPSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
 		elif input_args['type'] == 'fsk':
@@ -29,7 +32,10 @@ def ModemConfigurator(arg_sample_rate, input_args):
 def SlicerConfigurator(arg_sample_rate, input_args):
 	new_object = []
 	if input_args.get('type'):
-		if input_args['type'] == 'binary':
+		if input_args['type'] == 'quadrature':
+			new_object = modems_codecs.slicer.QuadratureSlicer(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
+		elif input_args['type'] == 'binary':
 			new_object = modems_codecs.slicer.BinarySlicer(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
 	return new_object
