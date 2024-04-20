@@ -103,12 +103,12 @@ class NCO:
 		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
 		while self.phase_accumulator >= 2.0 * pi:
 			self.phase_accumulator -= 2.0 * pi
-		in_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
-		self.in_phase_output = self.wavetable[in_phase_index]
-		quadrature_phase_index = int(in_phase_index + (self.wavetable_size / 4.0))
-		while quadrature_phase_index >= 0 :
-			quadrature_phase_index -= self.wavetable_size
-		self.quadrature_phase_output = self.wavetable[quadrature_phase_index]
+		sine_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
+		self.sine_output = self.wavetable[sine_phase_index]
+		cosine_phase_index = int(sine_phase_index + (self.wavetable_size / 4.0))
+		while cosine_phase_index >= 0 :
+			cosine_phase_index -= self.wavetable_size
+		self.cosine_output = self.wavetable[cosine_phase_index]
 
 class BPSKModem:
 
@@ -294,13 +294,13 @@ class BPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			i_mixer = sample * self.NCO.in_phase_output
+			i_mixer = sample * self.NCO.sine_output
 			# low pass filter this product
 			#self.I_LPF.update(i_mixer)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
-			q_mixer = sample * self.NCO.quadrature_phase_output
+			q_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
 			#self.Q_LPF.update(q_mixer)
 			# mix the I and Q products to create the phase detector
@@ -508,7 +508,7 @@ class QPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			i_mixer = sample * self.NCO.quadrature_phase_output
+			i_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
 			self.I_LPF.update(i_mixer)
 			demod_audio.i_data.append(self.I_LPF.output)
@@ -519,7 +519,7 @@ class QPSKModem:
 				i_sgn = 1
 			else:
 				i_sgn = -1
-			q_mixer = sample * self.NCO.in_phase_output
+			q_mixer = sample * self.NCO.sine_output
 			# low pass filter this product
 			self.Q_LPF.update(q_mixer)
 			demod_audio.q_data.append(self.Q_LPF.output)
