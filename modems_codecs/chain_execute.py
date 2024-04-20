@@ -2,6 +2,7 @@
 # Functions for executing signal processing chains
 # Nino Carrillo
 # 17 Apr 2024
+import matplotlib.pyplot as plt
 
 def process_chain(chain, input_audio):
 	print(f"{chain[0]} process start")
@@ -30,11 +31,21 @@ def process_chain(chain, input_audio):
 def process_chain_thread(chain, input_audio, queue):
 	try:
 		demod_audio = chain[1].demod(input_audio)
+		plt.figure()
+		plt.plot(demod_audio.i_data, demod_audio.q_data)
+		#plt.plot(demod_audio.q_data)
+		plt.show()
+		plt.figure()
+		plt.plot(demod_audio.i_data)
+		plt.plot(demod_audio.q_data)
+		plt.show()
 	except:
 		print(f"{chain[0]} skipped modem")
 		pass
 	try:
 		sliced_data = chain[2].slice(demod_audio)
+		#for data in sliced_data:
+			#print(data.data, end= ' ')
 	except:
 		print(f"{chain[0]} skipped slicer")
 		pass
