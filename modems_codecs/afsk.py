@@ -21,7 +21,7 @@ class AFSKModem:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1500.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_span = 6			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -38,7 +38,7 @@ class AFSKModem:
 			self.output_lpf_span = 2.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
-			self.correlator_span = 1.0		# correlator span in symbols
+			self.correlator_span = 0.5		# correlator span in symbols
 			self.correlator_offset = 0.0		# frequency offset for correlator in hz
 		else:
 			# set some default values for 1200 bps AFSK:
@@ -122,8 +122,21 @@ class AFSKModem:
 		self.output_lpf = firwin(
 			self.output_lpf_tap_count,
 			self.output_lpf_cutoff,
-			fs=self.output_oversample*self.sample_rate
+			fs=self.sample_rate
 		)
+		
+		# print("Sample Rate: ", self.sample_rate)
+		# print("Input BPF Tap Count: ", len(self.input_bpf))
+		# print("Input BPF Taps: ")
+		# for tap in self.input_bpf:
+			# print(int(round(tap * 32768,0)), end=', ')
+		# print(" ")
+		
+		# print("Output LPF Tap Count: ", len(self.output_lpf))
+		# print("Output LPF Taps: ")
+		# for tap in self.output_lpf:
+			# print(int(round(tap * 32768,0)), end=', ')
+		# print(" ")
 
 		# Create quadrature correlators for mark and space tones. Quadrature means
 		# we will have two tone patterns at each frequency, with 90 degrees of

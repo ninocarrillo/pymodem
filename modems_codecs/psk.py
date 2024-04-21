@@ -124,7 +124,7 @@ class BPSKModem:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_span = 2		# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -160,7 +160,7 @@ class BPSKModem:
 				gain= 7031.0
 			)
 		elif self.definition == '1200':
-			# set some default values for 300 bps AFSK:
+			# set some default values for 1200 bps BPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
@@ -258,6 +258,20 @@ class BPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
+		
+		print("Sample Rate: ", self.sample_rate)
+		print("Input BPF Tap Count: ", len(self.input_bpf))
+		print("Input BPF Taps: ")
+		for tap in self.input_bpf:
+			print(int(round(tap * 32768,0)), end=', ')
+		print(" ")
+		
+		print("Output LPF Tap Count: ", len(self.output_lpf))
+		print("Output LPF Taps: ")
+		for tap in self.input_bpf:
+			print(int(round(tap * 32768,0)), end=', ')
+		print(" ")		
+		
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
 			attack_rate = self.agc_attack_rate,
@@ -337,7 +351,7 @@ class QPSKModem:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_span = 2			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
