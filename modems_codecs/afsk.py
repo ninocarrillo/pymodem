@@ -21,7 +21,7 @@ class AFSKModem:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1500.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 6			# Number of symbols to span with the input
+			self.input_bpf_span = 6.0			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
