@@ -134,36 +134,36 @@ def main():
 
 	print("Executing demod stack plan.")
 
-	# Start the threaded processes.
-	# Each signal chain exists in its own thread.
+	# Start the processed processes.
+	# Each signal chain exists in its own process.
 
 	decoded_data_queue = Queue()
 
-	chain_thread_list = []
-	thread_count = 0
+	chain_process_list = []
+	process_count = 0
 	for chain in demod_stack:
-		chain_thread_list.append(
+		chain_process_list.append(
 			Process(
-				target = modems_codecs.chain_execute.process_chain_thread,
+				target = modems_codecs.chain_execute.process_chain_process,
 				args = ([chain, input_audio, decoded_data_queue])
 			)
 		)
-		chain_thread_list[thread_count].start()
-		print(f"started thread {thread_count}")
-		thread_count += 1
+		chain_process_list[process_count].start()
+		print(f"started process {process_count}")
+		process_count += 1
 
-	print(f"{thread_count} threads running")
+	print(f"{process_count} processs running")
 
 	decoded_datas = []
-	running_thread_count = thread_count
-	while running_thread_count > 0:
+	running_process_count = process_count
+	while running_process_count > 0:
 		while not decoded_data_queue.empty():
 			decoded_datas.append(decoded_data_queue.get())
-			running_thread_count -= 1
-			print(f"{running_thread_count} threads running")
+			running_process_count -= 1
+			print(f"{running_process_count} processs running")
 
-	for i in range(thread_count):
-		chain_thread_list[i].join()
+	for i in range(process_count):
+		chain_process_list[i].join()
 
 
 
