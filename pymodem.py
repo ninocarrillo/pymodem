@@ -160,7 +160,7 @@ def main():
 		while not decoded_data_queue.empty():
 			decoded_datas.append(decoded_data_queue.get())
 			running_process_count -= 1
-			print(f"{running_process_count} processs running")
+			print(f"{running_process_count} processes running")
 
 	for i in range(process_count):
 		chain_process_list[i].join()
