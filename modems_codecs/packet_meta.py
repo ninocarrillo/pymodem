@@ -168,6 +168,7 @@ class PacketMeta:
 		self.ValidCRC = False
 		self.SourceDecoder = 0
 		self.CorrelatedDecoders = []
+		self.SlicedIQSamples = []
 
 	def CalcCRC(self):
 		# Assume the CRC encoded in the packet is in the highest two positions of the data list

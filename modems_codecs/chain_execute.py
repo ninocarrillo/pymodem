@@ -35,8 +35,6 @@ def multiprocess_chain(chain, input_audio, queue):
 		pass
 	try:
 		sliced_data = chain[2].slice(demod_audio)
-		#for data in sliced_data:
-			#print(data.data, end= ' ')
 	except:
 		print(f"{chain[0]} skipped slicer")
 		pass

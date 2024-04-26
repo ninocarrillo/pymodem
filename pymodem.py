@@ -165,11 +165,6 @@ def main():
 	for i in range(process_count):
 		chain_process_list[i].join()
 
-
-
-	#for chain in demod_stack:
-	#	decoded_datas.append(modems_codecs.chain_execute.process_chain(chain, input_audio))
-
 	print("Correlating results.")
 
 	results = PacketMetaArray()
