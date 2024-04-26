@@ -144,7 +144,7 @@ def main():
 	for chain in demod_stack:
 		chain_process_list.append(
 			Process(
-				target = modems_codecs.chain_execute.process_chain_process,
+				target = modems_codecs.chain_execute.multiprocess_chain,
 				args = ([chain, input_audio, decoded_data_queue])
 			)
 		)
