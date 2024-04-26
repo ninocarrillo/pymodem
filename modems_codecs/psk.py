@@ -259,18 +259,18 @@ class BPSKModem:
 			scale=True
 		)
 		
-		print("Sample Rate: ", self.sample_rate)
-		print("Input BPF Tap Count: ", len(self.input_bpf))
-		print("Input BPF Taps: ")
-		for tap in self.input_bpf:
-			print(int(round(tap * 32768,0)), end=', ')
-		print(" ")
+		# print("Sample Rate: ", self.sample_rate)
+		# print("Input BPF Tap Count: ", len(self.input_bpf))
+		# print("Input BPF Taps: ")
+		# for tap in self.input_bpf:
+		# 	print(int(round(tap * 32768,0)), end=', ')
+		# print(" ")
 		
-		print("Output LPF Tap Count: ", len(self.output_lpf))
-		print("Output LPF Taps: ")
-		for tap in self.input_bpf:
-			print(int(round(tap * 32768,0)), end=', ')
-		print(" ")		
+		# print("Output LPF Tap Count: ", len(self.output_lpf))
+		# print("Output LPF Taps: ")
+		# for tap in self.input_bpf:
+		# 	print(int(round(tap * 32768,0)), end=', ')
+		# print(" ")		
 		
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
