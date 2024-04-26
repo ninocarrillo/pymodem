@@ -152,7 +152,7 @@ def main():
 		print(f"started process {process_count}")
 		process_count += 1
 
-	print(f"{process_count} processs running")
+	print(f"{process_count} processes running")
 
 	decoded_datas = []
 	running_process_count = process_count
