@@ -142,7 +142,7 @@ class IL2PCodec:
 		self.disable_rs = check_boolean(options.get('disable_rs', 'no'))
 		self.min_distance = int(options.get('min_dist', self.min_distance))
 		self.sync_tolerance = int(options.get('sync_tol', self.sync_tolerance))
-		print("sync tolerance", self.sync_tolerance)
+		# print("sync tolerance", self.sync_tolerance)
 
 	def get_a_bit(self, word_mask):
 		self.working_word <<= 1
