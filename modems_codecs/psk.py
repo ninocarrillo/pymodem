@@ -4,111 +4,14 @@
 # 9 Apr 2024
 
 from scipy.signal import firwin
-from math import ceil, tan,sin, pi
+from math import ceil, sin, pi
 from numpy import convolve, zeros
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
-
-class PI_control:
-	def __init__(self, **kwargs):
-		self.p_rate = kwargs.get('p', 0.1)
-		self.i_rate = kwargs.get('i', 0.1)
-		self.i_limit = kwargs.get('i_limit', 100.0)
-		self.gain = kwargs.get('gain', 1000.0)
-		self.integral = 0.0
-		self.proportional = 0.0
-
-	def update_reset(self, sample):
-		self.proportional = self.gain * self.p_rate * sample
-		self.integral += self.gain * (self.i_rate * sample)
-		if abs(self.integral) > self.i_limit:
-			self.integral = 0.0
-		self.output = self.proportional + self.integral
-
-		return self.output
-
-
-class IIR_1:
-	def __init__(self, **kwargs):
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
-		self.filter_type = kwargs.get('filter_type', 'lpf')
-		self.cutoff_freq = kwargs.get('cutoff', 100.0)
-		self.gain = kwargs.get('gain', 2.0)
-
-		radian_cutoff = 2.0 * pi * self.cutoff_freq
-
-		if self.filter_type == 'lpf':
-			# prewarp the cutoff frequency for bilinear Z transform
-			warp_cutoff = 2.0 * self.sample_rate * tan(radian_cutoff / (2.0 * self.sample_rate))
-			# calculate an intermediate value for bilinear Z transform
-			omega_T = warp_cutoff / self.sample_rate
-			# calculate denominator value
-			a1 = (2.0 - omega_T) / (2.0 + omega_T)
-			# calculate numerator values
-			b0 = omega_T / (2.0 + omega_T)
-			b1 = b0
-			# save the coefs
-			self.b_coefs = [self.gain * b0, self.gain * b1]
-			self.a_coefs = [0.0, a1]
-
-		self.output = 0.0
-		self.X = [0.0, 0.0]
-		self.Y = [0.0, 0.0]
-		self.order = 1
-
-	def update(self, sample):
-		# Update the input delay registers
-		for index in range(self.order, 0, -1):
-			self.X[index] = self.X[index - 1]
-		self.X[0] = sample
-		# Calculate the intermediate sum
-		v = 0
-		for index in range(self.order + 1):
-			v += (self.X[index] * self.b_coefs[index])
-		# Update the output delay registers
-		for index in range(self.order, 0, -1):
-			self.Y[index] = self.Y[index - 1]
-		# Calculate the final sum
-		for index in range(1, self.order + 1):
-			v += (self.Y[index] * self.a_coefs[index])
-		self.Y[0] = v
-		self.output = v
-
-class NCO:
-	def __init__(self, **kwargs):
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
-		self.amplitude = kwargs.get('amplitude', 10000.0)
-		self.set_frequency = kwargs.get('set_frequency', 1500.0)
-		self.wavetable_size = kwargs.get('wavetable_size', 256)
-
-		# control is the frequency adjustment input
-		self.control = 0.0
-
-		# instantaneous phase of the oscillator in degrees
-		self.phase_accumulator = 0.0
-
-		self.wavetable=[]
-		for i in range(self.wavetable_size):
-			self.wavetable.append(self.amplitude * sin(i * 2.0 * pi / self.wavetable_size))
-
-		# Calculate the phase accumulator to wavetable index scaling factor
-		self.index_scaling_factor = self.wavetable_size / (2.0 * pi)
-
-		# During each update of the NCO (once per sample), it will be advanced according to
-		# set_frequency + control. Calculate the scaling factor for phase advance.
-		self.phase_scaling_factor = 2.0 * pi / self.sample_rate
-
-	def update(self):
-		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
-		while self.phase_accumulator >= 2.0 * pi:
-			self.phase_accumulator -= 2.0 * pi
-		sine_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
-		self.sine_output = self.wavetable[sine_phase_index]
-		cosine_phase_index = int(sine_phase_index + (self.wavetable_size / 4.0))
-		while cosine_phase_index >= 0 :
-			cosine_phase_index -= self.wavetable_size
-		self.cosine_output = self.wavetable[cosine_phase_index]
+from modems_codecs.pi_control import PI_control
+from modems_codecs.iir import IIR_1
+from modems_codecs.nco import NCO
 
 class BPSKModem:
 
