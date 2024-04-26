@@ -37,8 +37,6 @@ Every demod chain is arranged the same way, and consists of four blocks in this 
 - 'stream' object manipulates the bitstream with a linear feedback shift register, which can be configured for differential descrambling, unmodified passthrough, or a combination of these processes
 - 'codec' object detects and decodes packets from the manipulated bitstream
 After all 'demod_chain' objects have been processed, Pymodem correlates the results of each to identify duplicate and unique packets. Uniqueness is determined by the streamaddress, or the sample index of the last input audio sample processed to create the last bit used to generate each decoded packet.
-### Omitted blocks in subsequent 'demod_chain' objects
-The first line the .json file should be a 'demod_chain' object that defines all four blocks. Subsequent lines may omit any of the leading blocks in the chain. When leading blocks are omitted, the rest of the chain in that line resumes processing with the product from the applicable block in the previous chain. This is demonstrated in configs/fsk_9600_il2pc.json.
 ## 'report' object
 The last line(s) of the config .json should be a 'report' object. This object describes how to dispose of the decoder output. Multiple 'report' objects are allowed.
 
