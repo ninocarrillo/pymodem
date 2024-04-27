@@ -26,14 +26,14 @@ class AFSKPLLModem:
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 300.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 1.5		# Number of symbols to span with the input
+			self.input_bpf_low_cutoff = 1500.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 6.0		# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
 			self.carrier_freq = 1700.0				# carrier tone frequency
-			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 350.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 150.0
@@ -47,7 +47,7 @@ class AFSKPLLModem:
 				p= 0.05,
 				i= 0.0001,
 				i_limit=self.max_freq_offset,
-				gain= 20000.0
+				gain= 15000.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -105,20 +105,20 @@ class AFSKPLLModem:
 			fs=self.sample_rate,
 			scale=True
 		)
-		
+
 		# print("Sample Rate: ", self.sample_rate)
 		# print("Input BPF Tap Count: ", len(self.input_bpf))
 		# print("Input BPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
 		# print(" ")
-		
+
 		# print("Output LPF Tap Count: ", len(self.output_lpf))
 		# print("Output LPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
-		# print(" ")		
-		
+		# print(" ")
+
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
 			attack_rate = self.agc_attack_rate,
@@ -166,4 +166,3 @@ class AFSKPLLModem:
 		plt.plot(demod_audio)
 		plt.show()
 		return demod_audio
-
