@@ -153,6 +153,8 @@ class QuadratureSlicer:
 
 	def slice(self, iq_samples):
 		result = []
+		i_samples = []
+		q_samples = []
 		result_index = 0
 		for i_sample, q_sample in zip(iq_samples.i_data, iq_samples.q_data):
 			self.streamaddress += 1
@@ -193,4 +195,6 @@ class QuadratureSlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_i_sample = i_sample
 			self.last_q_sample = q_sample
+			i_samples.append(i_sample)
+			q_samples.append(q_sample)
 		return result
