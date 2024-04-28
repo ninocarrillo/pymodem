@@ -120,6 +120,9 @@ class QuadratureSlicer:
 		elif self.definition == '2400':
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
+		elif self.definition == '4800':
+			self.symbol_rate = 2400
+			self.lock_rate = 0.88
 		else:
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9

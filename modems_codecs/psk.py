@@ -289,8 +289,51 @@ class QPSKModem:
 				i_limit=self.max_freq_offset,
 				gain= 858
 			)
+		elif self.definition == '4800':
+			# set some default values for 4800 bps QPSK:
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 1.0	# sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.symbol_rate = 2400.0			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 20.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.carrier_freq = 1800.0				# carrier tone frequency
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+											# output signal after I/Q demodulation
+			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.max_freq_offset = 87.5
+			self.rrc_rolloff_rate = 0.9
+			self.rrc_span = 6
+			self.I_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=2400.0,
+				gain=1.0
+			)
+			self.Q_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=2400.0,
+				gain=1.0
+			)
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=200.0,
+				gain=1.0
+			)
+			self.FeedbackController = PI_control(
+				p= 0.03,
+				i= 0.0001,
+				i_limit=self.max_freq_offset,
+				gain= 1717.0
+			)
 		elif self.definition == '2400':
-			# set some default values for 300 bps AFSK:
+			# set some default values for 2400 bps QPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
@@ -301,7 +344,7 @@ class QPSKModem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.carrier_freq = 1500.0				# carrier tone frequency
+			self.carrier_freq = 1800.0				# carrier tone frequency
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
