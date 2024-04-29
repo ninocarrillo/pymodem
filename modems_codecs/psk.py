@@ -307,7 +307,7 @@ class QPSKModem:
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 5
 			self.rrc_rolloff_rate = 0.3
-			self.rrc_span = 8
+			self.rrc_span = 6
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
