@@ -161,20 +161,20 @@ class BPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
-		
+
 		# print("Sample Rate: ", self.sample_rate)
 		# print("Input BPF Tap Count: ", len(self.input_bpf))
 		# print("Input BPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
 		# print(" ")
-		
+
 		# print("Output LPF Tap Count: ", len(self.output_lpf))
 		# print("Output LPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
-		# print(" ")		
-		
+		# print(" ")
+
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
 			attack_rate = self.agc_attack_rate,
@@ -327,10 +327,10 @@ class QPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.03,
+				p= 0.06,
 				i= 0.0001,
 				i_limit=self.max_freq_offset,
-				gain= 1717.0
+				gain= 1000.0
 			)
 		elif self.definition == '2400':
 			# set some default values for 2400 bps QPSK:
