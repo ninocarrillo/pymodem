@@ -295,8 +295,8 @@ class QPSKModem:
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 2400.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 20.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
+			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 3300.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 4.80			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
@@ -306,8 +306,8 @@ class QPSKModem:
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 87.5
-			self.rrc_rolloff_rate = 0.9
-			self.rrc_span = 6
+			self.rrc_rolloff_rate = 0.3
+			self.rrc_span = 8
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
