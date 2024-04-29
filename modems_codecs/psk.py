@@ -291,7 +291,7 @@ class QPSKModem:
 			)
 		elif self.definition == '4800':
 			# set some default values for 4800 bps QPSK:
-			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_attack_rate = 50.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 2400.0			# symbols per second (or baud)
