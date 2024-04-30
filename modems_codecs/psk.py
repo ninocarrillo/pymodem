@@ -296,8 +296,8 @@ class QPSKModem:
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 2400.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 3300.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_high_cutoff = 4000.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 8			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -327,10 +327,10 @@ class QPSKModem:
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.06,
-				i= 0.0001,
+				p= 0.033333,
+				i= 0.00006,
 				i_limit=self.max_freq_offset,
-				gain= 1000.0
+				gain= 1800.0
 			)
 		elif self.definition == '2400':
 			# set some default values for 2400 bps QPSK:
@@ -421,6 +421,13 @@ class QPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
+
+		print('Input BPF tap count: ', len(self.input_bpf))
+		print('Sample rate: ', self.sample_rate)
+		print('Span: ', self.input_bpf_span)
+		print('Symbol rate: ', self.symbol_rate)
+		for tap in self.input_bpf:
+			print(int(round(tap*32768)), end = ', ')
 
 		# Use scipy.signal.firwin to generate taps for output low pass filter.
 		# Output lpf is implemented as a Finite Impulse Response filter (FIR).
