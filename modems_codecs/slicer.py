@@ -46,7 +46,7 @@ class BinarySlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = self.samples_per_symbol / 2.0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) -0
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -146,7 +146,7 @@ class QuadratureSlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = self.samples_per_symbol / 2.0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1.0
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_i_sample = 0.0
