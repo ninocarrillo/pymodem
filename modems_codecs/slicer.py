@@ -5,6 +5,7 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
+from matplotlib import pyplot as plot
 
 class BinarySlicer:
 
@@ -46,7 +47,7 @@ class BinarySlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = (self.samples_per_symbol / 2.0) -0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -146,7 +147,7 @@ class QuadratureSlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1.0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_i_sample = 0.0
@@ -165,6 +166,8 @@ class QuadratureSlicer:
 			self.phase_clock += 1.0
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
+				i_samples.append(i_sample)
+				q_samples.append(q_sample)
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 				# make a bit decision
@@ -198,6 +201,7 @@ class QuadratureSlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_i_sample = i_sample
 			self.last_q_sample = q_sample
-			i_samples.append(i_sample)
-			q_samples.append(q_sample)
+		plot.figure()
+		plot.scatter(i_samples, q_samples,s=1)
+		plot.show()
 		return result

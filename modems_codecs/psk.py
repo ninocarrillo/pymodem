@@ -292,7 +292,7 @@ class QPSKModem:
 			)
 		elif self.definition == '4800':
 			# set some default values for 4800 bps QPSK:
-			self.agc_attack_rate = 50.0		# Normalized to full scale / sec
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 2400.0			# symbols per second (or baud)
@@ -308,17 +308,17 @@ class QPSKModem:
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 15
 			self.rrc_rolloff_rate = 0.3
-			self.rrc_span = 6
+			self.rrc_span = 8
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1800.0,
+				cutoff=1400.0,
 				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1800.0,
+				cutoff=1400.0,
 				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
