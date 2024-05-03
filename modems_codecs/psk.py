@@ -307,7 +307,7 @@ class QPSKModem:
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 15
-			self.rrc_rolloff_rate = 0.3
+			self.rrc_rolloff_rate = 0.2
 			self.rrc_span = 8
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
@@ -336,12 +336,12 @@ class QPSKModem:
 		elif self.definition == '2400':
 			# set some default values for 2400 bps QPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
-			self.agc_sustain_time = 1.0	# sec
+			self.agc_sustain_time = 1	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 1200.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.input_bpf_span = 4.8			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -351,17 +351,18 @@ class QPSKModem:
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 87.5
 			self.rrc_rolloff_rate = 0.9
-			self.rrc_span = 6
+			self.rrc_span = 3
+			branch_cutoff = 1200.0
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1200.0,
+				cutoff=branch_cutoff,
 				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1200.0,
+				cutoff=branch_cutoff,
 				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
@@ -370,11 +371,13 @@ class QPSKModem:
 				cutoff=200.0,
 				gain=1.0
 			)
+			pi_p = .1
+			pi_i = pi_p / 500
 			self.FeedbackController = PI_control(
-				p= 0.03,
-				i= 0.0001,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1717.0
+				gain= 450.0
 			)
 
 		self.oscillator_amplitude = 1.0
