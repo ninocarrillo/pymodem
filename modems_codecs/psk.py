@@ -245,7 +245,7 @@ class QPSKModem:
 
 	def __init__(self, **kwargs):
 		self.definition = kwargs.get('config', '600')
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
+		self.sample_rate = kwargs.get('sample_rate', 44100.0)
 
 		if self.definition == '600':
 			# set some default values for 300 bps BPSK:
@@ -295,9 +295,9 @@ class QPSKModem:
 			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 0.1 # sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
-			self.symbol_rate = 1800.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 3300.0	# high cutoff frequency for input filter
+			self.symbol_rate = 1800			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 3000.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 5			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
@@ -307,29 +307,29 @@ class QPSKModem:
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 15
-			self.rrc_rolloff_rate = 0.2
+			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1400.0,
+				cutoff=1300.0,
 				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1400.0,
+				cutoff=1300.0,
 				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=100.0,
+				cutoff=200.0,
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
-				p= 0.25,
-				i= 0.001,
+				p= 0.10,
+				i= 0.0001,
 				i_limit=self.max_freq_offset,
 				gain= 1800.0
 			)
