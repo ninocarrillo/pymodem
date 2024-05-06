@@ -428,12 +428,12 @@ class QPSKModem:
 			scale=True
 		)
 
-		print('Input BPF tap count: ', len(self.input_bpf))
-		print('Sample rate: ', self.sample_rate)
-		print('Span: ', self.input_bpf_span)
-		print('Symbol rate: ', self.symbol_rate)
-		for tap in self.input_bpf:
-			print(int(round(tap*32768)), end = ', ')
+		# print('Input BPF tap count: ', len(self.input_bpf))
+		# print('Sample rate: ', self.sample_rate)
+		# print('Span: ', self.input_bpf_span)
+		# print('Symbol rate: ', self.symbol_rate)
+		# for tap in self.input_bpf:
+			# print(int(round(tap*32768)), end = ', ')
 
 		# Use scipy.signal.firwin to generate taps for output low pass filter.
 		# Output lpf is implemented as a Finite Impulse Response filter (FIR).
