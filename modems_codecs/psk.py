@@ -302,7 +302,7 @@ class QPSKModem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.carrier_freq = 1500.0				# carrier tone frequency
+			self.carrier_freq = 1650.0				# carrier tone frequency
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
@@ -312,13 +312,13 @@ class QPSKModem:
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1300.0,
+				cutoff=1450.0,
 				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1300.0,
+				cutoff=1450.0,
 				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
