@@ -306,7 +306,7 @@ class QPSKModem:
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 7
+			self.max_freq_offset = 10.5
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.I_LPF = IIR_1(
@@ -328,7 +328,7 @@ class QPSKModem:
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /750
+			pi_i = pi_p /1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -475,6 +475,7 @@ class QPSKModem:
 		self.AGC.apply(audio)
 
 		self.loop_output = zeros(len(audio))
+		self.pi_i = zeros(len(audio))
 		demod_audio = IQData()
 		index = 0
 		# This is a costas loop
@@ -507,12 +508,14 @@ class QPSKModem:
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output[index] = self.NCO.control
+			self.pi_i[index] = self.FeedbackController.integral
 			index += 1
 
 		# Apply the output filter:
 		demod_audio.i_data = convolve(demod_audio.i_data, self.rrc.taps, 'valid')
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
-		#plot.figure()
-		#plot.plot(self.loop_output)
-		#plot.show()
+		plot.figure()
+		plot.plot(self.loop_output)
+		plot.plot(self.pi_i)
+		plot.show()
 		return demod_audio
