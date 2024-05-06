@@ -16,9 +16,18 @@ class PI_control:
 		self.proportional = self.gain * self.p_rate * sample
 		self.integral += self.gain * (self.i_rate * sample)
 		if self.integral > self.i_limit:
+			self.integral = 0
+		if self.integral < -self.i_limit:
+			self.integral = 0
+		self.output = self.proportional + self.integral
+		return self.output
+
+	def update_saturate(self, sample):
+		self.proportional = self.gain * self.p_rate * sample
+		self.integral += self.gain * (self.i_rate * sample)
+		if self.integral > self.i_limit:
 			self.integral = self.i_limit
 		if self.integral < -self.i_limit:
 			self.integral = -self.i_limit
 		self.output = self.proportional + self.integral
-
 		return self.output

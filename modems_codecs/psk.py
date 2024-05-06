@@ -227,7 +227,7 @@ class BPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			#demod_audio.append(self.I_LPF.output)
 			demod_audio.append(i_mixer)
@@ -505,7 +505,7 @@ class QPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output[index] = self.NCO.control
 			index += 1
 
