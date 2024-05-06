@@ -10,6 +10,7 @@ import modems_codecs.lfsr
 import modems_codecs.slicer
 import modems_codecs.il2p
 import modems_codecs.ax25
+import modems_codecs.afsk_pll
 from modems_codecs.string_ops import check_boolean
 
 
@@ -26,6 +27,9 @@ def ModemConfigurator(arg_sample_rate, input_args):
 			new_object = modems_codecs.fsk.FSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
 		elif input_args['type'] == 'afsk':
 			new_object = modems_codecs.afsk.AFSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
+		elif input_args['type'] == 'afsk_pll':
+			new_object = modems_codecs.afsk_pll.AFSKPLLModem(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
 	return new_object
 

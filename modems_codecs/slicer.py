@@ -5,6 +5,7 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
+from matplotlib import pyplot as plot
 
 class BinarySlicer:
 
@@ -46,7 +47,7 @@ class BinarySlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = self.samples_per_symbol / 2.0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -120,6 +121,12 @@ class QuadratureSlicer:
 		elif self.definition == '2400':
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
+		elif self.definition == '4800':
+			self.symbol_rate = 2400
+			self.lock_rate = 0.99
+		elif self.definition == '3600':
+			self.symbol_rate = 1800
+			self.lock_rate = 0.99
 		else:
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
@@ -143,7 +150,7 @@ class QuadratureSlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = self.samples_per_symbol / 2.0
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_i_sample = 0.0
@@ -153,6 +160,8 @@ class QuadratureSlicer:
 
 	def slice(self, iq_samples):
 		result = []
+		i_samples = []
+		q_samples = []
 		result_index = 0
 		for i_sample, q_sample in zip(iq_samples.i_data, iq_samples.q_data):
 			self.streamaddress += 1
@@ -160,6 +169,8 @@ class QuadratureSlicer:
 			self.phase_clock += 1.0
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
+				i_samples.append(i_sample)
+				q_samples.append(q_sample)
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 				# make a bit decision
@@ -193,4 +204,7 @@ class QuadratureSlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_i_sample = i_sample
 			self.last_q_sample = q_sample
+		plot.figure()
+		plot.scatter(i_samples, q_samples,s=1)
+		plot.show()
 		return result

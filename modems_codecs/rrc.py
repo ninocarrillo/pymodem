@@ -8,11 +8,11 @@ import math
 
 class RRC:
 	def __init__(self, **kwargs):
-		self.sample_rate = kwargs.get('sample_rate', 8000)
-		self.symbol_span = kwargs.get('symbol_span', 5)
+		self.sample_rate = kwargs.get('sample_rate', 44100)
+		self.symbol_span = kwargs.get('symbol_span', 8)
 		self.symbol_rate = kwargs.get('symbol_rate', 300)
 		self.rolloff_rate = kwargs.get('rolloff_rate', 0.3)
-		self.window = kwargs.get('window', "tukey")
+		self.window = kwargs.get('window', "rect")
 		self.tune()
 
 	def tune(self):
@@ -21,6 +21,7 @@ class RRC:
 		self.time_step = 1 / self.sample_rate
 		self.symbol_time = 1 / self.symbol_rate
 		self.time = np.arange(0, self.tap_count * self.time_step, self.time_step) - (self.tap_count * self.time_step / 2) + (self.time_step / 2)
+		self.tap_count = len(self.time)
 		self.taps = []
 		i = 0
 		try:
@@ -32,19 +33,21 @@ class RRC:
 				numerator = self.rolloff_rate * ((1 + 2 / np.pi) * np.sin(np.pi/(4 * self.rolloff_rate)) + (1 - (2 / np.pi)) * np.cos(np.pi / (4 * self.rolloff_rate)))
 				denominator = self.symbol_time * pow(2, 0.5)
 				try:
-					self.taps.append(numerator / denominator)
+					new_tap = numerator / denominator
 				except:
-					self.taps.append(0)
+					new_tap = 0.0
+				self.taps.append(new_tap)
 			else:
 				numerator = np.sin(np.pi * time * (1 - self.rolloff_rate) / self.symbol_time) + 4 * self.rolloff_rate * time * np.cos(np.pi * time * (1 + self.rolloff_rate) / self.symbol_time) / self.symbol_time
 				denominator = np.pi * time * (1 - pow(4 * self.rolloff_rate * time / self.symbol_time, 2)) / self.symbol_time
 				try:
-					self.taps.append(numerator / (denominator * self.symbol_time))
+					new_tap = numerator / (denominator * self.symbol_time)
 				except:
-					self.taps.append(0)
+					new_tap = 0
+				self.taps.append(new_tap)
 		self.taps = self.taps / np.linalg.norm(self.taps)
 		self.rc = np.convolve(self.taps, self.taps, 'same')
-
+		
 		self.filter_window = []
 		N = self.tap_count - 1
 		if self.window == 'hann':
@@ -87,7 +90,7 @@ class RRC:
 			while index <= N:
 				self.filter_window.append(self.filter_window[N - index])
 				index += 1
-
 		self.taps = np.multiply(self.taps, self.filter_window)
 		self.windowed_rc = np.convolve(self.taps, self.taps, 'same')
 		self.windowed_rc = self.windowed_rc * max(self.taps) / max(self.windowed_rc)
+

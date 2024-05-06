@@ -4,111 +4,15 @@
 # 9 Apr 2024
 
 from scipy.signal import firwin
-from math import ceil, tan,sin, pi
+from math import ceil, sin, pi
 from numpy import convolve, zeros
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
-
-class PI_control:
-	def __init__(self, **kwargs):
-		self.p_rate = kwargs.get('p', 0.1)
-		self.i_rate = kwargs.get('i', 0.1)
-		self.i_limit = kwargs.get('i_limit', 100.0)
-		self.gain = kwargs.get('gain', 1000.0)
-		self.integral = 0.0
-		self.proportional = 0.0
-
-	def update_reset(self, sample):
-		self.proportional = self.gain * self.p_rate * sample
-		self.integral += self.gain * (self.i_rate * sample)
-		if abs(self.integral) > self.i_limit:
-			self.integral = 0.0
-		self.output = self.proportional + self.integral
-
-		return self.output
-
-
-class IIR_1:
-	def __init__(self, **kwargs):
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
-		self.filter_type = kwargs.get('filter_type', 'lpf')
-		self.cutoff_freq = kwargs.get('cutoff', 100.0)
-		self.gain = kwargs.get('gain', 2.0)
-
-		radian_cutoff = 2.0 * pi * self.cutoff_freq
-
-		if self.filter_type == 'lpf':
-			# prewarp the cutoff frequency for bilinear Z transform
-			warp_cutoff = 2.0 * self.sample_rate * tan(radian_cutoff / (2.0 * self.sample_rate))
-			# calculate an intermediate value for bilinear Z transform
-			omega_T = warp_cutoff / self.sample_rate
-			# calculate denominator value
-			a1 = (2.0 - omega_T) / (2.0 + omega_T)
-			# calculate numerator values
-			b0 = omega_T / (2.0 + omega_T)
-			b1 = b0
-			# save the coefs
-			self.b_coefs = [self.gain * b0, self.gain * b1]
-			self.a_coefs = [0.0, a1]
-
-		self.output = 0.0
-		self.X = [0.0, 0.0]
-		self.Y = [0.0, 0.0]
-		self.order = 1
-
-	def update(self, sample):
-		# Update the input delay registers
-		for index in range(self.order, 0, -1):
-			self.X[index] = self.X[index - 1]
-		self.X[0] = sample
-		# Calculate the intermediate sum
-		v = 0
-		for index in range(self.order + 1):
-			v += (self.X[index] * self.b_coefs[index])
-		# Update the output delay registers
-		for index in range(self.order, 0, -1):
-			self.Y[index] = self.Y[index - 1]
-		# Calculate the final sum
-		for index in range(1, self.order + 1):
-			v += (self.Y[index] * self.a_coefs[index])
-		self.Y[0] = v
-		self.output = v
-
-class NCO:
-	def __init__(self, **kwargs):
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
-		self.amplitude = kwargs.get('amplitude', 10000.0)
-		self.set_frequency = kwargs.get('set_frequency', 1500.0)
-		self.wavetable_size = kwargs.get('wavetable_size', 256)
-
-		# control is the frequency adjustment input
-		self.control = 0.0
-
-		# instantaneous phase of the oscillator in degrees
-		self.phase_accumulator = 0.0
-
-		self.wavetable=[]
-		for i in range(self.wavetable_size):
-			self.wavetable.append(self.amplitude * sin(i * 2.0 * pi / self.wavetable_size))
-
-		# Calculate the phase accumulator to wavetable index scaling factor
-		self.index_scaling_factor = self.wavetable_size / (2.0 * pi)
-
-		# During each update of the NCO (once per sample), it will be advanced according to
-		# set_frequency + control. Calculate the scaling factor for phase advance.
-		self.phase_scaling_factor = 2.0 * pi / self.sample_rate
-
-	def update(self):
-		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
-		while self.phase_accumulator >= 2.0 * pi:
-			self.phase_accumulator -= 2.0 * pi
-		sine_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
-		self.sine_output = self.wavetable[sine_phase_index]
-		cosine_phase_index = int(sine_phase_index + (self.wavetable_size / 4.0))
-		while cosine_phase_index >= 0 :
-			cosine_phase_index -= self.wavetable_size
-		self.cosine_output = self.wavetable[cosine_phase_index]
+from modems_codecs.pi_control import PI_control
+from modems_codecs.iir import IIR_1
+from modems_codecs.nco import NCO
+from matplotlib import pyplot as plot
 
 class BPSKModem:
 
@@ -258,20 +162,20 @@ class BPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
-		
+
 		# print("Sample Rate: ", self.sample_rate)
 		# print("Input BPF Tap Count: ", len(self.input_bpf))
 		# print("Input BPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
 		# print(" ")
-		
+
 		# print("Output LPF Tap Count: ", len(self.output_lpf))
 		# print("Output LPF Taps: ")
 		# for tap in self.input_bpf:
 		# 	print(int(round(tap * 32768,0)), end=', ')
-		# print(" ")		
-		
+		# print(" ")
+
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
 			attack_rate = self.agc_attack_rate,
@@ -323,7 +227,7 @@ class BPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
 			#demod_audio.append(self.I_LPF.output)
 			demod_audio.append(i_mixer)
@@ -341,7 +245,7 @@ class QPSKModem:
 
 	def __init__(self, **kwargs):
 		self.definition = kwargs.get('config', '600')
-		self.sample_rate = kwargs.get('sample_rate', 8000.0)
+		self.sample_rate = kwargs.get('sample_rate', 44100.0)
 
 		if self.definition == '600':
 			# set some default values for 300 bps BPSK:
@@ -386,15 +290,15 @@ class QPSKModem:
 				i_limit=self.max_freq_offset,
 				gain= 858
 			)
-		elif self.definition == '2400':
-			# set some default values for 300 bps AFSK:
-			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
-			self.agc_sustain_time = 1.0	# sec
+		elif self.definition == '3600':
+			# set some default values for 3600 bps QPSK:
+			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.1 # sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
-			self.symbol_rate = 1200.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 4.80			# Number of symbols to span with the input
+			self.symbol_rate = 1800			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 3000.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 5			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
@@ -402,19 +306,19 @@ class QPSKModem:
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 87.5
-			self.rrc_rolloff_rate = 0.9
-			self.rrc_span = 6
+			self.max_freq_offset = 10.5
+			self.rrc_rolloff_rate = 0.3
+			self.rrc_span = 8
 			self.I_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1200.0,
+				cutoff=1300.0,
 				gain=1.0
 			)
 			self.Q_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1200.0,
+				cutoff=1300.0,
 				gain=1.0
 			)
 			self.Loop_LPF = IIR_1(
@@ -423,11 +327,59 @@ class QPSKModem:
 				cutoff=200.0,
 				gain=1.0
 			)
+			pi_p = 0.15
+			pi_i = pi_p /1000
 			self.FeedbackController = PI_control(
-				p= 0.03,
-				i= 0.0001,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1717.0
+				gain= 1350.0
+			)
+		elif self.definition == '2400':
+			# set some default values for 2400 bps QPSK:
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 1	# sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.symbol_rate = 1200.0			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 4.8			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.carrier_freq = 1800.0				# carrier tone frequency
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+											# output signal after I/Q demodulation
+			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.max_freq_offset = 87.5
+			self.rrc_rolloff_rate = 0.9
+			self.rrc_span = 3
+			branch_cutoff = 1200.0
+			self.I_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=branch_cutoff,
+				gain=1.0
+			)
+			self.Q_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=branch_cutoff,
+				gain=1.0
+			)
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=200.0,
+				gain=1.0
+			)
+			pi_p = .1
+			pi_i = pi_p / 500
+			self.FeedbackController = PI_control(
+				p= pi_p,
+				i= pi_i,
+				i_limit=self.max_freq_offset,
+				gain= 450.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -476,6 +428,13 @@ class QPSKModem:
 			scale=True
 		)
 
+		# print('Input BPF tap count: ', len(self.input_bpf))
+		# print('Sample rate: ', self.sample_rate)
+		# print('Span: ', self.input_bpf_span)
+		# print('Symbol rate: ', self.symbol_rate)
+		# for tap in self.input_bpf:
+			# print(int(round(tap*32768)), end = ', ')
+
 		# Use scipy.signal.firwin to generate taps for output low pass filter.
 		# Output lpf is implemented as a Finite Impulse Response filter (FIR).
 		# firwin defaults to hamming window if not specified.
@@ -516,6 +475,7 @@ class QPSKModem:
 		self.AGC.apply(audio)
 
 		self.loop_output = zeros(len(audio))
+		self.pi_i = zeros(len(audio))
 		demod_audio = IQData()
 		index = 0
 		# This is a costas loop
@@ -546,10 +506,16 @@ class QPSKModem:
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.Loop_LPF.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output[index] = self.NCO.control
+			self.pi_i[index] = self.FeedbackController.integral
+			index += 1
 
 		# Apply the output filter:
 		demod_audio.i_data = convolve(demod_audio.i_data, self.rrc.taps, 'valid')
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
+		plot.figure()
+		plot.plot(self.loop_output)
+		plot.plot(self.pi_i)
+		plot.show()
 		return demod_audio
