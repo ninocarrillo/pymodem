@@ -15,8 +15,10 @@ class PI_control:
 	def update_reset(self, sample):
 		self.proportional = self.gain * self.p_rate * sample
 		self.integral += self.gain * (self.i_rate * sample)
-		if abs(self.integral) > self.i_limit:
-			self.integral = 0.0
+		if self.integral > self.i_limit:
+			self.integral = self.i_limit
+		if self.integral < -self.i_limit:
+			self.integral = -self.i_limit
 		self.output = self.proportional + self.integral
 
 		return self.output
