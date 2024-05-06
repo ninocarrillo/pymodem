@@ -327,11 +327,13 @@ class QPSKModem:
 				cutoff=200.0,
 				gain=1.0
 			)
+			pi_p = 0.15
+			pi_i = pi_p /750
 			self.FeedbackController = PI_control(
-				p= 0.10,
-				i= 0.0001,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1800.0
+				gain= 1350.0
 			)
 		elif self.definition == '2400':
 			# set some default values for 2400 bps QPSK:
