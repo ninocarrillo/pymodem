@@ -8,6 +8,8 @@ from scipy.signal import firwin
 from math import ceil
 from numpy import arange, sin, cos, pi, convolve, sqrt
 from modems_codecs.rrc import RRC
+from modems_codecs.string_ops import check_boolean
+from modems_codecs.agc import AGC
 
 class FSKModem:
 
@@ -57,12 +59,12 @@ class FSKModem:
 
 		self.tune()
 
-	def retune(self, **kwargs):
-		self.symbol_rate = kwargs.get('symbol_rate', self.symbol_rate)
-		self.input_lpf_low_cutoff = kwargs.get('input_lpf_low_cutoff', self.input_lpf_low_cutoff)
-		self.input_lpf_span = kwargs.get('input_lpf_span', self.input_lpf_span)
-		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
 
+
+
+	def StringOptionsRetune(self, options):
+		self.invert = check_boolean(options.get('invert', "false"))
+		
 		self.tune()
 
 	def tune(self):
@@ -75,7 +77,7 @@ class FSKModem:
 			self.rrc = RRC(
 				sample_rate = self.sample_rate,
 				symbol_rate = self.symbol_rate,
-				symbol_span = self.rrc_span,
+				symbol_span = self.input_lpf_span,
 				rolloff_rate = self.rrc_rolloff_rate
 			)
 			self.input_lpf = self.rrc.taps
@@ -93,4 +95,6 @@ class FSKModem:
 	def demod(self, input_audio):
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_lpf, 'valid')
+		if self.invert:
+			audio = -audio
 		return audio

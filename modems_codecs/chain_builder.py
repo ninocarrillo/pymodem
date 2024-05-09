@@ -25,6 +25,7 @@ def ModemConfigurator(arg_sample_rate, input_args):
 			new_object.StringOptionsRetune(input_args['options'])
 		elif input_args['type'] == 'fsk':
 			new_object = modems_codecs.fsk.FSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
 		elif input_args['type'] == 'afsk':
 			new_object = modems_codecs.afsk.AFSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
@@ -43,7 +44,7 @@ def SlicerConfigurator(arg_sample_rate, input_args):
 			new_object = modems_codecs.slicer.BinarySlicer(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
 		elif input_args['type'] == '4level':
-			new_object = modems_codecs.slicer.BinarySlicer(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object = modems_codecs.slicer.FourLevelSlicer(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
 	return new_object
 
