@@ -10,12 +10,17 @@ from numpy import arange, sin, cos, pi, convolve, sqrt
 from modems_codecs.rrc import RRC
 from modems_codecs.string_ops import check_boolean
 from modems_codecs.agc import AGC
+from matplotlib import pyplot as plt
 
 class FSKModem:
 
 	def __init__(self, **kwargs):
 		self.definition = kwargs.get('config', '9600')
 		self.sample_rate = kwargs.get('sample_rate', 96000)
+
+		self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+		self.agc_sustain_time = 1 # sec
+		self.agc_decay_rate = 5.0			# Normalized to full scale / sec
 
 		if self.definition == '9600':
 			# set some default values for 9600 bps FSK:
@@ -91,10 +96,24 @@ class FSKModem:
 				pass_zero='lowpass',
 				fs=self.sample_rate
 			)
+	
+		self.AGC = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.agc_attack_rate,
+			sustain_time = self.agc_sustain_time,
+			decay_rate = self.agc_decay_rate,
+			target_amplitude = 1.0,
+			record_envelope = False
+		)
 
 	def demod(self, input_audio):
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_lpf, 'valid')
 		if self.invert:
 			audio = -audio
+		# perform AGC on the audio samples, saving over the original samples
+		self.AGC.apply(audio)
+		plt.figure()
+		plt.plot(audio)
+		plt.show()
 		return audio

@@ -275,6 +275,8 @@ class FourLevelSlicer:
 		# this causes phase_clock to converge to synchronization
 		result = []
 		result_index = 0
+		save_samples = []
+		save_zeros = []
 		for sample in samples:
 			self.streamaddress += 1
 			# increment phase_clock
@@ -286,6 +288,8 @@ class FourLevelSlicer:
 				# shift and bound the working byte
 				self.working_byte = (self.working_byte << 2) & 0xFF
 				# This will determine the symbol value, from 0 at the lowest, to 3 at the highest.
+				save_samples.append(sample)
+				save_zeros.append(0)
 				if sample > 0:
 					if sample >= self.threshold:
 						symbol = 3
@@ -313,4 +317,7 @@ class FourLevelSlicer:
 				self.phase_clock = self.phase_clock * self.lock_rate
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
+		plot.figure()
+		plot.scatter(save_samples, save_zeros, s=1)
+		plot.show()
 		return result
