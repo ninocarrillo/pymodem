@@ -42,6 +42,9 @@ def SlicerConfigurator(arg_sample_rate, input_args):
 		elif input_args['type'] == 'binary':
 			new_object = modems_codecs.slicer.BinarySlicer(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
+		elif input_args['type'] == '4level':
+			new_object = modems_codecs.slicer.BinarySlicer(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
 	return new_object
 
 def StreamConfigurator(input_args):
