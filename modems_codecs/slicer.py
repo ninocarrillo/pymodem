@@ -296,7 +296,7 @@ class FourLevelSlicer:
 					else:
 						symbol = 2
 				else:
-					if sample <= self.threshold:
+					if sample <= -self.threshold:
 						symbol = 0
 					else:
 						symbol = 1
@@ -317,7 +317,7 @@ class FourLevelSlicer:
 				self.phase_clock = self.phase_clock * self.lock_rate
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
-		plot.figure()
-		plot.scatter(save_samples, save_zeros, s=1)
-		plot.show()
+		#plot.figure()
+		#plot.scatter(save_samples, save_zeros, s=1)
+		#plot.show()
 		return result

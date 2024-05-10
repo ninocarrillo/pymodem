@@ -176,8 +176,8 @@ def main():
 
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
-		print(results.Report(report_order[1]))
 		print(results.PrintRawBad())
+		print(results.Report(report_order[1]))
 
 	end_time = time.time()
 	print(f"Elapsed time: {round(end_time-start_time, 2)} seconds.")
