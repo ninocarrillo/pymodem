@@ -176,7 +176,7 @@ def main():
 
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
-		print(results.PrintRawBad())
+		#print(results.PrintRawBad())
 		print(results.Report(report_order[1]))
 
 	end_time = time.time()
