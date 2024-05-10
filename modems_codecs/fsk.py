@@ -45,8 +45,8 @@ class FSKModem:
 		elif self.definition == '4800-rrc':
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'rrc'
-			self.rrc_rolloff_rate = 0.3
-			self.input_lpf_span = 8			# Number of symbols to span with the input
+			self.rrc_rolloff_rate = 1
+			self.input_lpf_span = 9			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False
