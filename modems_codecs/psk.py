@@ -4,6 +4,7 @@
 # 9 Apr 2024
 
 from scipy.signal import firwin
+from scipy.signal import remez
 from math import ceil, sin, pi
 from numpy import convolve, zeros
 from modems_codecs.agc import AGC
@@ -518,4 +519,141 @@ class QPSKModem:
 		plot.plot(self.loop_output)
 		plot.plot(self.pi_i)
 		plot.show()
+		return demod_audio
+
+
+class MPSKModem:
+
+	def __init__(self, **kwargs):
+		self.definition = kwargs.get('config', '3600')
+		self.sample_rate = kwargs.get('sample_rate', 44100.0)
+
+		if self.definition == '3600':
+			# set some default values for 3600 bps QPSK:
+			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.1 # sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.symbol_rate = 1800			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 900.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 5			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.carrier_freq = 1650.0				# carrier tone frequency
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+											# output signal after I/Q demodulation
+			self.output_lpf_span = 1.5			# Number of symbols to span with the output
+			self.max_freq_offset = 10.5
+			self.rrc_rolloff_rate = 0.3
+			self.rrc_span = 8
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=200.0,
+				gain=1.0
+			)
+			pi_p = 0.15
+			pi_i = pi_p /1000
+			self.FeedbackController = PI_control(
+				p= pi_p,
+				i= pi_i,
+				i_limit=self.max_freq_offset,
+				gain= 1350.0
+			)
+
+		self.oscillator_amplitude = 1.0
+
+
+
+		self.tune()
+
+	def StringOptionsRetune(self, options):
+		self.symbol_rate = float(options.get('symbol_rate', self.symbol_rate))
+		self.sample_rate = float(options.get('sample_rate', self.sample_rate))
+		self.carrier_freq = float(options.get('carrier_freq', self.carrier_freq))
+		self.tune()
+
+	def tune(self):
+		self.input_bpf_tap_count = round(
+			self.sample_rate * self.input_bpf_span / self.symbol_rate
+		)
+
+		if self.input_bpf_tap_count % 2:
+			self.input_bpf_tap_count += 1
+
+		self.output_lpf_tap_count = round(
+			self.sample_rate * self.output_lpf_span / self.symbol_rate
+		)
+
+		# Use scipy.signal.remez to generate taps for input hilbert filter.
+		try:
+			self.input_bpf = remez(
+				self.input_bpf_tap_count,
+				[ 0.1, 0.5 ],
+				[1],
+				type='hilbert',
+				fs=1
+			)
+			# self.input_bpf = remez(
+			# 	29,
+			# 	[ .1, .4 ],
+			# 	[1],
+			# 	type='hilbert',
+			# 	fs=1
+			# )
+		except:
+			print("remez failed")
+
+
+		self.input_bpf = (self.input_bpf / max(self.input_bpf))
+
+
+		plot.figure()
+		plot.stem(self.input_bpf)
+		plot.title("Hilbert Filter Taps")
+		plot.show()
+
+		# print('Input BPF tap count: ', len(self.input_bpf))
+		# print('Sample rate: ', self.sample_rate)
+		# print('Span: ', self.input_bpf_span)
+		# print('Symbol rate: ', self.symbol_rate)
+		# for tap in self.input_bpf:
+		# 	print(int(round(tap*32768)), end = ', ')
+
+		#
+		self.AGC = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.agc_attack_rate,
+			sustain_time = self.agc_sustain_time,
+			decay_rate = self.agc_decay_rate,
+			target_amplitude = self.oscillator_amplitude,
+			record_envelope = False
+		)
+		#
+		# self.NCO = NCO(
+		# 	sample_rate = self.sample_rate,
+		# 	amplitude = self.oscillator_amplitude,
+		# 	set_frequency = self.carrier_freq,
+		# 	wavetable_size = 256
+		# )
+		# self.rrc = RRC(
+		# 	sample_rate = self.sample_rate,
+		# 	symbol_rate = self.symbol_rate,
+		# 	symbol_span = self.rrc_span,
+		# 	rolloff_rate = self.rrc_rolloff_rate
+		# )
+		self.output_sample_rate = self.sample_rate
+
+	def demod(self, input_audio):
+		# Apply the input filter.
+
+		#self.AGC.apply(input_audio)
+		audio = convolve(input_audio, self.input_bpf, 'valid')
+		plot.figure()
+		plot.plot(audio)
+		plot.plot(input_audio)
+		plot.show()
+
+
 		return demod_audio

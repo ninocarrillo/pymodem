@@ -20,6 +20,9 @@ def ModemConfigurator(arg_sample_rate, input_args):
 		if input_args['type'] == 'qpsk':
 			new_object = modems_codecs.psk.QPSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
+		elif input_args['type'] == 'mpsk':
+			new_object = modems_codecs.psk.MPSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
+			new_object.StringOptionsRetune(input_args['options'])
 		elif input_args['type'] == 'bpsk':
 			new_object = modems_codecs.psk.BPSKModem(sample_rate=arg_sample_rate, config=input_args['config'])
 			new_object.StringOptionsRetune(input_args['options'])
