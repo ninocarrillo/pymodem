@@ -535,16 +535,14 @@ class MPSKModem:
 			self.agc_sustain_time = 0.1 # sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 1800			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 900.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 5000.0	# high cutoff frequency for input filter
+			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 3000.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 5			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
+			self.hilbert_span = 3			# number of symbols to span with hilbert transformer
 			self.carrier_freq = 1650.0				# carrier tone frequency
-			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
-											# output signal after I/Q demodulation
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 10.5
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
@@ -580,29 +578,36 @@ class MPSKModem:
 			self.sample_rate * self.input_bpf_span / self.symbol_rate
 		)
 
-		self.output_lpf_tap_count = round(
-			self.sample_rate * self.output_lpf_span / self.symbol_rate
+
+		self.hilbert_tap_count = round(
+			self.sample_rate * self.hilbert_span / self.symbol_rate
 		)
 
-		self.Hilbert = Hilbert(tap_count=self.input_bpf_tap_count)
-		self.input_bpf = self.Hilbert.taps
+		self.input_bpf = firwin(
+			self.input_bpf_tap_count,
+			[ self.input_bpf_low_cutoff, self.input_bpf_high_cutoff ],
+			pass_zero='bandpass',
+			fs=self.sample_rate,
+			scale=True
+		)
 
-		print(self.input_bpf_tap_count)
+		if self.hilbert_tap_count % 2:
+			pass
+		else:
+			# make hilbert tap count odd
+			self.hilbert_tap_count += 1
+
+		self.Hilbert = Hilbert(tap_count=self.hilbert_tap_count)
+
+		print(self.hilbert_tap_count)
 		print(self.Hilbert.tap_count)
 		print(len(self.Hilbert.taps))
 
 
 		plot.figure()
-		plot.stem(self.input_bpf)
+		plot.stem(self.Hilbert.taps)
 		plot.title("Hilbert Filter Taps")
 		plot.show()
-
-		# print('Input BPF tap count: ', len(self.input_bpf))
-		# print('Sample rate: ', self.sample_rate)
-		# print('Span: ', self.input_bpf_span)
-		# print('Symbol rate: ', self.symbol_rate)
-		# for tap in self.input_bpf:
-		# 	print(int(round(tap*32768)), end = ', ')
 
 		#
 		self.AGC = AGC(
@@ -633,6 +638,7 @@ class MPSKModem:
 
 		#self.AGC.apply(input_audio)
 		audio = convolve(input_audio, self.input_bpf, 'valid')
+		audio = convolve(audio, self.Hilbert.taps, 'valid')
 		plot.figure()
 		plot.plot(audio)
 		plot.plot(input_audio)
