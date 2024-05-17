@@ -3,12 +3,13 @@
 # Nino Carrillo
 # 17 May 2024
 
-from math import pi
+from math import pi, sin
 
 class Hilbert:
 	def __init__(self, **kwargs):
 		self.tap_count = kwargs.get('tap_count', 21)
 		self.amplitude = kwargs.get('amplitude', 1.0)
+		self.window = kwargs.get('window', 'hann')
 		self.taps = []
 		start = -(self.tap_count // 2)
 		end = start + self.tap_count
@@ -19,3 +20,10 @@ class Hilbert:
 			else:
 				# n is even
 				self.taps.append(0)
+		self.window_taps = []
+		N = self.tap_count - 1
+		if self.window == 'hann':
+				for n in range(self.tap_count):
+					self.window_taps.append(sin(pi * n / N)**2)
+		for i in range(self.tap_count):
+			self.taps[i] = self.taps[i] * self.window_taps[i]
