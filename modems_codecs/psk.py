@@ -667,9 +667,9 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			angle.append(sample.getangle())
-			angle_error.append(sample.get_angle_error_4())
 			# Low pass filter the angle error
-			self.Loop_LPF.update(sample.angle_error)
+			self.Loop_LPF.update(sample.get_angle_error_4())
+			angle_error.append(self.Loop_LPF.output)
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
