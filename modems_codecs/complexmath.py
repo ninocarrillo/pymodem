@@ -15,7 +15,12 @@ class ComplexNumber:
 		self.imag = (arg.real*self.imag) + (self.real*arg.imag)
 
 	def getangle(self):
-		self.angle = atan(self.real/self.imag) * 360 / pi
+		self.angle = atan(self.imag/self.real) * 180 / pi
+		if self.real < 0:
+			if self.imag < 0:
+				self.angle += 180
+			else:
+				self.angle -= 180
 		return self.angle
 
 	def get_angle_error_4(self):

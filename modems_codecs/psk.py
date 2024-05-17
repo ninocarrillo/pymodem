@@ -544,7 +544,7 @@ class MPSKModem:
 											# more taps = shaper cutoff, more processing
 			self.hilbert_span = 3			# number of symbols to span with hilbert transformer
 			self.carrier_freq = 1650.0				# carrier tone frequency
-			self.max_freq_offset = 10.5
+			self.max_freq_offset = 100
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.Loop_LPF = IIR_1(
@@ -559,7 +559,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 10.0
+				gain= 20.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -657,7 +657,10 @@ class MPSKModem:
 		control = []
 		integral = []
 		nco_output = []
-		sample_log = []
+		mul_imag_log = []
+		mul_real_log = []
+		sample_imag_log = []
+		sample_real_log = []
 
 		for real,imag in zip(real_audio, imag_audio):
 			sample = ComplexNumber(real,imag)
@@ -671,7 +674,11 @@ class MPSKModem:
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
 			nco_output.append(self.NCO.cosine_output)
-			sample_log.append(sample.imag)
+			mul_imag_log.append(sample.imag)
+			mul_real_log.append(sample.real)
+			sample_imag_log.append(imag)
+			sample_real_log.append(real)
+
 
 
 
@@ -691,6 +698,7 @@ class MPSKModem:
 		plot.show()
 		plot.figure()
 		plot.plot(nco_output)
-		plot.plot(sample_log)
+		plot.plot(sample_real_log)
+		plot.plot(mul_real_log)
 		plot.show()
 		return demod_audio
