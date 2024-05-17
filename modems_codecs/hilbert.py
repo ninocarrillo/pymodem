@@ -11,7 +11,8 @@ class Hilbert:
 		self.amplitude = kwargs.get('amplitude', 1.0)
 		self.window = kwargs.get('window', 'hann')
 		self.taps = []
-		start = -(self.tap_count // 2)
+		self.delay = self.tap_count // 2
+		start = -(self.delay)
 		end = start + self.tap_count
 		for n in range(start,end):
 			if n % 2:
@@ -27,3 +28,7 @@ class Hilbert:
 					self.window_taps.append(sin(pi * n / N)**2)
 		for i in range(self.tap_count):
 			self.taps[i] = self.taps[i] * self.window_taps[i]
+		self.delay_taps = []
+		for i in range(self.delay+1):
+			self.delay_taps.append(0)
+		self.delay_taps[0] = 1

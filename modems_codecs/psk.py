@@ -599,15 +599,14 @@ class MPSKModem:
 
 		self.Hilbert = Hilbert(tap_count=self.hilbert_tap_count)
 
-		print(self.hilbert_tap_count)
-		print(self.Hilbert.tap_count)
-		print(len(self.Hilbert.taps))
+		print("hilbert tap count: ", self.Hilbert.tap_count)
+		print("hilbert delay count: ", self.Hilbert.delay)
 
 
-		plot.figure()
-		plot.stem(self.Hilbert.taps)
-		plot.title("Hilbert Filter Taps")
-		plot.show()
+		# plot.figure()
+		# plot.stem(self.Hilbert.taps)
+		# plot.title("Hilbert Filter Taps")
+		# plot.show()
 
 		#
 		self.AGC = AGC(
@@ -637,11 +636,12 @@ class MPSKModem:
 		# Apply the input filter.
 
 		#self.AGC.apply(input_audio)
-		audio = convolve(input_audio, self.input_bpf, 'valid')
-		audio = convolve(audio, self.Hilbert.taps, 'valid')
+		filtered_audio = convolve(input_audio, self.input_bpf, 'valid')
+		imag_audio = convolve(filtered_audio, self.Hilbert.taps, 'valid')
+		real_audio = convolve(filtered_audio, self.Hilbert.delay_taps, 'valid')
+		
 		plot.figure()
-		plot.plot(audio)
-		plot.plot(input_audio)
+		plot.scatter(real_audio[:100000], imag_audio[:100000], s=1)
 		plot.show()
 
 
