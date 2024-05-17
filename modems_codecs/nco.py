@@ -41,5 +41,5 @@ class NCO:
 		while cosine_phase_index >= 0 :
 			cosine_phase_index -= self.wavetable_size
 		self.cosine_output = self.wavetable[cosine_phase_index]
-		self.ComplexOutput.real = self.sine_output
-		self.ComplexOutput.imag = self.cosine_output
+		self.ComplexOutput.real = self.cosine_output
+		self.ComplexOutput.imag = -self.sine_output

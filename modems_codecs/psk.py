@@ -559,7 +559,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 0.0
+				gain= 10.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -618,7 +618,7 @@ class MPSKModem:
 			target_amplitude = self.oscillator_amplitude,
 			record_envelope = False
 		)
-		
+
 		self.NCO = NCO(
 			sample_rate = self.sample_rate,
 			amplitude = self.oscillator_amplitude,
@@ -672,8 +672,8 @@ class MPSKModem:
 			integral.append(self.FeedbackController.integral)
 			nco_output.append(self.NCO.cosine_output)
 			sample_log.append(sample.imag)
-			
-			
+
+
 
 		plot.figure()
 		plot.subplot(221)
