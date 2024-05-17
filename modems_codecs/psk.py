@@ -634,15 +634,20 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 		# Apply the input filter.
+		audio = convolve(input_audio, self.input_bpf, 'full')
 
-		#self.AGC.apply(input_audio)
-		filtered_audio = convolve(input_audio, self.input_bpf, 'valid')
-		imag_audio = convolve(filtered_audio, self.Hilbert.taps, 'valid')
-		real_audio = convolve(filtered_audio, self.Hilbert.delay_taps, 'valid')
-		
+		# perform AGC on the audio samples, saving over the original samples
+		self.AGC.apply(audio)
+		imag_audio = convolve(audio, self.Hilbert.taps, 'valid')
+		real_audio = convolve(audio, self.Hilbert.delay_taps, 'valid')
+		real_audio = real_audio[:-self.Hilbert.delay]
 		plot.figure()
-		plot.scatter(real_audio[:100000], imag_audio[:100000], s=1)
+		plot.scatter(real_audio, imag_audio, s=1)
 		plot.show()
+		print("len real", len(real_audio))
+		print("len imag", len(imag_audio))
 
+		for real,imag in zip(real_audio, imag_audio):
+			pass
 
 		return demod_audio
