@@ -580,9 +580,6 @@ class MPSKModem:
 			self.sample_rate * self.input_bpf_span / self.symbol_rate
 		)
 
-		if self.input_bpf_tap_count % 2:
-			self.input_bpf_tap_count += 1
-
 		self.output_lpf_tap_count = round(
 			self.sample_rate * self.output_lpf_span / self.symbol_rate
 		)
@@ -590,7 +587,9 @@ class MPSKModem:
 		self.Hilbert = Hilbert(tap_count=self.input_bpf_tap_count)
 		self.input_bpf = self.Hilbert.taps
 
-		#self.input_bpf = (self.input_bpf / max(self.input_bpf))
+		print(self.input_bpf_tap_count)
+		print(self.Hilbert.tap_count)
+		print(len(self.Hilbert.taps))
 
 
 		plot.figure()
