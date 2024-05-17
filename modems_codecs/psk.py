@@ -697,8 +697,7 @@ class MPSKModem:
 		plot.title("PI Integral")
 		plot.show()
 		plot.figure()
-		plot.plot(nco_output)
-		plot.plot(sample_real_log)
 		plot.plot(mul_real_log)
+		plot.plot(mul_imag_log)
 		plot.show()
 		return demod_audio
