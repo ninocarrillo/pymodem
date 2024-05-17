@@ -14,6 +14,7 @@ from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
 from modems_codecs.hilbert import Hilbert
+from modems_codecs.complexmath import ComplexNumber
 from matplotlib import pyplot as plot
 
 class BPSKModem:
@@ -558,7 +559,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1350.0
+				gain= 0.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -617,13 +618,13 @@ class MPSKModem:
 			target_amplitude = self.oscillator_amplitude,
 			record_envelope = False
 		)
-		#
-		# self.NCO = NCO(
-		# 	sample_rate = self.sample_rate,
-		# 	amplitude = self.oscillator_amplitude,
-		# 	set_frequency = self.carrier_freq,
-		# 	wavetable_size = 256
-		# )
+		
+		self.NCO = NCO(
+			sample_rate = self.sample_rate,
+			amplitude = self.oscillator_amplitude,
+			set_frequency = self.carrier_freq,
+			wavetable_size = 256
+		)
 		# self.rrc = RRC(
 		# 	sample_rate = self.sample_rate,
 		# 	symbol_rate = self.symbol_rate,
@@ -634,20 +635,62 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 		# Apply the input filter.
-		audio = convolve(input_audio, self.input_bpf, 'full')
+		audio = convolve(input_audio, self.input_bpf, 'valid')
 
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
 		imag_audio = convolve(audio, self.Hilbert.taps, 'valid')
 		real_audio = convolve(audio, self.Hilbert.delay_taps, 'valid')
 		real_audio = real_audio[:-self.Hilbert.delay]
-		plot.figure()
-		plot.scatter(real_audio, imag_audio, s=1)
-		plot.show()
+		# plot.figure()
+		# plot.scatter(real_audio, imag_audio, s=1)
+		# plot.show()
+		#plot.figure()
+		#plot.plot(real_audio)
+		#plot.plot(imag_audio)
+		#plot.show()
 		print("len real", len(real_audio))
 		print("len imag", len(imag_audio))
 
-		for real,imag in zip(real_audio, imag_audio):
-			pass
+		angle = []
+		angle_error = []
+		control = []
+		integral = []
+		nco_output = []
+		sample_log = []
 
+		for real,imag in zip(real_audio, imag_audio):
+			sample = ComplexNumber(real,imag)
+			self.NCO.update()
+			sample.multiply(self.NCO.ComplexOutput)
+			angle.append(sample.getangle())
+			angle_error.append(sample.get_angle_error_4())
+			# Low pass filter the angle error
+			self.Loop_LPF.update(sample.angle_error)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
+			control.append(self.NCO.control)
+			integral.append(self.FeedbackController.integral)
+			nco_output.append(self.NCO.cosine_output)
+			sample_log.append(sample.imag)
+			
+			
+
+		plot.figure()
+		plot.subplot(221)
+		plot.plot(angle)
+		plot.title("Angle")
+		plot.subplot(222)
+		plot.plot(angle_error)
+		plot.title("Angle Error")
+		plot.subplot(223)
+		plot.plot(control)
+		plot.title("NCO Control")
+		plot.subplot(224)
+		plot.plot(integral)
+		plot.title("PI Integral")
+		plot.show()
+		plot.figure()
+		plot.plot(nco_output)
+		plot.plot(sample_log)
+		plot.show()
 		return demod_audio
