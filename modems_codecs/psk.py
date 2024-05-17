@@ -13,6 +13,7 @@ from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
+from modems_codecs.hilbert import Hilbert
 from matplotlib import pyplot as plot
 
 class BPSKModem:
@@ -586,27 +587,10 @@ class MPSKModem:
 			self.sample_rate * self.output_lpf_span / self.symbol_rate
 		)
 
-		# Use scipy.signal.remez to generate taps for input hilbert filter.
-		try:
-			self.input_bpf = remez(
-				self.input_bpf_tap_count,
-				[ 0.1, 0.5 ],
-				[1],
-				type='hilbert',
-				fs=1
-			)
-			# self.input_bpf = remez(
-			# 	29,
-			# 	[ .1, .4 ],
-			# 	[1],
-			# 	type='hilbert',
-			# 	fs=1
-			# )
-		except:
-			print("remez failed")
+		self.Hilbert = Hilbert(tap_count=self.input_bpf_tap_count)
+		self.input_bpf = self.Hilbert.taps
 
-
-		self.input_bpf = (self.input_bpf / max(self.input_bpf))
+		#self.input_bpf = (self.input_bpf / max(self.input_bpf))
 
 
 		plot.figure()

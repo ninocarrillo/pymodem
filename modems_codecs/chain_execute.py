@@ -28,11 +28,11 @@ def process_chain(chain, input_audio):
 	return decoded_data
 
 def multiprocess_chain(chain, input_audio, queue):
-	try:
-		demod_audio = chain[1].demod(input_audio)
-	except:
-		print(f"{chain[0]} skipped modem")
-		pass
+	#try:
+	demod_audio = chain[1].demod(input_audio)
+	#except:
+	#	print(f"{chain[0]} skipped modem")
+	#	pass
 	try:
 		sliced_data = chain[2].slice(demod_audio)
 	except:

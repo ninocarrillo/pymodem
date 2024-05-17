@@ -254,16 +254,22 @@ class PacketMetaArray:
 					string_output += print_to_string("Valid IL2P Decode with Invalid CRC:")
 					string_output += print_to_string("Packet number: ", self.bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("source decoder: ", packet.SourceDecoder)
-					for byte in packet.data[:-2]:
-						byte = int(byte)
-						if (byte < 0x7F) and (byte > 0x1F):
-							string_output += print_to_string(chr(int(byte)), end='')
-						else:
-							string_output += print_to_string(f'<{byte}>', end='')
+					string_output += print_to_string("Packet byte count: ", len(packet.data))
+					header_info = print_ax25_header_to_string(packet.data, ', ')
+					string_output += header_info[1]
+					for i in range(header_info[0], len(packet.data)-2):
+						byte = packet.data[i]
+						string_output +=print_to_string(chr(int(byte)), end='')
+					# for byte in packet.data[:-2]:
+					# 	byte = int(byte)
+					# 	if (byte < 0x7F) and (byte > 0x1F):
+					# 		string_output += print_to_string(chr(int(byte)), end='')
+					# 	else:
+					# 		string_output += print_to_string(f'<{byte}>', end='')
 					string_output += print_to_string("")
 					for byte in packet.data[:-2]:
 						string_output += print_to_string(hex(int(byte)), end=" ")
-					string_output += print_to_string(" ")
+					string_output += print_to_string("\n")
 		return string_output
 
 	def CountGood(self):

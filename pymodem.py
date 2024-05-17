@@ -76,14 +76,14 @@ def main():
 				# go to the next iteration of the for loop
 				continue
 			# append the modem object to this chain
-			try:
-				modem = modems_codecs.chain_builder.ModemConfigurator(
-					input_sample_rate,
-					line['modem'],
-				)
-			except:
-				print(f"Invalid or missing 'modem' in {line['object_name']}.")
-				modem = []
+			#try:
+			modem = modems_codecs.chain_builder.ModemConfigurator(
+				input_sample_rate,
+				line['modem'],
+			)
+			#except:
+			#	print(f"Invalid or missing 'modem' in {line['object_name']}.")
+			#	modem = []
 			demod_stack[demod_stack_index].append(modem)
 			try:
 				slicer_sample_rate = demod_stack[demod_stack_index][1].output_sample_rate
@@ -176,7 +176,7 @@ def main():
 
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
-		#print(results.PrintRawBad())
+		print(results.PrintRawBad())
 		print(results.Report(report_order[1]))
 
 	end_time = time.time()

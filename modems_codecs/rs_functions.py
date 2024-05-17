@@ -137,6 +137,7 @@ def decode(rs, data, block_size, min_distance):
 				y = 0
 			y = rs['gf']['table'][y]
 			error_magnitudes[i] = gf_functions.mul(rs['gf'], y, z)
+			print(hex(int(data[error_locations[i]])))
 			data[error_locations[i]] ^= error_magnitudes[i]
 	# error correction is complete, now check for success by calculating syndromes on the corrected data
 	for i in range(rs['num_roots']):

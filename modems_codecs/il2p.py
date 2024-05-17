@@ -171,6 +171,8 @@ class IL2PCodec:
 			# RS decoding failed
 			self.block_fail = True
 		else:
+			if rs_result > 0:
+				print("Successful RS block decode with corrected errors: ", rs_result)
 			self.bytes_corrected += rs_result
 
 	def header_rs_decode(self):
@@ -193,6 +195,8 @@ class IL2PCodec:
 		result.append(
 			copy.copy(self.working_packet)
 		)
+		print("IL2P packet complete. Bytes Corrected: ", self.bytes_corrected)
+		self.bytes_corrected = 0;
 		self.working_packet = PacketMeta()
 		self.state = 'sync_search'
 
