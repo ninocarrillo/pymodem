@@ -24,10 +24,10 @@ class ComplexNumber:
 		return self.angle
 
 	def get_angle_error_4(self):
-		self.angle_error = self.getangle()
+		self.angle_error = self.getangle() - 45
 		while self.angle_error > 45:
 			self.angle_error -= 90
-		while self.angle_error < -45:
+		while self.angle_error <= -45:
 			self.angle_error += 90
 		return self.angle_error
 
