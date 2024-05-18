@@ -13,8 +13,10 @@ class ComplexNumber:
 		self.angle = 0
 
 	def multiply(self, arg):
-		self.real = (self.real*arg.real) - (self.imag*arg.imag)
-		self.imag = (arg.real*self.imag) + (self.real*arg.imag)
+		real = (self.real*arg.real) - (self.imag*arg.imag)
+		imag = (arg.real*self.imag) + (self.real*arg.imag)
+		self.imag = imag
+		self.real = real
 
 	def getangle(self):
 		#self.angle = atan(self.imag/self.real) * 180 / pi

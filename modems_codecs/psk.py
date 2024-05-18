@@ -664,6 +664,11 @@ class MPSKModem:
 		sample_imag_log = []
 		sample_real_log = []
 
+		x = ComplexNumber(3,4)
+		y = ComplexNumber(4,5)
+		x.multiply(y)
+		print(f'{x.real} + {x.imag}j')
+
 		for real,imag in zip(real_audio, imag_audio):
 			sample = ComplexNumber(real,imag)
 			self.NCO.update()
