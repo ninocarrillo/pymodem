@@ -532,9 +532,9 @@ class MPSKModem:
 
 		if self.definition == '3600':
 			# set some default values for 3600 bps QPSK:
-			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
-			self.agc_sustain_time = 0.1 # sec
-			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.agc_attack_rate = 50.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 1 # sec
+			self.agc_decay_rate = 1.0			# Normalized to full scale / sec
 			self.symbol_rate = 1800			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 3000.0	# high cutoff frequency for input filter
@@ -559,7 +559,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 20.0
+				gain= 2.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -604,10 +604,10 @@ class MPSKModem:
 		print("hilbert delay count: ", self.Hilbert.delay)
 
 
-		# plot.figure()
-		# plot.stem(self.Hilbert.taps)
-		# plot.title("Hilbert Filter Taps")
-		# plot.show()
+		#plot.figure()
+		#plot.stem(self.Hilbert.taps)
+		#plot.title("Hilbert Filter Taps")
+		#plot.show()
 
 		#
 		self.AGC = AGC(
@@ -642,9 +642,9 @@ class MPSKModem:
 		imag_audio = convolve(audio, self.Hilbert.taps, 'valid')
 		real_audio = convolve(audio, self.Hilbert.delay_taps, 'valid')
 		real_audio = real_audio[:-self.Hilbert.delay]
-		# plot.figure()
-		# plot.scatter(real_audio, imag_audio, s=1)
-		# plot.show()
+		#plot.figure()
+		#plot.scatter(real_audio, imag_audio, s=1)
+		#plot.show()
 		#plot.figure()
 		#plot.plot(real_audio)
 		#plot.plot(imag_audio)
@@ -653,10 +653,12 @@ class MPSKModem:
 		print("len imag", len(imag_audio))
 
 		angle = []
+		magnitude = []
 		angle_error = []
 		control = []
 		integral = []
-		nco_output = []
+		nco_real_output = []
+		nco_imag_output = []
 		mul_imag_log = []
 		mul_real_log = []
 		sample_imag_log = []
@@ -667,13 +669,15 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			angle.append(sample.getangle())
+			magnitude.append(sample.getmag())
 			# Low pass filter the angle error
-			self.Loop_LPF.update(sample.get_angle_error_4())
+			self.Loop_LPF.update(sample.get_angle_error())
 			angle_error.append(self.Loop_LPF.output)
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
-			nco_output.append(self.NCO.cosine_output)
+			nco_real_output.append(self.NCO.ComplexOutput.real)
+			nco_imag_output.append(self.NCO.ComplexOutput.imag)
 			mul_imag_log.append(sample.imag)
 			mul_real_log.append(sample.real)
 			sample_imag_log.append(imag)
@@ -684,11 +688,13 @@ class MPSKModem:
 
 		plot.figure()
 		plot.subplot(221)
+		plot.plot(magnitude)
 		plot.plot(angle)
-		plot.title("Angle")
+		plot.title("Product Mag, Angle")
+		plot.legend(["Mag", "Angle"])
 		plot.subplot(222)
 		plot.plot(angle_error)
-		plot.title("Angle Error")
+		plot.title("Loop Filter")
 		plot.subplot(223)
 		plot.plot(control)
 		plot.title("NCO Control")
@@ -697,7 +703,13 @@ class MPSKModem:
 		plot.title("PI Integral")
 		plot.show()
 		plot.figure()
+		plot.plot(nco_real_output)
+		plot.plot(nco_imag_output)
+		plot.plot(sample_real_log)
+		plot.plot(sample_imag_log)
 		plot.plot(mul_real_log)
 		plot.plot(mul_imag_log)
+
+		plot.legend(["nco real", "nco imag", "sample real", "sample imag", "mul real", "mul imag"])
 		plot.show()
 		return demod_audio

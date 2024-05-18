@@ -3,13 +3,13 @@
 # Nino Carrillo
 # 17 May 2024
 
-from math import pi, sin, atan
+from math import pi, sin, atan, atan2, sqrt
 
 class ComplexNumber:
 	def __init__(self, real, imag):
 		self.real = real
 		self.imag = imag
-		self.constellation = [45, 135, -45, -135]
+		self.constellation = [90, -90]
 		self.angle = 0
 
 	def multiply(self, arg):
@@ -17,15 +17,20 @@ class ComplexNumber:
 		self.imag = (arg.real*self.imag) + (self.real*arg.imag)
 
 	def getangle(self):
-		self.angle = atan(self.imag/self.real) * 180 / pi
-		if self.real < 0:
-			if self.imag < 0:
-				self.angle -= 180
-			else:
-				self.angle += 180
+		#self.angle = atan(self.imag/self.real) * 180 / pi
+		#if self.real < 0:
+		#	if self.imag < 0:
+		#		self.angle -= 180
+		#	else:
+		#		self.angle += 180
+		self.angle = atan2(self.imag, self.real) * 180 / pi
 		return self.angle
 
-	def get_angle_error_4(self):
+	def getmag(self):
+		self.magnitude = sqrt((self.imag**2) + (self.real**2))
+		return self.magnitude
+
+	def get_angle_error(self):
 		errors = []
 		distances = []
 		for point in self.constellation:
@@ -39,7 +44,7 @@ class ComplexNumber:
 				error = distances[i]
 				min_index = i
 		self.angle_error = errors[min_index]
-		return self.angle_error
 
-	def angle_error_8(self):
-		pass
+		self.angle_error = self.angle
+
+		return self.angle_error
