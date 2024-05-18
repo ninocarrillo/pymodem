@@ -42,13 +42,13 @@ class BPSKModem:
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.max_freq_offset = 37.5
-			self.I_LPF = IIR_1(
+			self.Cosine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
 				gain=1.0
 			)
-			self.Q_LPF = IIR_1(
+			self.Sine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
@@ -85,13 +85,13 @@ class BPSKModem:
 			self.max_freq_offset = 87.5
 			self.rrc_rolloff_rate = 0.9
 			self.rrc_span = 6
-			self.I_LPF = IIR_1(
+			self.Cosine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=1200.0,
 				gain=1.0
 			)
-			self.Q_LPF = IIR_1(
+			self.Sine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=1200.0,
@@ -215,25 +215,25 @@ class BPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			i_mixer = sample * self.NCO.sine_output
+			cosine_mixer = sample * self.NCO.sine_output
 			# low pass filter this product
-			#self.I_LPF.update(i_mixer)
+			#self.Cosine_LPF.update(cosine_mixer)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
 			q_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
-			#self.Q_LPF.update(q_mixer)
+			#self.Sine_LPF.update(q_mixer)
 			# mix the I and Q products to create the phase detector
-			#loop_mixer = self.I_LPF.output * self.Q_LPF.output
-			loop_mixer = i_mixer * q_mixer
+			#loop_mixer = self.Cosine_LPF.output * self.Sine_LPF.output
+			loop_mixer = cosine_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
-			#demod_audio.append(self.I_LPF.output)
-			demod_audio.append(i_mixer)
+			#demod_audio.append(self.Cosine_LPF.output)
+			demod_audio.append(cosine_mixer)
 
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
@@ -269,13 +269,13 @@ class QPSKModem:
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.max_freq_offset = 37.5
-			self.I_LPF = IIR_1(
+			self.Cosine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
 				gain=1.0
 			)
-			self.Q_LPF = IIR_1(
+			self.Sine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=300.0,
@@ -312,13 +312,13 @@ class QPSKModem:
 			self.max_freq_offset = 10.5
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
-			self.I_LPF = IIR_1(
+			self.Cosine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=1450.0,
 				gain=1.0
 			)
-			self.Q_LPF = IIR_1(
+			self.Sine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=1450.0,
@@ -358,13 +358,13 @@ class QPSKModem:
 			self.rrc_rolloff_rate = 0.9
 			self.rrc_span = 3
 			branch_cutoff = 1200.0
-			self.I_LPF = IIR_1(
+			self.Cosine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=branch_cutoff,
 				gain=1.0
 			)
-			self.Q_LPF = IIR_1(
+			self.Sine_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=branch_cutoff,
@@ -485,27 +485,27 @@ class QPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			i_mixer = sample * self.NCO.cosine_output
+			cosine_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
-			self.I_LPF.update(i_mixer)
+			self.Cosine_LPF.update(cosine_mixer)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
-			if self.I_LPF.output >= 0:
-				i_sgn = 1
+			if self.Cosine_LPF.output >= 0:
+				cosine_sgn = 1
 			else:
-				i_sgn = -1
+				cosine_sgn = -1
 			q_mixer = sample * self.NCO.sine_output
 			# low pass filter this product
-			self.Q_LPF.update(q_mixer)
-			demod_audio.i_data.append(self.Q_LPF.output)
-			demod_audio.q_data.append(self.I_LPF.output)
+			self.Sine_LPF.update(q_mixer)
+			demod_audio.i_data.append(self.Sine_LPF.output)
+			demod_audio.q_data.append(self.Cosine_LPF.output)
 			# mix the I and Q products to create the phase detector
-			if self.Q_LPF.output >= 0:
-				q_sgn = 1
+			if self.Sine_LPF.output >= 0:
+				sine_sgn = 1
 			else:
-				q_sgn = -1
-			loop_mixer = (self.I_LPF.output * q_sgn) - (self.Q_LPF.output * i_sgn)
+				sine_sgn = -1
+			loop_mixer = (self.Cosine_LPF.output * sine_sgn) - (self.Sine_LPF.output * cosine_sgn)
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
@@ -532,9 +532,9 @@ class MPSKModem:
 
 		if self.definition == '3600':
 			# set some default values for 3600 bps QPSK:
-			self.agc_attack_rate = 50.0		# Normalized to full scale / sec
-			self.agc_sustain_time = 1 # sec
-			self.agc_decay_rate = 1.0			# Normalized to full scale / sec
+			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.1 # sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 1800			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 300.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 3000.0	# high cutoff frequency for input filter
@@ -544,7 +544,7 @@ class MPSKModem:
 											# more taps = shaper cutoff, more processing
 			self.hilbert_span = 3.0			# number of symbols to span with hilbert transformer
 			self.carrier_freq = 1650.0				# carrier tone frequency
-			self.max_freq_offset = 25
+			self.max_freq_offset = 10.5
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.Loop_LPF = IIR_1(
@@ -554,12 +554,12 @@ class MPSKModem:
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /1000
+			pi_i = pi_p /1200
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 20.0
+				gain= 8.7
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -679,23 +679,23 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		plot.figure()
-		plot.subplot(221)
-		plot.plot(angle)
-		plot.title("Output Phase")
-		plot.subplot(222)
-		plot.plot(angle_error)
-		plot.title("Angle Error")
-		plot.subplot(223)
-		plot.plot(control)
-		plot.title("NCO Control")
-		plot.subplot(224)
-		plot.plot(integral)
-		plot.title("PI Integral")
-		plot.show()
-		plot.figure()
-		plot.plot(demod_audio.i_data)
-		plot.plot(demod_audio.q_data)
-		plot.legend(["I", "Q"])
-		plot.show()
+		# plot.figure()
+		# plot.subplot(221)
+		# plot.plot(angle)
+		# plot.title("Output Phase")
+		# plot.subplot(222)
+		# plot.plot(angle_error)
+		# plot.title("Angle Error")
+		# plot.subplot(223)
+		# plot.plot(control)
+		# plot.title("NCO Control")
+		# plot.subplot(224)
+		# plot.plot(integral)
+		# plot.title("PI Integral")
+		# plot.show()
+		# plot.figure()
+		# plot.plot(demod_audio.i_data)
+		# plot.plot(demod_audio.q_data)
+		# plot.legend(["I", "Q"])
+		# plot.show()
 		return demod_audio

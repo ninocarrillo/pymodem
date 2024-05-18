@@ -204,9 +204,9 @@ class QuadratureSlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_i_sample = i_sample
 			self.last_q_sample = q_sample
-		plot.figure()
-		plot.scatter(i_samples, q_samples,s=1)
-		plot.show()
+		# plot.figure()
+		# plot.scatter(i_samples, q_samples,s=1)
+		# plot.show()
 		return result
 
 class FourLevelSlicer:
