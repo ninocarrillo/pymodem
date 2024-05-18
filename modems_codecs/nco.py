@@ -11,7 +11,7 @@ class NCO:
 		self.sample_rate = kwargs.get('sample_rate', 8000.0)
 		self.amplitude = kwargs.get('amplitude', 10000.0)
 		self.set_frequency = kwargs.get('set_frequency', 1500.0)
-		self.wavetable_size = kwargs.get('wavetable_size', 1024)
+		self.wavetable_size = kwargs.get('wavetable_size', 256)
 
 		# control is the frequency adjustment input
 		self.control = 0.0
@@ -43,5 +43,5 @@ class NCO:
 		while cosine_phase_index < 0:
 			cosine_phase_index += self.wavetable_size
 		self.cosine_output = self.wavetable[cosine_phase_index]
-		self.ComplexOutput.real = self.cosine_output
-		self.ComplexOutput.imag = -self.sine_output
+		self.ComplexOutput.real = (self.cosine_output)
+		self.ComplexOutput.imag = -(self.sine_output)
