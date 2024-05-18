@@ -33,6 +33,7 @@ class ComplexNumber:
 		return self.magnitude
 
 	def get_angle_error(self):
+		self.getangle()
 		errors = []
 		distances = []
 		for point in self.constellation:

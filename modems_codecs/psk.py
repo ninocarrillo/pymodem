@@ -488,7 +488,6 @@ class QPSKModem:
 			i_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
 			self.I_LPF.update(i_mixer)
-			demod_audio.i_data.append(self.I_LPF.output)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
@@ -499,7 +498,8 @@ class QPSKModem:
 			q_mixer = sample * self.NCO.sine_output
 			# low pass filter this product
 			self.Q_LPF.update(q_mixer)
-			demod_audio.q_data.append(self.Q_LPF.output)
+			demod_audio.i_data.append(self.Q_LPF.output)
+			demod_audio.q_data.append(self.I_LPF.output)
 			# mix the I and Q products to create the phase detector
 			if self.Q_LPF.output >= 0:
 				q_sgn = 1
@@ -542,9 +542,9 @@ class MPSKModem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.hilbert_span = 3			# number of symbols to span with hilbert transformer
+			self.hilbert_span = 3.0			# number of symbols to span with hilbert transformer
 			self.carrier_freq = 1650.0				# carrier tone frequency
-			self.max_freq_offset = 100
+			self.max_freq_offset = 25
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.Loop_LPF = IIR_1(
@@ -625,12 +625,12 @@ class MPSKModem:
 			set_frequency = self.carrier_freq,
 			wavetable_size = 256
 		)
-		# self.rrc = RRC(
-		# 	sample_rate = self.sample_rate,
-		# 	symbol_rate = self.symbol_rate,
-		# 	symbol_span = self.rrc_span,
-		# 	rolloff_rate = self.rrc_rolloff_rate
-		# )
+		self.rrc = RRC(
+			sample_rate = self.sample_rate,
+			symbol_rate = self.symbol_rate,
+			symbol_span = self.rrc_span,
+			rolloff_rate = self.rrc_rolloff_rate
+		)
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
@@ -649,41 +649,34 @@ class MPSKModem:
 		#plot.plot(real_audio)
 		#plot.plot(imag_audio)
 		#plot.show()
-		print("len real", len(real_audio))
-		print("len imag", len(imag_audio))
+		#print("len real", len(real_audio))
+		#print("len imag", len(imag_audio))
+
+		demod_audio = IQData()
 
 		angle = []
-		magnitude = []
 		angle_error = []
 		control = []
 		integral = []
-		nco_real_output = []
-		nco_imag_output = []
-		mul_imag_log = []
-		mul_real_log = []
-		sample_imag_log = []
-		sample_real_log = []
 
 		for real,imag in zip(real_audio, imag_audio):
 			sample = ComplexNumber(real,imag)
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
-			angle.append(sample.getangle())
-			magnitude.append(sample.getmag())
 			# Low pass filter the angle error
 			self.Loop_LPF.update(sample.get_angle_error())
-			angle_error.append(sample.angle_error)
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
+			demod_audio.i_data.append(sample.real)
+			demod_audio.q_data.append(sample.imag)
+
+			angle.append(sample.angle)
+			angle_error.append(sample.angle_error)
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
-			nco_real_output.append(self.NCO.ComplexOutput.real)
-			nco_imag_output.append(self.NCO.ComplexOutput.imag)
-			mul_imag_log.append(sample.imag)
-			mul_real_log.append(sample.real)
-			sample_imag_log.append(imag)
-			sample_real_log.append(real)
 
-
+		# Apply the output filter:
+		demod_audio.i_data = convolve(demod_audio.i_data, self.rrc.taps, 'valid')
+		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
 		plot.figure()
@@ -701,9 +694,8 @@ class MPSKModem:
 		plot.title("PI Integral")
 		plot.show()
 		plot.figure()
-		plot.plot(mul_real_log)
-		plot.plot(mul_imag_log)
-
+		plot.plot(demod_audio.i_data)
+		plot.plot(demod_audio.q_data)
 		plot.legend(["I", "Q"])
 		plot.show()
 		return demod_audio

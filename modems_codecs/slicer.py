@@ -176,9 +176,9 @@ class QuadratureSlicer:
 				# make a bit decision
 				self.state_register = (self.state_register << 2) & 0xF
 				if i_sample >= 0:
-					self.state_register |= 2
-				if q_sample >= 0:
 					self.state_register |= 1
+				if q_sample >= 0:
+					self.state_register |= 2
 				# shift the working byte
 				self.working_byte = self.working_byte << 2
 				self.working_byte |= self.demap[self.state_register]
@@ -219,7 +219,7 @@ class FourLevelSlicer:
 			self.symbol_rate = 4800
 			self.lock_rate = 0.99
 			self.threshold = 0.5
-			
+
 		self.symbol_map = [1, 3, -1, -3]
 
 		self.tune()
