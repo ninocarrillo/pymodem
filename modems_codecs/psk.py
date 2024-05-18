@@ -559,7 +559,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 2.0
+				gain= 20.0
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -664,11 +664,6 @@ class MPSKModem:
 		sample_imag_log = []
 		sample_real_log = []
 
-		x = ComplexNumber(3,4)
-		y = ComplexNumber(4,5)
-		x.multiply(y)
-		print(f'{x.real} + {x.imag}j')
-
 		for real,imag in zip(real_audio, imag_audio):
 			sample = ComplexNumber(real,imag)
 			self.NCO.update()
@@ -677,7 +672,7 @@ class MPSKModem:
 			magnitude.append(sample.getmag())
 			# Low pass filter the angle error
 			self.Loop_LPF.update(sample.get_angle_error())
-			angle_error.append(self.Loop_LPF.output)
+			angle_error.append(sample.angle_error)
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
@@ -693,13 +688,11 @@ class MPSKModem:
 
 		plot.figure()
 		plot.subplot(221)
-		plot.plot(magnitude)
 		plot.plot(angle)
-		plot.title("Product Mag, Angle")
-		plot.legend(["Mag", "Angle"])
+		plot.title("Output Phase")
 		plot.subplot(222)
 		plot.plot(angle_error)
-		plot.title("Loop Filter")
+		plot.title("Angle Error")
 		plot.subplot(223)
 		plot.plot(control)
 		plot.title("NCO Control")
@@ -708,13 +701,9 @@ class MPSKModem:
 		plot.title("PI Integral")
 		plot.show()
 		plot.figure()
-		plot.plot(nco_real_output)
-		plot.plot(nco_imag_output)
-		plot.plot(sample_real_log)
-		plot.plot(sample_imag_log)
 		plot.plot(mul_real_log)
 		plot.plot(mul_imag_log)
 
-		plot.legend(["nco real", "nco imag", "sample real", "sample imag", "mul real", "mul imag"])
+		plot.legend(["I", "Q"])
 		plot.show()
 		return demod_audio

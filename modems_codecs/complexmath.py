@@ -9,7 +9,7 @@ class ComplexNumber:
 	def __init__(self, real, imag):
 		self.real = real
 		self.imag = imag
-		self.constellation = [90, -90]
+		self.constellation = [45, -45, 135, -135]
 		self.angle = 0
 
 	def multiply(self, arg):
@@ -36,7 +36,7 @@ class ComplexNumber:
 		errors = []
 		distances = []
 		for point in self.constellation:
-			error = point - self.angle
+			error = self.angle - point
 			errors.append(error)
 			distances.append(abs(error))
 		error = 361
@@ -46,7 +46,5 @@ class ComplexNumber:
 				error = distances[i]
 				min_index = i
 		self.angle_error = errors[min_index]
-
-		self.angle_error = self.angle
 
 		return self.angle_error
