@@ -115,35 +115,47 @@ class QuadratureSlicer:
 		# but increase jitter. Higher values are more stable,
 		# but sync the bitstream more slowly. Typically 0.65-0.95.
 
+
+		#self.demap = [3,2,1,0,1,3,0,2,2,0,3,1,0,1,2,3]
+		# swap i and q bit order
+
 		if self.definition == 'qpsk_600':
+			self.state_mask = 0xF
 			self.bits_per_symbol = 2
 			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 300
-			self.lock_rate = 0.9
+			self.lock_rate = 0.815
+		elif self.definition == 'bpsk_300':
+			self.state_mask = 0x3
+			self.bits_per_symbol = 1
+			self.demap = [0,0,1,1]
+			self.symbol_rate = 300
+			self.lock_rate = 0.815
 		elif self.definition == 'qpsk_2400':
+			self.state_mask = 0xF
 			self.bits_per_symbol = 2
 			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
 		elif self.definition == 'qpsk_4800':
+			self.state_mask = 0xF
 			self.bits_per_symbol = 2
 			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 2400
 			self.lock_rate = 0.99
 		elif self.definition == 'qpsk_3600':
+			self.state_mask = 0xF
 			self.bits_per_symbol = 2
 			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1800
 			self.lock_rate = 0.99
 		else:
+			self.state_mask = 0xF
 			self.bits_per_symbol = 2
 			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
 
-		#self.demap = [3,2,1,0,1,3,0,2,2,0,3,1,0,1,2,3]
-		# swap i and q bit order
-		self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 
 		self.tune()
 
@@ -186,7 +198,7 @@ class QuadratureSlicer:
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 				# make a bit decision
-				self.state_register = (self.state_register << self.bits_per_symbol) & 0xF
+				self.state_register = (self.state_register << 2) & self.state_mask
 				if i_sample >= 0:
 					self.state_register |= 2
 				if q_sample >= 0:

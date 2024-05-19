@@ -10,7 +10,7 @@ class ComplexNumber:
 		self.real = real
 		self.imag = imag
 		self.qpsk_constellation = [45, -45, 135, -135]
-		self.bpsk_constellation = [0, 180]
+		self.bpsk_constellation = [-180, 0, 180]
 		self.angle = 0
 
 	def multiply(self, arg):
