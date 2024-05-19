@@ -545,7 +545,7 @@ class MPSKModem:
 											# more taps = shaper cutoff, more processing
 			self.hilbert_span = 3.0			# number of symbols to span with hilbert transformer
 			self.carrier_freq = 1650.0				# carrier tone frequency
-			self.max_freq_offset = 100
+			self.max_freq_offset = 50
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.Loop_LPF = IIR_1(
@@ -555,12 +555,12 @@ class MPSKModem:
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /1500
+			pi_i = pi_p /800
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 8.7
+				gain= 9.5
 			)
 		elif self.definition == "qpsk_600":
 			self.constellation_id = 'qpsk'
