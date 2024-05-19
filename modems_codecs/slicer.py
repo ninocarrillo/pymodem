@@ -116,22 +116,33 @@ class QuadratureSlicer:
 		# but sync the bitstream more slowly. Typically 0.65-0.95.
 
 		if self.definition == 'qpsk_600':
+			self.bits_per_symbol = 2
+			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 300
 			self.lock_rate = 0.9
 		elif self.definition == 'qpsk_2400':
+			self.bits_per_symbol = 2
+			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
 		elif self.definition == 'qpsk_4800':
+			self.bits_per_symbol = 2
+			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 2400
 			self.lock_rate = 0.99
 		elif self.definition == 'qpsk_3600':
+			self.bits_per_symbol = 2
+			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1800
 			self.lock_rate = 0.99
 		else:
+			self.bits_per_symbol = 2
+			self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 			self.symbol_rate = 1200
 			self.lock_rate = 0.9
 
 		#self.demap = [3,2,1,0,1,3,0,2,2,0,3,1,0,1,2,3]
+		# swap i and q bit order
 		self.demap = [3,1,2,0,2,3,0,1,1,0,3,2,0,2,1,3]
 
 		self.tune()
@@ -175,16 +186,16 @@ class QuadratureSlicer:
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 				# make a bit decision
-				self.state_register = (self.state_register << 2) & 0xF
+				self.state_register = (self.state_register << self.bits_per_symbol) & 0xF
 				if i_sample >= 0:
 					self.state_register |= 2
 				if q_sample >= 0:
 					self.state_register |= 1
 				# shift the working byte
-				self.working_byte = self.working_byte << 2
+				self.working_byte = self.working_byte << self.bits_per_symbol
 				self.working_byte |= self.demap[self.state_register]
 				# save this bit into the lsb of the working_byte
-				self.working_bit_count += 2
+				self.working_bit_count += self.bits_per_symbol
 				# after 8 bits, save this byte in the result array and reset bit
 				# count
 				if self.working_bit_count >= 8:
