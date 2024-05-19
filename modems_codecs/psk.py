@@ -309,7 +309,7 @@ class QPSKModem:
 			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 10.5
+			self.max_freq_offset = 50
 			self.rrc_rolloff_rate = 0.3
 			self.rrc_span = 8
 			self.Cosine_LPF = IIR_1(
