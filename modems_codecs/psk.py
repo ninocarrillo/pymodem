@@ -625,6 +625,37 @@ class MPSKModem:
 				i_limit=self.max_freq_offset,
 				gain= 1.2
 			)
+		elif self.definition == "bpsk_1200":
+			self.constellation_id = 'bpsk'
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 1 # sec
+			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
+			self.symbol_rate = 1200			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 4.8			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.hilbert_span = 2			# number of symbols to span with hilbert transformer
+			self.carrier_freq = 1500.0				# carrier tone frequency
+			self.max_freq_offset = 87.5
+			self.rrc_rolloff_rate = 0.9
+			self.rrc_span = 6
+			self.Loop_LPF = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=200.0,
+				gain=1.0
+			)
+			pi_p = 0.15
+			pi_i = pi_p /1000
+			self.FeedbackController = PI_control(
+				p= pi_p,
+				i= pi_i,
+				i_limit=self.max_freq_offset,
+				gain= 5
+			)
 
 		self.oscillator_amplitude = 1.0
 		self.tune()

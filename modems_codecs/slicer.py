@@ -131,6 +131,12 @@ class QuadratureSlicer:
 			self.demap = [0,0,1,1]
 			self.symbol_rate = 300
 			self.lock_rate = 0.815
+		elif self.definition == 'bpsk_1200':
+			self.state_mask = 0x3
+			self.bits_per_symbol = 1
+			self.demap = [0,0,1,1]
+			self.symbol_rate = 1200
+			self.lock_rate = 0.9
 		elif self.definition == 'qpsk_2400':
 			self.state_mask = 0xF
 			self.bits_per_symbol = 2
