@@ -9,7 +9,8 @@ class ComplexNumber:
 	def __init__(self, real, imag):
 		self.real = real
 		self.imag = imag
-		self.constellation = [45, -45, 135, -135]
+		self.qpsk_constellation = [45, -45, 135, -135]
+		self.bpsk_constellation = [0, 180]
 		self.angle = 0
 
 	def multiply(self, arg):
@@ -32,17 +33,22 @@ class ComplexNumber:
 		self.magnitude = sqrt((self.imag**2) + (self.real**2))
 		return self.magnitude
 
-	def get_angle_error(self):
+	def get_angle_error(self, constellation_id):
 		self.getangle()
 		errors = []
 		distances = []
-		for point in self.constellation:
+		constellation = self.qpsk_constellation
+		if constellation_id == 'qpsk':
+			constellation = self.qpsk_constellation
+		elif constellation_id == 'bpsk':
+			constellation = self.bpsk_constellation
+		for point in constellation:
 			error = self.angle - point
 			errors.append(error)
 			distances.append(abs(error))
 		error = 361
 		min_index = 0
-		for i in range(len(self.constellation)):
+		for i in range(len(constellation)):
 			if distances[i] < error:
 				error = distances[i]
 				min_index = i

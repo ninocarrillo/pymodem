@@ -527,10 +527,11 @@ class QPSKModem:
 class MPSKModem:
 
 	def __init__(self, **kwargs):
-		self.definition = kwargs.get('config', '3600')
+		self.definition = kwargs.get('config', 'qpsk_3600')
 		self.sample_rate = kwargs.get('sample_rate', 44100.0)
 
-		if self.definition == '3600':
+		if self.definition == 'qpsk_3600':
+			self.constellation_id = 'qpsk'
 			# set some default values for 3600 bps QPSK:
 			self.agc_attack_rate = 5000.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 0.1 # sec
@@ -561,7 +562,8 @@ class MPSKModem:
 				i_limit=self.max_freq_offset,
 				gain= 8.7
 			)
-		elif self.definition == "600":
+		elif self.definition == "qpsk_600":
+			self.constellation_id = 'qpsk'
 			# set some default values for 3600 bps QPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1 # sec
@@ -692,7 +694,7 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
-			self.Loop_LPF.update(sample.get_angle_error())
+			self.Loop_LPF.update(sample.get_angle_error(self.constellation_id))
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)
@@ -707,20 +709,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		plot.figure()
-		plot.subplot(221)
-		plot.plot(angle)
-		plot.title("Output Phase")
-		plot.subplot(222)
-		plot.plot(angle_error)
-		plot.title("Angle Error")
-		plot.subplot(223)
-		plot.plot(control)
-		plot.title("NCO Control")
-		plot.subplot(224)
-		plot.plot(integral)
-		plot.title("PI Integral")
-		plot.show()
+		# plot.figure()
+		# plot.subplot(221)
+		# plot.plot(angle)
+		# plot.title("Output Phase")
+		# plot.subplot(222)
+		# plot.plot(angle_error)
+		# plot.title("Angle Error")
+		# plot.subplot(223)
+		# plot.plot(control)
+		# plot.title("NCO Control")
+		# plot.subplot(224)
+		# plot.plot(integral)
+		# plot.title("PI Integral")
+		# plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
