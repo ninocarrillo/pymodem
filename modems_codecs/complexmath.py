@@ -20,13 +20,10 @@ class ComplexNumber:
 		self.real = real
 
 	def getangle(self):
-		#self.angle = atan(self.imag/self.real) * 180 / pi
-		#if self.real < 0:
-		#	if self.imag < 0:
-		#		self.angle -= 180
-		#	else:
-		#		self.angle += 180
 		self.angle = atan2(self.imag, self.real) * 180 / pi
+		# need about 1/8 degree resolution for no loss in performance
+		# 1 degree resolution is adequate for about 0.3dB performance loss
+
 		return self.angle
 
 	def getmag(self):
