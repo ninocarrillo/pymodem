@@ -32,8 +32,8 @@ class PhaseDetector:
 
 	def atan2(self, imag, real):
 		# returns angle in range -180, 180
-		real = int(floor(real * self.granularity / 2))
-		imag = int(floor(imag * self.granularity / 2))
+		real = int(floor(real * self.granularity * .5))
+		imag = int(floor(imag * self.granularity * .5))
 		if real >= self.granularity:
 			real = self.granularity - 1
 		if imag >= self.granularity:
