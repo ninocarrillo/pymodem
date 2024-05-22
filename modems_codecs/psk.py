@@ -5,7 +5,7 @@
 
 from scipy.signal import firwin
 from scipy.signal import remez
-from math import ceil, sin, pi
+from math import ceil, sin, pi, atan2
 from numpy import convolve, zeros
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
@@ -552,7 +552,7 @@ class MPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=250.0,
+				cutoff=100.0,
 				gain=1.0
 			)
 			pi_p = 0.15
@@ -561,7 +561,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 7.9
+				gain= 7.0
 			)
 		elif self.definition == "qpsk_600":
 			self.constellation_id = 'qpsk'
@@ -760,7 +760,7 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 
-		pd = PhaseDetector('qpsk',32,1)
+		pd = PhaseDetector('qpsk',64,1)
 
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
@@ -792,13 +792,13 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
-			self.Loop_LPF.update(sample.get_angle_error(self.constellation_id))
+			self.Loop_LPF.update(pd.get_angle_error(sample.imag,sample.real))
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)
 
 			angle.append(sample.angle)
-			angle_error.append(sample.angle_error)
+			angle_error.append(pd.angle_error)
 			control.append(self.NCO.control)
 			integral.append(self.FeedbackController.integral)
 
