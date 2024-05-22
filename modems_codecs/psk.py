@@ -15,6 +15,7 @@ from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
 from modems_codecs.hilbert import Hilbert
 from modems_codecs.complexmath import ComplexNumber
+from modems_codecs.phase_detector import PhaseDetector
 from matplotlib import pyplot as plot
 
 class BPSKModem:
@@ -759,6 +760,8 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 
+		pd = PhaseDetector('qpsk',32,1)
+
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 
@@ -804,20 +807,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		plot.figure()
-		plot.subplot(221)
-		plot.plot(angle)
-		plot.title("Output Phase")
-		plot.subplot(222)
-		plot.plot(angle_error)
-		plot.title("Angle Error")
-		plot.subplot(223)
-		plot.plot(control)
-		plot.title("NCO Control")
-		plot.subplot(224)
-		plot.plot(integral)
-		plot.title("PI Integral")
-		plot.show()
+		# plot.figure()
+		# plot.subplot(221)
+		# plot.plot(angle)
+		# plot.title("Output Phase")
+		# plot.subplot(222)
+		# plot.plot(angle_error)
+		# plot.title("Angle Error")
+		# plot.subplot(223)
+		# plot.plot(control)
+		# plot.title("NCO Control")
+		# plot.subplot(224)
+		# plot.plot(integral)
+		# plot.title("PI Integral")
+		# plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
