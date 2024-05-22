@@ -551,16 +551,16 @@ class MPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=350.0,
+				cutoff=250.0,
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /800
+			pi_i = pi_p /1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 9.5
+				gain= 7.9
 			)
 		elif self.definition == "qpsk_600":
 			self.constellation_id = 'qpsk'
@@ -758,6 +758,7 @@ class MPSKModem:
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
+
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 
@@ -803,20 +804,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		# plot.figure()
-		# plot.subplot(221)
-		# plot.plot(angle)
-		# plot.title("Output Phase")
-		# plot.subplot(222)
-		# plot.plot(angle_error)
-		# plot.title("Angle Error")
-		# plot.subplot(223)
-		# plot.plot(control)
-		# plot.title("NCO Control")
-		# plot.subplot(224)
-		# plot.plot(integral)
-		# plot.title("PI Integral")
-		# plot.show()
+		plot.figure()
+		plot.subplot(221)
+		plot.plot(angle)
+		plot.title("Output Phase")
+		plot.subplot(222)
+		plot.plot(angle_error)
+		plot.title("Angle Error")
+		plot.subplot(223)
+		plot.plot(control)
+		plot.title("NCO Control")
+		plot.subplot(224)
+		plot.plot(integral)
+		plot.title("PI Integral")
+		plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)

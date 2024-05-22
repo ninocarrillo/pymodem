@@ -4,13 +4,13 @@
 # 17 May 2024
 
 from math import pi, sin, atan, atan2, sqrt
+from matplotlib import pyplot as plot
+
 
 class ComplexNumber:
 	def __init__(self, real, imag):
 		self.real = real
 		self.imag = imag
-		self.qpsk_constellation = [45, -45, 135, -135]
-		self.bpsk_constellation = [-180, 0, 180]
 		self.angle = 0
 
 	def multiply(self, arg):
@@ -20,9 +20,16 @@ class ComplexNumber:
 		self.real = real
 
 	def getangle(self):
-		self.angle = atan2(self.imag, self.real) * 180 / pi
-		# need about 1/8 degree resolution for no loss in performance
-		# 1 degree resolution is adequate for about 0.3dB performance loss
+		if self.real < 0:
+			real = -self.real
+			imag = -self.imag
+		factor = 32
+		real = round(self.real * factor)
+		imag = round(self.imag * factor)
+		if imag >= 0:
+			self.angle = atan2(imag, real) * 180 / pi
+		else:
+			self.angle = -atan2(-imag,real) * 180 / pi
 
 		return self.angle
 
@@ -34,11 +41,10 @@ class ComplexNumber:
 		self.getangle()
 		errors = []
 		distances = []
-		constellation = self.qpsk_constellation
 		if constellation_id == 'qpsk':
-			constellation = self.qpsk_constellation
+			constellation = [45, -45, 135, -135]
 		elif constellation_id == 'bpsk':
-			constellation = self.bpsk_constellation
+			constellation = [-180, 0, 180]
 		for point in constellation:
 			error = self.angle - point
 			errors.append(error)
