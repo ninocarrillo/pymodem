@@ -588,7 +588,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1.5
+				gain= 1.5 * (500)
 			)
 		elif self.definition == "bpsk_1200":
 			self.constellation_id = 'bpsk'

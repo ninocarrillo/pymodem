@@ -69,19 +69,21 @@ class PhaseDetector:
 		return self.angle
 
 	def get_angle_error(self, imag, real):
-		self.atan2(imag,real)
-		errors = []
-		distances = []
-		for point in self.constellation:
-			error = self.angle - point
-			errors.append(error)
-			distances.append(abs(error))
-		error = 361
-		min_index = 0
-		for i in range(len(self.constellation)):
-			if distances[i] < error:
-				error = distances[i]
-				min_index = i
-		self.angle_error = errors[min_index]
-
+		if self.constellation_id == 'qpsk':
+			self.atan2(imag,real)
+			errors = []
+			distances = []
+			for point in self.constellation:
+				error = self.angle - point
+				errors.append(error)
+				distances.append(abs(error))
+			error = 361
+			min_index = 0
+			for i in range(len(self.constellation)):
+				if distances[i] < error:
+					error = distances[i]
+					min_index = i
+			self.angle_error = errors[min_index]
+		elif self.constellation_id == 'bpsk':
+			self.angle_error = imag * real
 		return self.angle_error
