@@ -37,24 +37,9 @@ class BPSKModem:
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.output_lpf_cutoff = 200.0		# low pass filter cutoff frequency for
-											# output signal after I/Q demodulation
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.max_freq_offset = 37.5
-			self.Cosine_LPF = IIR_1(
-				sample_rate=self.sample_rate,
-				filter_type='lpf',
-				cutoff=300.0,
-				gain=1.0
-			)
-			self.Sine_LPF = IIR_1(
-				sample_rate=self.sample_rate,
-				filter_type='lpf',
-				cutoff=300.0,
-				gain=1.0
-			)
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -80,24 +65,9 @@ class BPSKModem:
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
-											# output signal after I/Q demodulation
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
 			self.max_freq_offset = 87.5
 			self.rrc_rolloff_rate = 0.9
 			self.rrc_span = 6
-			self.Cosine_LPF = IIR_1(
-				sample_rate=self.sample_rate,
-				filter_type='lpf',
-				cutoff=1200.0,
-				gain=1.0
-			)
-			self.Sine_LPF = IIR_1(
-				sample_rate=self.sample_rate,
-				filter_type='lpf',
-				cutoff=1200.0,
-				gain=1.0
-			)
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -122,8 +92,6 @@ class BPSKModem:
 		self.input_bpf_low_cutoff = kwargs.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff)
 		self.input_bpf_high_cutoff = kwargs.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff)
 		self.input_bpf_span = kwargs.get('input_bpf_span', self.input_bpf_span)
-		self.output_lpf_cutoff = kwargs.get('output_lpf_cutoff', self.output_lpf_cutoff)
-		self.output_lpf_span = kwargs.get('output_lpf_span', self.output_lpf_span)
 		self.sample_rate = kwargs.get('sample_rate', self.sample_rate)
 		self.carrier_freq = kwargs.get('carrier_freq', self.carrier_freq)
 		self.tune()
@@ -133,8 +101,6 @@ class BPSKModem:
 		self.input_bpf_low_cutoff = float(options.get('input_bpf_low_cutoff', self.input_bpf_low_cutoff))
 		self.input_bpf_high_cutoff = float(options.get('input_bpf_high_cutoff', self.input_bpf_high_cutoff))
 		self.input_bpf_span = float(options.get('input_bpf_span', self.input_bpf_span))
-		self.output_lpf_cutoff = float(options.get('output_lpf_cutoff', self.output_lpf_cutoff))
-		self.output_lpf_span = float(options.get('output_lpf_span', self.output_lpf_span))
 		self.sample_rate = float(options.get('sample_rate', self.sample_rate))
 		self.carrier_freq = float(options.get('carrier_freq', self.carrier_freq))
 		self.tune()
@@ -143,9 +109,6 @@ class BPSKModem:
 		self.input_bpf_tap_count = round(
 			self.sample_rate * self.input_bpf_span / self.symbol_rate
 		)
-		self.output_lpf_tap_count = round(
-			self.sample_rate * self.output_lpf_span / self.symbol_rate
-		)
 
 		# Use scipy.signal.firwin to generate taps for input bandpass filter.
 		# Input bpf is implemented as a Finite Impulse Response filter (FIR).
@@ -153,16 +116,6 @@ class BPSKModem:
 			self.input_bpf_tap_count,
 			[ self.input_bpf_low_cutoff, self.input_bpf_high_cutoff ],
 			pass_zero='bandpass',
-			fs=self.sample_rate,
-			scale=True
-		)
-
-		# Use scipy.signal.firwin to generate taps for output low pass filter.
-		# Output lpf is implemented as a Finite Impulse Response filter (FIR).
-		# firwin defaults to hamming window if not specified.
-		self.output_lpf = firwin(
-			self.output_lpf_tap_count,
-			self.output_lpf_cutoff,
 			fs=self.sample_rate,
 			scale=True
 		)
@@ -217,23 +170,16 @@ class BPSKModem:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
 			cosine_mixer = sample * self.NCO.sine_output
-			# low pass filter this product
-			#self.Cosine_LPF.update(cosine_mixer)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
 			q_mixer = sample * self.NCO.cosine_output
-			# low pass filter this product
-			#self.Sine_LPF.update(q_mixer)
-			# mix the I and Q products to create the phase detector
-			#loop_mixer = self.Cosine_LPF.output * self.Sine_LPF.output
 			loop_mixer = cosine_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
-			#demod_audio.append(self.Cosine_LPF.output)
 			demod_audio.append(cosine_mixer)
 
 		# Apply the output filter:
@@ -633,7 +579,7 @@ class MPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=350.0,
+				cutoff=250.0,
 				gain=1.0
 			)
 			pi_p = 0.15

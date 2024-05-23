@@ -19,7 +19,7 @@ class PhaseDetector:
 		if constellation_id == 'qpsk':
 			self.constellation = [45, -45, 135, -135]
 		elif constellation_id == 'bpsk':
-			self.constellation = [-175, 5, 185]
+			self.constellation = [5, -175, 185]
 
 		self.atan_table = []
 		for imag in range(self.granularity):
