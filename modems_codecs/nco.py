@@ -34,9 +34,15 @@ class NCO:
 	def update(self):
 		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
 		while self.phase_accumulator >= 2.0 * pi:
-			self.phase_accumulator -= 2.0 * pi
+			self.phase_accumulator = self.phase_accumulator - (2.0 * pi)
+		while self.phase_accumulator < 0:
+			self.phase_accumulator = self.phase_accumulator + (2.0 * pi)
 		sine_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
-		self.sine_output = self.wavetable[sine_phase_index]
+		try:
+			self.sine_output = self.wavetable[sine_phase_index]
+		except:
+			#pass
+			print(sine_phase_index, self.index_scaling_factor, self.phase_accumulator)
 		cosine_phase_index = int(sine_phase_index + (self.wavetable_size / 4.0))
 		while cosine_phase_index >= self.wavetable_size :
 			cosine_phase_index -= self.wavetable_size

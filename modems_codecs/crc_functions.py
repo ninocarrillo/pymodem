@@ -55,7 +55,7 @@ def CheckCRC(packet):
 	calculated_crc ^= 0xFFFF
 	crc_distance = Distance8[(calculated_crc & 0xFF)^(packet_crc & 0xFF)]
 	crc_distance += Distance8[(calculated_crc>>8)^(packet_crc>>8)]
-	if crc_distance <= 0:
+	if crc_distance <= 3:
 		return [packet_crc, calculated_crc, True]
 	else:
 		return [packet_crc, calculated_crc, False]
