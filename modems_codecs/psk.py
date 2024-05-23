@@ -562,39 +562,34 @@ class MPSKModem:
 			)
 		elif self.definition == "qpsk_600":
 			self.constellation_id = 'qpsk'
-			# set some default values for 3600 bps QPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1 # sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
 			self.symbol_rate = 300			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 1.5			# Number of symbols to span with the input
-											# filter. This is used with the sampling
-											# rate to determine the tap count.
-											# more taps = shaper cutoff, more processing
-			self.hilbert_span = 0.5			# number of symbols to span with hilbert transformer
+			self.input_bpf_span = 2.7			# milliseconds spanned by input filter
+			self.hilbert_span = 2.7			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 50
+			self.max_freq_offset = 40
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=100.0,
+				cutoff= 350.0,
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /1200
+			pi_i = pi_p /1100
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 3
+				gain= 1.6
 			)
 		elif self.definition == "qpsk_2400":
 			self.constellation_id = 'qpsk'
-			# set some default values for 3600 bps QPSK:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1 # sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
@@ -617,7 +612,7 @@ class MPSKModem:
 				gain=1.0
 			)
 			pi_p = 0.15
-			pi_i = pi_p /1000
+			pi_i = pi_p /800
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -804,21 +799,21 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		# plot.figure()
-		# plot.subplot(221)
-		# plot.plot(angle)
-		# plot.title("Output Phase")
-		# plot.subplot(222)
-		# plot.plot(angle_error)
-		# plot.title("Angle Error")
-		# plot.subplot(223)
-		# plot.plot(control)
-		# plot.title("NCO Control")
-		# plot.subplot(224)
-		# plot.plot(integral)
-		# plot.title("PI Integral")
-		# plot.show()
-		# plot.figure()
+		plot.figure()
+		plot.subplot(221)
+		plot.plot(angle)
+		plot.title("Output Phase")
+		plot.subplot(222)
+		plot.plot(angle_error)
+		plot.title("Angle Error")
+		plot.subplot(223)
+		plot.plot(control)
+		plot.title("NCO Control")
+		plot.subplot(224)
+		plot.plot(integral)
+		plot.title("PI Integral")
+		plot.show()
+		plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
 		# plot.legend(["I", "Q"])
