@@ -624,11 +624,8 @@ class MPSKModem:
 			self.symbol_rate = 300			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 1.5			# Number of symbols to span with the input
-											# filter. This is used with the sampling
-											# rate to determine the tap count.
-											# more taps = shaper cutoff, more processing
-			self.hilbert_span = 0.5			# number of symbols to span with hilbert transformer
+			self.input_bpf_span = 2.7			# milliseconds spanned by input filter
+			self.hilbert_span = 2.7			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
 			self.max_freq_offset = 50
 			self.rrc_rolloff_rate = 0.6
@@ -636,7 +633,7 @@ class MPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=100.0,
+				cutoff=350.0,
 				gain=1.0
 			)
 			pi_p = 0.15
@@ -645,7 +642,7 @@ class MPSKModem:
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1.2
+				gain= 1.5
 			)
 		elif self.definition == "bpsk_1200":
 			self.constellation_id = 'bpsk'
@@ -749,7 +746,7 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 
-		pd = PhaseDetector('qpsk',64,1)
+		pd = PhaseDetector(self.constellation_id,64,1)
 
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')

@@ -19,7 +19,7 @@ class PhaseDetector:
 		if constellation_id == 'qpsk':
 			self.constellation = [45, -45, 135, -135]
 		elif constellation_id == 'bpsk':
-			self.constellation = [-180, 0, 180]
+			self.constellation = [-175, 5, 185]
 
 		self.atan_table = []
 		for imag in range(self.granularity):
@@ -34,6 +34,8 @@ class PhaseDetector:
 		# returns angle in range -180, 180
 		real = int(floor(real * self.granularity * .5))
 		imag = int(floor(imag * self.granularity * .5))
+		#real = round(real * self.granularity * .5)
+		#imag = round(imag * self.granularity * .5)
 		if real >= self.granularity:
 			real = self.granularity - 1
 		if imag >= self.granularity:
