@@ -259,16 +259,10 @@ class PacketMetaArray:
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
 						byte = packet.data[i]
-						string_output +=print_to_string(chr(int(byte)), end='')
-					# for byte in packet.data[:-2]:
-					# 	byte = int(byte)
-					# 	if (byte < 0x7F) and (byte > 0x1F):
-					# 		string_output += print_to_string(chr(int(byte)), end='')
-					# 	else:
-					# 		string_output += print_to_string(f'<{byte}>', end='')
-					string_output += print_to_string("")
-					for byte in packet.data[:-2]:
-						string_output += print_to_string(hex(int(byte)), end=" ")
+						if (byte < 0x7F) and (byte > 0x1F):
+							string_output +=print_to_string(chr(int(byte)), end='')
+						else:
+							string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
 					string_output += print_to_string("\n")
 		return string_output
 
@@ -290,14 +284,11 @@ class PacketMetaArray:
 				string_output += print_to_string("Packet number: ", self.good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 				string_output += print_to_string("source decoders: ", packet.CorrelatedDecoders)
 				for byte in packet.data[:-2]:
-					byte = int(byte)
+					byte = packet.data[i]
 					if (byte < 0x7F) and (byte > 0x1F):
 						string_output +=print_to_string(chr(int(byte)), end='')
 					else:
-						string_output += print_to_string(f'<{byte}>', end='')
-				string_output += print_to_string(" ")
-				for byte in packet.data[:-2]:
-					string_output += print_to_string(hex(int(byte)), end=" ")
+						string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
 				string_output += print_to_string(" ")
 		return string_output
 
@@ -320,7 +311,10 @@ class PacketMetaArray:
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
 						byte = packet.data[i]
-						string_output +=print_to_string(chr(int(byte)), end='')
+						if (byte < 0x7F) and (byte > 0x1F):
+							string_output +=print_to_string(chr(int(byte)), end='')
+						else:
+							string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
 
 			string_output += print_to_string("\n\nUnique, valid packets: ", self.CountGood())
 			string_output += print_to_string("Packets rejected from all decoders for CRC failure: ", self.CountBad())
