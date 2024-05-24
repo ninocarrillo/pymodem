@@ -192,6 +192,7 @@ class IL2PCodec:
 			self.bytes_corrected += rs_result
 
 	def write_n_search(self, result):
+		self.working_packet.BytesCorrected = self.bytes_corrected
 		result.append(
 			copy.copy(self.working_packet)
 		)

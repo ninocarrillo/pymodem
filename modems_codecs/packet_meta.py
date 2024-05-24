@@ -255,6 +255,7 @@ class PacketMetaArray:
 					string_output += print_to_string("Packet number: ", self.bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("source decoder: ", packet.SourceDecoder)
 					string_output += print_to_string("Packet byte count: ", len(packet.data))
+					string_output += print_to_string("Bytes corrected: ", packet.BytesCorrected)
 					header_info = print_ax25_header_to_string(packet.data, ', ')
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
@@ -307,6 +308,7 @@ class PacketMetaArray:
 					string_output += print_to_string("\n\nPacket number: ", count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("Source decoders: ", packet.CorrelatedDecoders)
 					string_output += print_to_string("Packet byte count: ", len(packet.data))
+					string_output += print_to_string("Bytes corrected: ", packet.BytesCorrected)
 					header_info = print_ax25_header_to_string(packet.data, ', ')
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
