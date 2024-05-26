@@ -71,7 +71,7 @@ class BPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=200.0,
+				cutoff=150.0,
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
