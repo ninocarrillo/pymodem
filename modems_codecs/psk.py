@@ -724,7 +724,7 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
-			self.Loop_LPF.update(pd.get_angle_error(sample.imag,sample.real))
+			self.Loop_LPF.update(pd.get_angle_error2(sample.imag,sample.real))
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)

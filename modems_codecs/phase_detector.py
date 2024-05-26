@@ -28,6 +28,12 @@ class PhaseDetector:
 				self.atan_table[imag].append(gain * atan2(imag,real) * 180 / pi)
 		# Table holds Quadrant 1 values (0-90 degrees)
 		self.atan_table[0][0] = 0
+		
+		self.psk_error_table = []
+		for imag in range(self.granularity):
+			self.psk_error_table.append([])
+			for real in range(self.granularity):
+				self.psk_error_table[imag].append(self.atan_table[imag][real]-45)
 
 
 	def atan2(self, imag, real):
@@ -86,4 +92,39 @@ class PhaseDetector:
 			self.angle_error = errors[min_index]
 		elif self.constellation_id == 'bpsk':
 			self.angle_error = imag * real
+		return self.angle_error
+
+	def get_angle_error2(self, imag, real):
+		real = int(floor(real * self.granularity * .5))
+		imag = int(floor(imag * self.granularity * .5))
+		if real >= self.granularity:
+			real = self.granularity - 1
+		if imag >= self.granularity:
+			imag = self.granularity - 1
+		if real <= -self.granularity:
+			real = -(self.granularity - 1)
+		if imag <= -self.granularity:
+			imag = -(self.granularity - 1)
+		if real >= 0:
+			if imag >= 0:
+				# Quadrant 1
+				# Direct read out of table
+				self.angle_error = self.psk_error_table[imag][real]
+			else:
+				# Quadrant 4
+				# Reflect across real axis
+				# Negate result
+				self.angle_error = self.psk_error_table[real][-imag]
+				#self.angle_error = 0
+		else:
+			if imag >=0:
+				# Quadrant 2
+				self.angle_error = self.psk_error_table[-real][imag]
+				#self.angle_error = 0
+			else:
+				# Quadrant 3
+				# Reflect across both axes
+				# Subtract 180 from result
+				self.angle_error = self.psk_error_table[-imag][-real]
+				#self.angle_error = 0
 		return self.angle_error
