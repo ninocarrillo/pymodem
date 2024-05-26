@@ -43,7 +43,7 @@ class BPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=100.0,
+				cutoff=250.0,
 				gain=1.0
 			)
 			self.FeedbackController = PI_control(
@@ -169,18 +169,20 @@ class BPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			cosine_mixer = sample * self.NCO.sine_output
+			#i_mixer = sample * self.NCO.sine_output
+			i_mixer = sample * self.NCO.ComplexOutput.real
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
-			q_mixer = sample * self.NCO.cosine_output
-			loop_mixer = cosine_mixer * q_mixer
+			#q_mixer = sample * self.NCO.cosine_output
+			q_mixer = sample * self.NCO.ComplexOutput.imag
+			loop_mixer = i_mixer * q_mixer
 			# low pass filter this product
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.NCO.control)
-			demod_audio.append(cosine_mixer)
+			demod_audio.append(i_mixer)
 
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
@@ -432,9 +434,9 @@ class QPSKModem:
 		for sample in audio:
 			self.NCO.update()
 			# mix the in phase oscillator output with the input signal
-			cosine_mixer = sample * self.NCO.cosine_output
+			i_mixer = sample * self.NCO.cosine_output
 			# low pass filter this product
-			self.Cosine_LPF.update(cosine_mixer)
+			self.Cosine_LPF.update(i_mixer)
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
@@ -724,7 +726,7 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
-			self.Loop_LPF.update(pd.get_angle_error2(sample.imag,sample.real))
+			self.Loop_LPF.update(pd.get_angle_error(sample.imag,sample.real))
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)
