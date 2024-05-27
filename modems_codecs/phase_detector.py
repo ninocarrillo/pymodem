@@ -28,12 +28,20 @@ class PhaseDetector:
 				self.atan_table[imag].append(gain * atan2(imag,real) * 180 / pi)
 		# Table holds Quadrant 1 values (0-90 degrees)
 		self.atan_table[0][0] = 0
-		
+
+
+		#fig = plot.figure()
+		#ax = fig.add_subplot(projection='3d')
+
 		self.psk_error_table = []
 		for imag in range(self.granularity):
 			self.psk_error_table.append([])
 			for real in range(self.granularity):
-				self.psk_error_table[imag].append(self.atan_table[imag][real]-45)
+				self.psk_error_table[imag].append(round(gain*((atan2(imag,real) * 180 / pi)-45)))
+				#ax.scatter(real,imag,self.psk_error_table[imag][real])
+
+		#plot.show()
+
 
 
 	def atan2(self, imag, real):

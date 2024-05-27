@@ -528,13 +528,13 @@ class MPSKModem:
 				cutoff= 350.0,
 				gain=1.0
 			)
-			pi_p = 0.15
+			pi_p = 0.24 * (65536/14400)
 			pi_i = pi_p /1100
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1.6
+				gain= (14400/65536) / 512
 			)
 		elif self.definition == "qpsk_2400":
 			self.constellation_id = 'qpsk'
@@ -625,6 +625,7 @@ class MPSKModem:
 			)
 
 		self.oscillator_amplitude = 1.0
+		self.pd_gain = 512
 		self.tune()
 
 	def StringOptionsRetune(self, options):
@@ -694,7 +695,7 @@ class MPSKModem:
 
 	def demod(self, input_audio):
 
-		pd = PhaseDetector(self.constellation_id,64,1)
+		pd = PhaseDetector(self.constellation_id,64,self.pd_gain)
 
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
@@ -726,7 +727,7 @@ class MPSKModem:
 			self.NCO.update()
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
-			self.Loop_LPF.update(pd.get_angle_error(sample.imag,sample.real))
+			self.Loop_LPF.update(pd.get_angle_error2(sample.imag,sample.real))
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)
