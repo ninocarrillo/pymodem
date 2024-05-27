@@ -526,15 +526,15 @@ class MPSKModem:
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff= 350.0,
-				gain=1.0
+				gain=1/8
 			)
-			pi_p = 0.24 * (65536/14400)
+			pi_p = 0.2731
 			pi_i = pi_p /1100
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= (14400/65536) / 512
+				gain= (14400/65536)
 			)
 		elif self.definition == "qpsk_2400":
 			self.constellation_id = 'qpsk'
@@ -625,7 +625,7 @@ class MPSKModem:
 			)
 
 		self.oscillator_amplitude = 1.0
-		self.pd_gain = 512
+		self.pd_gain = 32
 		self.tune()
 
 	def StringOptionsRetune(self, options):
