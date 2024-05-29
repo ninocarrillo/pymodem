@@ -36,14 +36,14 @@ class PhaseDetector:
 		#ax = fig.add_subplot(projection='3d')
 
 		self.qpsk_error_table = []
-		for imag in range(self.granularity):
+		for real in range(self.granularity):
 			self.qpsk_error_table.append([])
-			for real in range(self.granularity):
+			for imag in range(self.granularity):
 				mag = sqrt((real**2) + (imag**2))
 				if  mag >= self.min_mag and mag <= self.max_mag:
-					self.qpsk_error_table[imag].append(round(gain*((atan2(imag,real) * 180 / pi)-45)))
+					self.qpsk_error_table[real].append(round(gain*((atan2(imag,real) * 180 / pi)-45)))
 				else:
-					self.qpsk_error_table[imag].append(0)
+					self.qpsk_error_table[real].append(0)
 				#ax.scatter(real,imag,self.psk_error_table[imag][real])
 
 		#plot.show()
@@ -108,7 +108,7 @@ class PhaseDetector:
 			self.angle_error = imag * real
 		return self.angle_error
 
-	def get_qpsk_angle_error(self, imag, real):
+	def get_qpsk_angle_error(self, real, imag):
 		real = int(floor(real * self.granularity * 0.5))
 		imag = int(floor(imag * self.granularity * 0.5))
 		if real >= self.granularity:
@@ -122,15 +122,15 @@ class PhaseDetector:
 		if real >= 0:
 			if imag >= 0:
 				# Quadrant 1
-				self.angle_error = self.qpsk_error_table[imag][real]
+				self.angle_error = self.qpsk_error_table[real][imag]
 			else:
 				# Quadrant 4
-				self.angle_error = self.qpsk_error_table[real][-imag]
+				self.angle_error = self.qpsk_error_table[-imag][real]
 		else:
 			if imag >=0:
 				# Quadrant 2
-				self.angle_error = self.qpsk_error_table[-real][imag]
+				self.angle_error = self.qpsk_error_table[imag][-real]
 			else:
 				# Quadrant 3
-				self.angle_error = self.qpsk_error_table[-imag][-real]
+				self.angle_error = self.qpsk_error_table[-real][-imag]
 		return self.angle_error
