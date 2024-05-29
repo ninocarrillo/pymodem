@@ -48,6 +48,20 @@ class PhaseDetector:
 
 		#plot.show()
 
+	def print_qpsk_pd(self):
+		print(f'PhaseDetectorTable[{self.granularity**2}]', end='')
+		print(" = { \\")
+		count = 0
+		for real in range(self.granularity):
+			for imag in range(self.granularity):
+				print(f'{self.qpsk_error_table[real][imag]:5d}', end='')
+				count += 1
+				if count < (self.granularity**2):
+					print(f', ', end='')
+				else:
+					print(" };")
+			if (imag == (self.granularity - 1)) and (count < self.granularity**2):
+				print(f' \\')
 
 
 	def atan2(self, imag, real):
