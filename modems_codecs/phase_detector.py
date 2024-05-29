@@ -11,6 +11,8 @@ from matplotlib import pyplot as plot
 
 class PhaseDetector:
 	def __init__(self, constellation_id, granularity, gain):
+		self.min_mag = granularity * .15
+		self.max_mag = granularity * .76
 		self.angle = 0
 		self.constellation = []
 		self.constellation_id = constellation_id
@@ -37,7 +39,11 @@ class PhaseDetector:
 		for imag in range(self.granularity):
 			self.psk_error_table.append([])
 			for real in range(self.granularity):
-				self.psk_error_table[imag].append(round(gain*((atan2(imag,real) * 180 / pi)-45)))
+				mag = sqrt((real**2) + (imag**2))
+				if  mag >= self.min_mag and mag <= self.max_mag:
+					self.psk_error_table[imag].append(round(gain*((atan2(imag,real) * 180 / pi)-45)))
+				else:
+					self.psk_error_table[imag].append(0)
 				#ax.scatter(real,imag,self.psk_error_table[imag][real])
 
 		#plot.show()
@@ -103,8 +109,8 @@ class PhaseDetector:
 		return self.angle_error
 
 	def get_angle_error2(self, imag, real):
-		real = int(floor(real * self.granularity * .5))
-		imag = int(floor(imag * self.granularity * .5))
+		real = int(floor(real * self.granularity * 0.5))
+		imag = int(floor(imag * self.granularity * 0.5))
 		if real >= self.granularity:
 			real = self.granularity - 1
 		if imag >= self.granularity:

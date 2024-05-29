@@ -47,8 +47,6 @@ def main():
 		print('Unable to open audio file.')
 		sys.exit(4)
 
-	start_time = time.time()
-
 	print("Building processing stacks from config json")
 
 	demod_stack = []
@@ -134,6 +132,7 @@ def main():
 
 	print("Executing demod stack plan.")
 
+	start_time = time.time()
 	# Start the processed processes.
 	# Each signal chain exists in its own process.
 
