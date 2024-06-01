@@ -32,3 +32,15 @@ class Hilbert:
 		for i in range(self.delay+1):
 			self.delay_taps.append(0)
 		self.delay_taps[0] = 1
+
+	def print(self, amplitude):
+		print(f'HilbertFilter[{self.tap_count}] = ', end='')
+		print("{ ", end='')
+		count = 0
+		for tap in self.taps:
+			print(f'{int(round(tap*amplitude))}', end='')
+			count += 1
+			if count < self.tap_count:
+				print(f', ', end='')
+			else:
+				print(" };")

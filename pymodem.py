@@ -20,6 +20,7 @@ import modems_codecs.chain_builder
 import modems_codecs.chain_execute
 import json
 
+from modems_codecs.hilbert import Hilbert
 
 def main():
 	# check correct version of Python
@@ -184,3 +185,5 @@ def main():
 
 if __name__ == "__main__":
 	main()
+	h = Hilbert(tap_count=79)
+	h.print(32768)
