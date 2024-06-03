@@ -185,5 +185,5 @@ def main():
 
 if __name__ == "__main__":
 	main()
-	h = Hilbert(tap_count=79)
+	h = Hilbert(tap_count=49)
 	h.print(32768)
