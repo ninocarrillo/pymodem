@@ -516,20 +516,20 @@ class MPSKModem:
 			self.symbol_rate = 300			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 2.7			# milliseconds spanned by input filter
-			self.hilbert_span = 2.7			# milliseconds spanned by hilbert transformer
+			self.input_bpf_span = 5.1			# milliseconds spanned by input filter
+			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 25
+			self.max_freq_offset = 50
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff= 400.0,
+				cutoff= 2000.0,
 				gain=1/8
 			)
-			pi_p = 0.273
-			pi_i = pi_p /1150
+			pi_p = 0.9
+			pi_i = pi_p / 5000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -728,7 +728,7 @@ class MPSKModem:
 			sample.multiply(self.NCO.ComplexOutput)
 			# Low pass filter the angle error
 			self.Loop_LPF.update(pd.get_qpsk_angle_error(sample.real,sample.imag))
-			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
+			self.NCO.control = round(self.FeedbackController.update_saturate(self.Loop_LPF.output))
 			demod_audio.i_data.append(sample.real)
 			demod_audio.q_data.append(sample.imag)
 
@@ -742,20 +742,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		# plot.figure()
-		# plot.subplot(221)
-		# plot.plot(angle)
-		# plot.title("Output Phase")
-		# plot.subplot(222)
-		# plot.plot(angle_error)
-		# plot.title("Angle Error")
-		# plot.subplot(223)
-		# plot.plot(control)
-		# plot.title("NCO Control")
-		# plot.subplot(224)
-		# plot.plot(integral)
-		# plot.title("PI Integral")
-		# plot.show()
+		plot.figure()
+		plot.subplot(221)
+		plot.plot(angle)
+		plot.title("Output Phase")
+		plot.subplot(222)
+		plot.plot(angle_error)
+		plot.title("Angle Error")
+		plot.subplot(223)
+		plot.plot(control)
+		plot.title("NCO Control")
+		plot.subplot(224)
+		plot.plot(integral)
+		plot.title("PI Integral")
+		plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
