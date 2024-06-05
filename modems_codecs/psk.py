@@ -519,16 +519,16 @@ class MPSKModem:
 			self.input_bpf_span = 5.1			# milliseconds spanned by input filter
 			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 50
+			self.max_freq_offset = 13*1.25
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff= 2000.0,
+				cutoff= 130,
 				gain=1/8
 			)
-			pi_p = 0.9
+			pi_p = 0.8
 			pi_i = pi_p / 5000
 			self.FeedbackController = PI_control(
 				p= pi_p,
@@ -660,8 +660,8 @@ class MPSKModem:
 
 		self.Hilbert = Hilbert(tap_count=self.hilbert_tap_count)
 
-		print("hilbert tap count: ", self.Hilbert.tap_count)
-		print("hilbert delay count: ", self.Hilbert.delay)
+		#print("hilbert tap count: ", self.Hilbert.tap_count)
+		#print("hilbert delay count: ", self.Hilbert.delay)
 
 
 		#plot.figure()
@@ -743,16 +743,16 @@ class MPSKModem:
 
 
 		plot.figure()
-		plot.subplot(221)
-		plot.plot(angle)
-		plot.title("Output Phase")
-		plot.subplot(222)
-		plot.plot(angle_error)
-		plot.title("Angle Error")
-		plot.subplot(223)
+		#plot.subplot(221)
+		#plot.plot(angle)
+		#plot.title("Output Phase")
+		#plot.subplot(222)
+		#plot.plot(angle_error)
+		#plot.title("Angle Error")
+		plot.subplot(121)
 		plot.plot(control)
 		plot.title("NCO Control")
-		plot.subplot(224)
+		plot.subplot(122)
 		plot.plot(integral)
 		plot.title("PI Integral")
 		plot.show()
