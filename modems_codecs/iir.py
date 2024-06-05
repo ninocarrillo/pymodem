@@ -32,6 +32,8 @@ class IIR_1:
 		self.X = [0.0, 0.0]
 		self.Y = [0.0, 0.0]
 		self.order = 1
+		#print(self.a_coefs)
+		#print(self.b_coefs)
 
 	def update(self, sample):
 		# Update the input delay registers
