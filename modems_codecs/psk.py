@@ -519,7 +519,7 @@ class MPSKModem:
 			self.input_bpf_span = 5.1			# milliseconds spanned by input filter
 			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 13*2.25
+			self.max_freq_offset = 13*1.25
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
@@ -529,7 +529,7 @@ class MPSKModem:
 				gain= 1/2
 			)
 			pi_p = 0.2
-			pi_i = pi_p/2000
+			pi_i = pi_p / 2000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -545,19 +545,19 @@ class MPSKModem:
 			self.input_bpf_low_cutoff = 200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 2800.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 2.7			# milliseconds spanned by input filter
-			self.hilbert_span = 2.7			# milliseconds spanned by hilbert transformer
+			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 37.5
+			self.max_freq_offset = 25*1.25
 			self.rrc_rolloff_rate = 0.9
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=350.0,
-				gain=1/8
+				cutoff=250.0,
+				gain=1
 			)
-			pi_p = 0.5973
-			pi_i = pi_p /850
+			pi_p = 0.2
+			pi_i = pi_p / 2000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
