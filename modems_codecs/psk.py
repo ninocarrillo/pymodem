@@ -497,10 +497,10 @@ class MPSKModem:
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1000.0,
+				cutoff=250.0,
 				gain=1
 			)
-			pi_p = 0.4
+			pi_p = 0.2
 			pi_i = pi_p /1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
