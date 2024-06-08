@@ -500,7 +500,7 @@ class MPSKModem:
 				cutoff=250.0,
 				gain=1
 			)
-			pi_p = 0.4
+			pi_p = 0.1
 			pi_i = pi_p /500
 			self.FeedbackController = PI_control(
 				p= pi_p,
