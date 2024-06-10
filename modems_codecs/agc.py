@@ -18,6 +18,7 @@ class AGC:
 		self.envelope = 0
 		self.normal = 1.0
 		self.envelope_buffer = []
+		self.sustain_count = 0
 
 	def peak_detect(self, sample):
 		compare_value = abs(sample)

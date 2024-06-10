@@ -20,6 +20,7 @@ import modems_codecs.chain_builder
 import modems_codecs.chain_execute
 import json
 
+from modems_codecs.hilbert import Hilbert
 
 def main():
 	# check correct version of Python
@@ -46,8 +47,6 @@ def main():
 	except:
 		print('Unable to open audio file.')
 		sys.exit(4)
-
-	start_time = time.time()
 
 	print("Building processing stacks from config json")
 
@@ -76,14 +75,14 @@ def main():
 				# go to the next iteration of the for loop
 				continue
 			# append the modem object to this chain
-			try:
-				modem = modems_codecs.chain_builder.ModemConfigurator(
-					input_sample_rate,
-					line['modem'],
-				)
-			except:
-				print(f"Invalid or missing 'modem' in {line['object_name']}.")
-				modem = []
+			#try:
+			modem = modems_codecs.chain_builder.ModemConfigurator(
+				input_sample_rate,
+				line['modem'],
+			)
+			#except:
+			#	print(f"Invalid or missing 'modem' in {line['object_name']}.")
+			#	modem = []
 			demod_stack[demod_stack_index].append(modem)
 			try:
 				slicer_sample_rate = demod_stack[demod_stack_index][1].output_sample_rate
@@ -134,6 +133,7 @@ def main():
 
 	print("Executing demod stack plan.")
 
+	start_time = time.time()
 	# Start the processed processes.
 	# Each signal chain exists in its own process.
 
@@ -176,7 +176,7 @@ def main():
 
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")
-		#print(results.PrintRawBad())
+		print(results.PrintRawBad())
 		print(results.Report(report_order[1]))
 
 	end_time = time.time()
@@ -185,3 +185,5 @@ def main():
 
 if __name__ == "__main__":
 	main()
+	#h = Hilbert(tap_count=49)
+	#h.print(32768)

@@ -28,7 +28,7 @@ def print_ax25_header_to_string(frame, delimiter):
 		subfield_character_index = 0
 		subfield_index = 0
 		# Print address information
-		while address_extension_bit == 0:
+		while (address_extension_bit == 0) and (index < count):
 			working_character = int(frame[index])
 			if (working_character & 0b1) == 1:
 				address_extension_bit = 1
@@ -61,85 +61,86 @@ def print_ax25_header_to_string(frame, delimiter):
 			index = index + 1
 			if index > count:
 				address_extension_bit = 1
-		# Control and PID fields
-		working_character = frame[index]
-		string_output += print_to_string(delimiter, end='')
-		string_output += print_to_string("Control: ", end='')
-		string_output += print_to_string(f'{hex(working_character)} ', end='')
-		poll_final_bit = (working_character & 0x10) >> 4
-		# determine what type of frame this is
-		if (working_character & 1) == 1:
-			# either a Supervisory or Unnumbered frame
-			frame_type = working_character & 3
-		else:
-			# Information frame
-			frame_type = 0
-			ax25_ns = (working_character >> 1) & 7
-			ax25_nr = (working_character >> 5) & 7
-
-		if frame_type == 1:
-			# Supervisory frame
-			ax25_nr = (working_character >> 5) & 7
-
-		if frame_type == 3:
-			# Unnumbered frame, determine what type
-			ax25_u_control_field_type = working_character & 0xEF
-		else:
-			ax25_u_control_field_type = 0
-
-		if (ax25_u_control_field_type == 0x6F):
-			string_output += print_to_string("SABME", end='')
-		elif (ax25_u_control_field_type == 0x2F):
-			string_output += print_to_string("SABM", end='')
-		elif (ax25_u_control_field_type == 0x43):
-			string_output += print_to_string("DISC", end='')
-		elif (ax25_u_control_field_type == 0x0F):
-			string_output += print_to_string("DM", end='')
-		elif (ax25_u_control_field_type == 0x63):
-			string_output += print_to_string("UA", end='')
-		elif (ax25_u_control_field_type == 0x87):
-			string_output += print_to_string("FRMR", end='')
-		elif (ax25_u_control_field_type == 0x03):
-			string_output += print_to_string("UI", end='')
-		elif (ax25_u_control_field_type == 0xAF):
-			string_output += print_to_string("XID", end='')
-		elif (ax25_u_control_field_type == 0xE3):
-			string_output += print_to_string("TEST", end='')
-
-		if (frame_type == 0) or (ax25_u_control_field_type == 3):
-			# This is an Information frame, or an Unnumbered Information frame, so
-			# there is a PID byte.
-			index = index + 1
+		if (index < count):
+			# Control and PID fields
 			working_character = frame[index]
 			string_output += print_to_string(delimiter, end='')
-			string_output += print_to_string("PID: ", end='')
+			string_output += print_to_string("Control: ", end='')
 			string_output += print_to_string(f'{hex(working_character)} ', end='')
-			if (working_character == 1):
-				string_output += print_to_string("ISO 8208", end='')
-			if (working_character == 6):
-				string_output += print_to_string("Compressed TCP/IP", end='')
-			if (working_character == 7):
-				string_output += print_to_string("Uncompressed TCP/IP", end='')
-			if (working_character == 8):
-				string_output += print_to_string("Segmentation Fragment", end='')
-			if (working_character == 0xC3):
-				string_output += print_to_string("TEXNET", end='')
-			if (working_character == 0xC4):
-				string_output += print_to_string("Link Quality Protocol", end='')
-			if (working_character == 0xCA):
-				string_output += print_to_string("Appletalk", end='')
-			if (working_character == 0xCC):
-				string_output += print_to_string("ARPA Internet Protocol", end='')
-			if (working_character == 0xCD):
-				string_output += print_to_string("ARPA Address Resolution", end='')
-			if (working_character == 0xCF):
-				string_output += print_to_string("TheNET (NET/ROM)", end='')
-			if (working_character == 0xF0):
-				string_output += print_to_string("No Layer 3", end='')
-			if (working_character == 0xFF):
-				string_output += print_to_string("Escape", end='')
+			poll_final_bit = (working_character & 0x10) >> 4
+			# determine what type of frame this is
+			if (working_character & 1) == 1:
+				# either a Supervisory or Unnumbered frame
+				frame_type = working_character & 3
+			else:
+				# Information frame
+				frame_type = 0
+				ax25_ns = (working_character >> 1) & 7
+				ax25_nr = (working_character >> 5) & 7
 
-		index = index + 1
+			if frame_type == 1:
+				# Supervisory frame
+				ax25_nr = (working_character >> 5) & 7
+
+			if frame_type == 3:
+				# Unnumbered frame, determine what type
+				ax25_u_control_field_type = working_character & 0xEF
+			else:
+				ax25_u_control_field_type = 0
+
+			if (ax25_u_control_field_type == 0x6F):
+				string_output += print_to_string("SABME", end='')
+			elif (ax25_u_control_field_type == 0x2F):
+				string_output += print_to_string("SABM", end='')
+			elif (ax25_u_control_field_type == 0x43):
+				string_output += print_to_string("DISC", end='')
+			elif (ax25_u_control_field_type == 0x0F):
+				string_output += print_to_string("DM", end='')
+			elif (ax25_u_control_field_type == 0x63):
+				string_output += print_to_string("UA", end='')
+			elif (ax25_u_control_field_type == 0x87):
+				string_output += print_to_string("FRMR", end='')
+			elif (ax25_u_control_field_type == 0x03):
+				string_output += print_to_string("UI", end='')
+			elif (ax25_u_control_field_type == 0xAF):
+				string_output += print_to_string("XID", end='')
+			elif (ax25_u_control_field_type == 0xE3):
+				string_output += print_to_string("TEST", end='')
+
+			if (frame_type == 0) or (ax25_u_control_field_type == 3):
+				# This is an Information frame, or an Unnumbered Information frame, so
+				# there is a PID byte.
+				index = index + 1
+				working_character = frame[index]
+				string_output += print_to_string(delimiter, end='')
+				string_output += print_to_string("PID: ", end='')
+				string_output += print_to_string(f'{hex(working_character)} ', end='')
+				if (working_character == 1):
+					string_output += print_to_string("ISO 8208", end='')
+				if (working_character == 6):
+					string_output += print_to_string("Compressed TCP/IP", end='')
+				if (working_character == 7):
+					string_output += print_to_string("Uncompressed TCP/IP", end='')
+				if (working_character == 8):
+					string_output += print_to_string("Segmentation Fragment", end='')
+				if (working_character == 0xC3):
+					string_output += print_to_string("TEXNET", end='')
+				if (working_character == 0xC4):
+					string_output += print_to_string("Link Quality Protocol", end='')
+				if (working_character == 0xCA):
+					string_output += print_to_string("Appletalk", end='')
+				if (working_character == 0xCC):
+					string_output += print_to_string("ARPA Internet Protocol", end='')
+				if (working_character == 0xCD):
+					string_output += print_to_string("ARPA Address Resolution", end='')
+				if (working_character == 0xCF):
+					string_output += print_to_string("TheNET (NET/ROM)", end='')
+				if (working_character == 0xF0):
+					string_output += print_to_string("No Layer 3", end='')
+				if (working_character == 0xFF):
+					string_output += print_to_string("Escape", end='')
+
+			index = index + 1
 
 		# return the index of the start of payload data and the printed string
 		string_output += print_to_string(" ")
@@ -167,6 +168,7 @@ class PacketMeta:
 		self.CarriedCRC = 0
 		self.ValidCRC = False
 		self.SourceDecoder = 0
+		self.BytesCorrected = 0
 		self.CorrelatedDecoders = []
 		self.SlicedIQSamples = []
 
@@ -254,16 +256,17 @@ class PacketMetaArray:
 					string_output += print_to_string("Valid IL2P Decode with Invalid CRC:")
 					string_output += print_to_string("Packet number: ", self.bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("source decoder: ", packet.SourceDecoder)
-					for byte in packet.data[:-2]:
-						byte = int(byte)
+					string_output += print_to_string("Packet byte count: ", len(packet.data))
+					string_output += print_to_string("Bytes corrected: ", packet.BytesCorrected)
+					header_info = print_ax25_header_to_string(packet.data, ', ')
+					string_output += header_info[1]
+					for i in range(header_info[0], len(packet.data)-2):
+						byte = packet.data[i]
 						if (byte < 0x7F) and (byte > 0x1F):
-							string_output += print_to_string(chr(int(byte)), end='')
+							string_output +=print_to_string(chr(int(byte)), end='')
 						else:
-							string_output += print_to_string(f'<{byte}>', end='')
-					string_output += print_to_string("")
-					for byte in packet.data[:-2]:
-						string_output += print_to_string(hex(int(byte)), end=" ")
-					string_output += print_to_string(" ")
+							string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
+					string_output += print_to_string("\n")
 		return string_output
 
 	def CountGood(self):
@@ -284,14 +287,11 @@ class PacketMetaArray:
 				string_output += print_to_string("Packet number: ", self.good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 				string_output += print_to_string("source decoders: ", packet.CorrelatedDecoders)
 				for byte in packet.data[:-2]:
-					byte = int(byte)
+					byte = packet.data[i]
 					if (byte < 0x7F) and (byte > 0x1F):
 						string_output +=print_to_string(chr(int(byte)), end='')
 					else:
-						string_output += print_to_string(f'<{byte}>', end='')
-				string_output += print_to_string(" ")
-				for byte in packet.data[:-2]:
-					string_output += print_to_string(hex(int(byte)), end=" ")
+						string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
 				string_output += print_to_string(" ")
 		return string_output
 
@@ -310,11 +310,15 @@ class PacketMetaArray:
 					string_output += print_to_string("\n\nPacket number: ", count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("Source decoders: ", packet.CorrelatedDecoders)
 					string_output += print_to_string("Packet byte count: ", len(packet.data))
+					string_output += print_to_string("Bytes corrected: ", packet.BytesCorrected)
 					header_info = print_ax25_header_to_string(packet.data, ', ')
 					string_output += header_info[1]
 					for i in range(header_info[0], len(packet.data)-2):
 						byte = packet.data[i]
-						string_output +=print_to_string(chr(int(byte)), end='')
+						if (byte < 0x7F) and (byte > 0x1F):
+							string_output +=print_to_string(chr(int(byte)), end='')
+						else:
+							string_output +=print_to_string(f'<{hex(int(byte))}>', end='')
 
 			string_output += print_to_string("\n\nUnique, valid packets: ", self.CountGood())
 			string_output += print_to_string("Packets rejected from all decoders for CRC failure: ", self.CountBad())

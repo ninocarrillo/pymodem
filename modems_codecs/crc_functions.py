@@ -7,6 +7,40 @@
 # CRC-CCIT Polynomial x^16+x^12+x^5+1
 
 def CheckCRC(packet):
+	Distance8 = [
+			0, 1, 1, 2, 1, 2, 2, 3,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			1, 2, 2, 3, 2, 3, 3, 4,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			2, 3, 3, 4, 3, 4, 4, 5,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			3, 4, 4, 5, 4, 5, 5, 6,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			4, 5, 5, 6, 5, 6, 6, 7,
+			5, 6, 6, 7, 6, 7, 7, 8
+		]
 	packet_crc = int((packet[-1] * 256) + packet[-2])
 	calculated_crc = 0xFFFF
 	CRC_poly = 0x8408
@@ -19,7 +53,9 @@ def CheckCRC(packet):
 				calculated_crc >>= 1
 			byte >>= 1
 	calculated_crc ^= 0xFFFF
-	if packet_crc == calculated_crc:
+	crc_distance = Distance8[(calculated_crc & 0xFF)^(packet_crc & 0xFF)]
+	crc_distance += Distance8[(calculated_crc>>8)^(packet_crc>>8)]
+	if crc_distance <= 4:
 		return [packet_crc, calculated_crc, True]
 	else:
 		return [packet_crc, calculated_crc, False]

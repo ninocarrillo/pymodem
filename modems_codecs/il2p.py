@@ -171,6 +171,8 @@ class IL2PCodec:
 			# RS decoding failed
 			self.block_fail = True
 		else:
+			if rs_result > 0:
+				print("Successful RS block decode with corrected errors: ", rs_result)
 			self.bytes_corrected += rs_result
 
 	def header_rs_decode(self):
@@ -190,9 +192,12 @@ class IL2PCodec:
 			self.bytes_corrected += rs_result
 
 	def write_n_search(self, result):
+		self.working_packet.BytesCorrected = self.bytes_corrected
 		result.append(
 			copy.copy(self.working_packet)
 		)
+		print("IL2P packet complete. Bytes Corrected: ", self.bytes_corrected)
+		self.bytes_corrected = 0;
 		self.working_packet = PacketMeta()
 		self.state = 'sync_search'
 
@@ -380,6 +385,7 @@ class IL2PCodec:
 							self.construct_ax25_header()
 
 							if self.block_fail:
+								print("IL2P Header Decode Fail")
 								self.block_fail = False
 								self.state = 'sync_search'
 								self.working_packet = PacketMeta()
@@ -426,6 +432,7 @@ class IL2PCodec:
 							self.byte_index_a = 0
 
 							if self.block_fail:
+								print("IL2P BigBlock Decode Fail")
 								self.block_fail = False
 								self.working_packet = PacketMeta()
 								self.state = 'sync_search'
@@ -460,6 +467,7 @@ class IL2PCodec:
 
 
 							if self.block_fail:
+								print("IL2P SmallBlock Decode Fail")
 								self.block_fail = False
 								self.working_packet = PacketMeta()
 								self.state = 'sync_search'

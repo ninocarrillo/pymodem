@@ -12,7 +12,7 @@ from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 class AFSKPLLModem:
 
@@ -161,8 +161,8 @@ class AFSKPLLModem:
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		#print(self.rrc)
-		plt.figure()
-		plt.plot(self.loop_output)
-		plt.plot(demod_audio)
-		plt.show()
+		#plt.figure()
+		#plt.plot(self.loop_output)
+		#plt.plot(demod_audio)
+		#plt.show()
 		return demod_audio

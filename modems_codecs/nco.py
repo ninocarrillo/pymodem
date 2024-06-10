@@ -4,6 +4,7 @@
 # 26 Apr 2024
 
 from math import sin, pi
+from modems_codecs.complexmath import ComplexNumber
 
 class NCO:
 	def __init__(self, **kwargs):
@@ -28,14 +29,25 @@ class NCO:
 		# During each update of the NCO (once per sample), it will be advanced according to
 		# set_frequency + control. Calculate the scaling factor for phase advance.
 		self.phase_scaling_factor = 2.0 * pi / self.sample_rate
+		self.ComplexOutput = ComplexNumber(1,0)
 
 	def update(self):
 		self.phase_accumulator += (self.phase_scaling_factor * (self.set_frequency + self.control))
 		while self.phase_accumulator >= 2.0 * pi:
-			self.phase_accumulator -= 2.0 * pi
+			self.phase_accumulator = self.phase_accumulator - (2.0 * pi)
+		while self.phase_accumulator < 0:
+			self.phase_accumulator = self.phase_accumulator + (2.0 * pi)
 		sine_phase_index = int(self.phase_accumulator * self.index_scaling_factor)
-		self.sine_output = self.wavetable[sine_phase_index]
+		try:
+			self.sine_output = self.wavetable[sine_phase_index]
+		except:
+			#pass
+			print(sine_phase_index, self.index_scaling_factor, self.phase_accumulator)
 		cosine_phase_index = int(sine_phase_index + (self.wavetable_size / 4.0))
-		while cosine_phase_index >= 0 :
+		while cosine_phase_index >= self.wavetable_size :
 			cosine_phase_index -= self.wavetable_size
+		while cosine_phase_index < 0:
+			cosine_phase_index += self.wavetable_size
 		self.cosine_output = self.wavetable[cosine_phase_index]
+		self.ComplexOutput.real = (self.cosine_output)
+		self.ComplexOutput.imag = -(self.sine_output)
