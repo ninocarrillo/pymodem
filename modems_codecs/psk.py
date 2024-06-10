@@ -16,7 +16,7 @@ from modems_codecs.nco import NCO
 from modems_codecs.hilbert import Hilbert
 from modems_codecs.complexmath import ComplexNumber
 from modems_codecs.phase_detector import PhaseDetector
-from matplotlib import pyplot as plot
+#from matplotlib import pyplot as plot
 
 class BPSKModem:
 
@@ -651,9 +651,9 @@ class MPSKModem:
 			fs=self.sample_rate,
 			scale=True
 		)
-		print("BPF tap count:", len(self.input_bpf))
-		for tap in self.input_bpf:
-			print(round(tap*32768), end=',')
+		#print("BPF tap count:", len(self.input_bpf))
+		#for tap in self.input_bpf:
+			#print(round(tap*32768), end=',')
 
 		if self.hilbert_tap_count % 2:
 			pass
@@ -745,20 +745,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		plot.figure()
+		#plot.figure()
 		#plot.subplot(221)
 		#plot.plot(angle)
 		#plot.title("Output Phase")
 		#plot.subplot(222)
 		#plot.plot(angle_error)
 		#plot.title("Angle Error")
-		plot.subplot(121)
-		plot.plot(control)
-		plot.title("NCO Control")
-		plot.subplot(122)
-		plot.plot(integral)
-		plot.title("PI Integral")
-		plot.show()
+		#plot.subplot(121)
+		#plot.plot(control)
+		#plot.title("NCO Control")
+		#plot.subplot(122)
+		#plot.plot(integral)
+		#plot.title("PI Integral")
+		#plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
