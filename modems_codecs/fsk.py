@@ -20,7 +20,7 @@ class FSKModem:
 
 		self.agc_attack_rate = 5.0		# Normalized to full scale / sec
 		self.agc_sustain_time = 1.0 # sec
-		self.agc_decay_rate = 5.0			# Normalized to full scale / sec
+		self.agc_decay_rate = 1.0			# Normalized to full scale / sec
 
 		if self.definition == '9600':
 			# set some default values for 9600 bps FSK:
@@ -46,7 +46,7 @@ class FSKModem:
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'rrc'
 			self.rrc_rolloff_rate = 0.3
-			self.input_lpf_span = 9			# Number of symbols to span with the input
+			self.input_lpf_span = 8			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False
@@ -69,7 +69,7 @@ class FSKModem:
 
 	def StringOptionsRetune(self, options):
 		self.invert = check_boolean(options.get('invert', "false"))
-		
+
 		self.tune()
 
 	def tune(self):
@@ -96,7 +96,7 @@ class FSKModem:
 				pass_zero='lowpass',
 				fs=self.sample_rate
 			)
-	
+
 		self.AGC = AGC(
 			sample_rate = self.sample_rate,
 			attack_rate = self.agc_attack_rate,
