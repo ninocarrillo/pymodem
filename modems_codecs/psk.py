@@ -39,18 +39,20 @@ class BPSKModem:
 			self.carrier_freq = 1500.0				# carrier tone frequency
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
-			self.max_freq_offset = 37.5
+			self.max_freq_offset = 25*1.25
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=250.0,
 				gain=1.0
 			)
+			pi_p = 0.06
+			pi_i = pi_p / 1000
 			self.FeedbackController = PI_control(
-				p= 0.05,
-				i= 0.0001,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 7031.0
+				gain= 7200
 			)
 		elif self.definition == '1200':
 			# set some default values for 1200 bps BPSK:
@@ -65,20 +67,22 @@ class BPSKModem:
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 87.5
+			self.max_freq_offset = 50*1.25
 			self.rrc_rolloff_rate = 0.9
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=150.0,
+				cutoff=250.0,
 				gain=1.0
 			)
+			pi_p = 0.4
+			pi_i = pi_p / 1000
 			self.FeedbackController = PI_control(
-				p= 0.24,
-				i= 0.0003,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 7031.0
+				gain= 1800
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -181,16 +185,16 @@ class BPSKModem:
 			self.Loop_LPF.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
-			self.loop_output.append(self.NCO.control)
+			self.loop_output.append(self.FeedbackController.integral)
 			demod_audio.append(i_mixer)
 
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		demod_audio = convolve(demod_audio, self.rrc.taps, 'valid')
 		#print(self.rrc)
-		# plt.figure()
-		# plt.plot(self.loop_output)
-		# plt.show()
+		#plot.figure()
+		#plot.plot(self.loop_output)
+		#plot.show()
 		return demod_audio
 
 class QPSKModem:
