@@ -526,10 +526,10 @@ class MPSKModem:
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff= 150,
-				gain= 1/2
+				gain= 1
 			)
-			pi_p = 0.2
-			pi_i = pi_p / 2000
+			pi_p = 0.11
+			pi_i = pi_p / 1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
