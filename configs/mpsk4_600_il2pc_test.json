@@ -1,2 +1,0 @@
-{"object_name": "MPSK4 600 IL2P+CRC 1500", "object_type": "demod_chain", "modem": {"type": "mpsk",  "config": "qpsk_600", "options": {"carrier_freq": "1500"}}, "slicer": {"type": "quadrature", "config": "qpsk_600", "options": {"lock_rate": "0.815"}}, "stream": {"type": "lfsr", "options": {"poly": "0x1", "invert": "False"}}, "codec": {"type": "il2p", "options": {"crc": "yes", "disable_rs": "no", "min_dist": "0", "sync_tol": "2"}}}
-{"object_name": "Decoded header report", "object_type": "report", "options": {"style": "decoded_headers", "destination": "std_out"}}
