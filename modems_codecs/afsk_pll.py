@@ -12,7 +12,7 @@ from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 class AFSKPLLModem:
 
@@ -36,18 +36,20 @@ class AFSKPLLModem:
 			self.output_lpf_cutoff = 350.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 150.0
+			self.max_freq_offset = 200*1.25
 			self.LoopFilter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=1200.0,
+				cutoff=150.0,
 				gain=1.0
 			)
+			pi_p = 0.3
+			pi_i = pi_p/2500
 			self.FeedbackController = PI_control(
-				p= 0.05,
-				i= 0.0001,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 15000.0
+				gain= 1800
 			)
 
 		self.oscillator_amplitude = 1.0
@@ -144,6 +146,8 @@ class AFSKPLLModem:
 		self.AGC.apply(audio)
 
 		self.loop_output = []
+		self.pi_i = []
+		self.pi_p = []
 		demod_audio = []
 		# This is the PLL
 		for sample in audio:
@@ -153,16 +157,18 @@ class AFSKPLLModem:
 			# low pass filter this product
 			self.LoopFilter.update(mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_reset(self.LoopFilter.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.LoopFilter.output)
 			self.loop_output.append(self.NCO.control)
 			#demod_audio.append(self.I_LPF.output)
-			demod_audio.append(self.NCO.control)
+			demod_audio.append(self.FeedbackController.proportional)
+			self.pi_p.append(self.FeedbackController.proportional)
+			self.pi_i.append(self.FeedbackController.integral)
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		#print(self.rrc)
-		#plt.figure()
-		#plt.plot(self.loop_output)
-		#plt.plot(demod_audio)
-		#plt.show()
+		plt.figure()
+		plt.plot(self.pi_i)
+		plt.plot(demod_audio)
+		plt.show()
 		return demod_audio
