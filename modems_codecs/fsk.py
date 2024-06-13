@@ -18,9 +18,9 @@ class FSKModem:
 		self.definition = kwargs.get('config', '9600')
 		self.sample_rate = kwargs.get('sample_rate', 96000)
 
-		self.agc_attack_rate = 5.0		# Normalized to full scale / sec
+		self.agc_attack_rate = 1		# Normalized to full scale / sec
 		self.agc_sustain_time = 1.0 # sec
-		self.agc_decay_rate = 1.0			# Normalized to full scale / sec
+		self.agc_decay_rate = 1			# Normalized to full scale / sec
 
 		if self.definition == '9600':
 			# set some default values for 9600 bps FSK:

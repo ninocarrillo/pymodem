@@ -278,16 +278,16 @@ class FourLevelSlicer:
 		# create the symbol demap
 		self.demap = [0,0,0,0]
 		for index in range(4):
-			symbol_bits = 0
-			if self.symbol_map[index] == 3:
-				symbol_bits = 0
-			if self.symbol_map[index] == 1:
-				symbol_bits = 1
-			if self.symbol_map[index] == -1:
-				symbol_bits = 2
+			symbol_index = 0
 			if self.symbol_map[index] == -3:
-				symbol_bits = 3
-			self.demap[index] = symbol_bits
+				symbol_index = 0
+			if self.symbol_map[index] == -1:
+				symbol_index = 1
+			if self.symbol_map[index] == 1:
+				symbol_index = 2
+			if self.symbol_map[index] == 3:
+				symbol_index = 3
+			self.demap[symbol_index] = index
 		print("demap: ", self.demap)
 
 	def slice(self, samples):
