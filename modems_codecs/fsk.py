@@ -103,7 +103,7 @@ class FSKModem:
 			sustain_time = self.agc_sustain_time,
 			decay_rate = self.agc_decay_rate,
 			target_amplitude = 1.0,
-			record_envelope = False
+			record_envelope = True
 		)
 
 	def demod(self, input_audio):
@@ -115,5 +115,6 @@ class FSKModem:
 		self.AGC.apply(audio)
 		#plt.figure()
 		#plt.plot(audio)
+		#plt.plot(self.AGC.envelope_buffer)
 		#plt.show()
 		return audio

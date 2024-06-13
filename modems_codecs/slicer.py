@@ -278,16 +278,16 @@ class FourLevelSlicer:
 		# create the symbol demap
 		self.demap = [0,0,0,0]
 		for index in range(4):
-			value_number = 0
-			if self.symbol_map[index] == -3:
-				value_number = 0
-			if self.symbol_map[index] == -1:
-				value_number = 1
-			if self.symbol_map[index] == 1:
-				value_number = 2
+			symbol_bits = 0
 			if self.symbol_map[index] == 3:
-				value_number = 3
-			self.demap[index] = value_number
+				symbol_bits = 0
+			if self.symbol_map[index] == 1:
+				symbol_bits = 1
+			if self.symbol_map[index] == -1:
+				symbol_bits = 2
+			if self.symbol_map[index] == -3:
+				symbol_bits = 3
+			self.demap[index] = symbol_bits
 		print("demap: ", self.demap)
 
 	def slice(self, samples):
@@ -305,21 +305,21 @@ class FourLevelSlicer:
 		# this causes phase_clock to converge to synchronization
 		result = []
 		result_index = 0
-		save_samples = []
-		save_zeros = []
+		sample_stream = []
+		value_stream = []
+		symbol_stream = []
 		for sample in samples:
 			self.streamaddress += 1
 			# increment phase_clock
 			self.phase_clock += 1.0
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
+				sample_stream.append(sample)
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 				# shift and bound the working byte
 				self.working_byte = (self.working_byte << 2) & 0xFF
 				# This will determine the symbol value, from 0 at the lowest, to 3 at the highest.
-				save_samples.append(sample)
-				save_zeros.append(0)
 				if sample > 0:
 					if sample >= self.threshold:
 						symbol = 3
@@ -331,6 +331,8 @@ class FourLevelSlicer:
 					else:
 						symbol = 1
 				self.working_byte += self.demap[symbol]
+				symbol_stream.append(symbol)
+				value_stream.append(self.demap[symbol])
 				# save this bit into the lsb of the working_byte
 				self.working_bit_count += 2
 				# after 8 bits, save this byte in the result array and reset bit
@@ -338,6 +340,10 @@ class FourLevelSlicer:
 				if self.working_bit_count >= 8:
 					self.working_bit_count = 0
 					result.append(AddressedData(self.working_byte, self.streamaddress))
+			else:
+				sample_stream.append(0)
+				value_stream.append(-2)
+				symbol_stream.append(-1)
 			# check for zero-crossing in sample stream
 			if (
 					(self.last_sample < 0.0 and sample >= 0.0)
@@ -348,6 +354,9 @@ class FourLevelSlicer:
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
 		#plot.figure()
-		#plot.scatter(save_samples, save_zeros, s=1)
+		#plot.plot(symbol_stream)
+		#plot.plot(value_stream)
+		#plot.plot(sample_stream)
+		#plot.plot(samples)
 		#plot.show()
 		return result
