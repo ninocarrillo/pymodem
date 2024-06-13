@@ -350,6 +350,7 @@ class FourLevelSlicer:
 					or (self.last_sample >= 0.0 and sample < 0.0)
 				):
 				# zero crossing detected, adjust phase_clock
+				#if abs(sample - self.last_sample) * self.sample_rate > 0.:
 				self.phase_clock = self.phase_clock * self.lock_rate
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample

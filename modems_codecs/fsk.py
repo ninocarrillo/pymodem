@@ -19,7 +19,7 @@ class FSKModem:
 		self.sample_rate = kwargs.get('sample_rate', 96000)
 
 		self.agc_attack_rate = 1		# Normalized to full scale / sec
-		self.agc_sustain_time = 1.0 # sec
+		self.agc_sustain_time = 0.1 # sec
 		self.agc_decay_rate = 1			# Normalized to full scale / sec
 
 		if self.definition == '9600':
