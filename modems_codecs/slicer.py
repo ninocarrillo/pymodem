@@ -249,7 +249,10 @@ class FourLevelSlicer:
 			self.symbol_rate = 4800
 			self.lock_rate = 0.98
 			self.threshold = 0.5
-
+		elif self.definition == '9600':
+			self.symbol_rate = 9600
+			self.lock_rate = 0.98
+			self.threshold = 0.5
 		self.symbol_map = [1, 3, -1, -3]
 
 		self.tune()

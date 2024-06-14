@@ -43,25 +43,38 @@ class FSKModem:
 											# rate to determine the tap count.
 			self.rrc_rolloff_rate = False
 		elif self.definition == '4800-rrc':
-			self.agc_attack_rate = 1		# Normalized to full scale / sec
+
+			self.agc_attack_rate = 50		# Normalized to full scale / sec
 			self.agc_sustain_time = 0.1 # sec
-			self.agc_decay_rate = 1			# Normalized to full scale / sec
+			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'rrc'
 			self.rrc_rolloff_rate = 0.3
-			self.input_lpf_span = 8			# Number of symbols to span with the input
+			self.input_lpf_span = 9			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False
 		elif self.definition == '4800-gauss':
 
 			self.agc_attack_rate = 50		# Normalized to full scale / sec
-			self.agc_sustain_time = 1 # sec
-			self.agc_decay_rate = 10			# Normalized to full scale
+			self.agc_sustain_time = 0.1 # sec
+			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'lpf'
 			self.input_lpf_cutoff = 10000
-			self.input_lpf_span = 8			# Number of symbols to span with the input
+			self.input_lpf_span = 2			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+			self.invert = False
+		elif self.definition == '9600-gauss':
+
+			self.agc_attack_rate = 50		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.1 # sec
+			self.agc_decay_rate = 3			# Normalized to full scale
+			self.symbol_rate = 9600.0			# symbols per second (or baud)
+			self.input_filter_type = 'lpf'
+			self.input_lpf_cutoff = 15000
+			self.input_lpf_span = 2			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False

@@ -14,7 +14,7 @@ class AGC:
 		# adjust the agc attack and decay rates to per-sample values
 		self.scaled_attack_rate = self.attack_rate / self.sample_rate
 		self.scaled_decay_rate = self.decay_rate / self.sample_rate
-		self.sustain_increment = self.sustain_time / self.sample_rate
+		self.sustain_increment = 1 / self.sample_rate
 		self.envelope = 0
 		self.normal = 1.0
 		self.envelope_buffer = []
@@ -50,6 +50,6 @@ class AGC:
 			if self.envelope!= 0:
 				buffer[i] =  self.target_amplitude * sample / (self.envelope)
 			if self.record_envelope:
-				self.envelope_buffer.append(self.envelope)
+				self.envelope_buffer.append(self.envelope / self.normal)
 
 			i += 1
