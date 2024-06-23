@@ -49,7 +49,19 @@ class FSKModem:
 			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'rrc'
-			self.rrc_rolloff_rate = 0.3
+			self.rrc_rolloff_rate = 0.2
+			self.input_lpf_span = 9			# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+			self.invert = False
+		elif self.definition == '9600-rrc':
+
+			self.agc_attack_rate = 50		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.1 # sec
+			self.agc_decay_rate = 3			# Normalized to full scale
+			self.symbol_rate = 9600.0			# symbols per second (or baud)
+			self.input_filter_type = 'rrc'
+			self.rrc_rolloff_rate = 0.2
 			self.input_lpf_span = 9			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
@@ -141,7 +153,7 @@ class FSKModem:
 		if self.invert:
 			audio = -audio
 		# perform AGC on the audio samples, saving over the original samples
-		self.AGC.apply(audio)
+		#self.AGC.apply(audio)
 		#plt.figure()
 		#plt.plot(audio)
 		#plt.plot(self.AGC.envelope_buffer)

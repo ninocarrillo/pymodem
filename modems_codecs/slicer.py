@@ -247,12 +247,12 @@ class FourLevelSlicer:
 
 		if self.definition == '4800':
 			self.symbol_rate = 4800
-			self.lock_rate = 0.98
-			self.threshold = 0.5
+			self.lock_rate = 0.985
+			self.threshold = 35000
 		elif self.definition == '9600':
 			self.symbol_rate = 9600
-			self.lock_rate = 0.98
-			self.threshold = 0.5
+			self.lock_rate = 0.985
+			self.threshold = 23000
 		self.symbol_map = [1, 3, -1, -3]
 
 		self.tune()
@@ -272,7 +272,7 @@ class FourLevelSlicer:
 	def tune(self):
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -315,6 +315,7 @@ class FourLevelSlicer:
 			self.streamaddress += 1
 			# increment phase_clock
 			self.phase_clock += 1.0
+			#self.phase_clock += (35e-5)
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
 				sample_stream.append(sample)
@@ -355,12 +356,13 @@ class FourLevelSlicer:
 				# zero crossing detected, adjust phase_clock
 				if abs(sample - self.last_sample) * self.sample_rate > 5000:
 					self.phase_clock = self.phase_clock * self.lock_rate
+					#pass
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
-		#plot.figure()
+		plot.figure()
 		#plot.plot(symbol_stream)
 		#plot.plot(value_stream)
-		#plot.plot(sample_stream)
-		#plot.plot(samples)
-		#plot.show()
+		plot.plot(sample_stream, '.')
+		plot.plot(samples)
+		plot.show()
 		return result
