@@ -248,7 +248,7 @@ class FourLevelSlicer:
 		if self.definition == '4800':
 			self.symbol_rate = 4800
 			self.lock_rate = 0.985
-			self.threshold = 35000
+			self.threshold = 0
 		elif self.definition == '9600':
 			self.symbol_rate = 9600
 			self.lock_rate = 0.985
@@ -270,7 +270,9 @@ class FourLevelSlicer:
 		self.tune()
 
 	def tune(self):
+		self.sync_register = 0
 		self.phase_clock = 0.0
+		self.sync_phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
 		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1
 		self.working_byte = 0
@@ -306,16 +308,33 @@ class FourLevelSlicer:
 		# it is synchronized. When zero-crossing is detected in sample stream,
 		# multiply phase_clock by lock_rate (positive number less than 1.0)
 		# this causes phase_clock to converge to synchronization
+		threshold_depth = 8
+		threshold_samples = []
+		for i in range(threshold_depth):
+			threshold_samples.append(0)
+		threshold_index = 0
 		result = []
 		result_index = 0
 		sample_stream = []
 		value_stream = []
 		symbol_stream = []
+		threshold_stream = []
 		for sample in samples:
 			self.streamaddress += 1
-			# increment phase_clock
+			# increment phase clocks
 			self.phase_clock += 1.0
-			#self.phase_clock += (35e-5)
+			self.sync_phase_clock += 1.0
+			if self.sync_phase_clock >= self.rollover_threshold:
+				self.sync_phase_clock -= self.samples_per_symbol
+				self.sync_register = (self.sync_register << 1) & 0xFFFFF
+				if sample > 0:
+					self.sync_register += 1
+				if (self.sync_register == 0x55555) or (self.sync_register == 0xaaaaa):
+					threshold_index += 1
+					if threshold_index >= threshold_depth:
+						threshold_index = 0
+					threshold_samples[threshold_index] = (abs(sample) * 2 / 3) * 1.25
+					self.threshold = sum(threshold_samples) / threshold_depth
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
 				sample_stream.append(sample)
@@ -354,15 +373,17 @@ class FourLevelSlicer:
 					or (self.last_sample >= 0.0 and sample < 0.0)
 				):
 				# zero crossing detected, adjust phase_clock
-				if abs(sample - self.last_sample) * self.sample_rate > 5000:
-					self.phase_clock = self.phase_clock * self.lock_rate
-					#pass
+				self.sync_phase_clock = self.sync_phase_clock * self.lock_rate
+				self.phase_clock = self.phase_clock * self.lock_rate
+				
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
+			threshold_stream.append(self.threshold)
 		plot.figure()
 		#plot.plot(symbol_stream)
 		#plot.plot(value_stream)
 		plot.plot(sample_stream, '.')
 		plot.plot(samples)
+		plot.plot(threshold_stream)
 		plot.show()
 		return result

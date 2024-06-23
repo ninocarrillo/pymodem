@@ -44,7 +44,7 @@ class FSKModem:
 			self.rrc_rolloff_rate = False
 		elif self.definition == '4800-rrc':
 
-			self.agc_attack_rate = 50		# Normalized to full scale / sec
+			self.agc_attack_rate = 3		# Normalized to full scale / sec
 			self.agc_sustain_time = 0.1 # sec
 			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
