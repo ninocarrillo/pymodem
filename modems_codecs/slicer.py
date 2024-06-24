@@ -333,7 +333,7 @@ class FourLevelSlicer:
 					threshold_index += 1
 					if threshold_index >= threshold_depth:
 						threshold_index = 0
-					threshold_samples[threshold_index] = (abs(sample) * 2 / 3) * 1.25
+					threshold_samples[threshold_index] = (abs(sample) * 2 / 3) * 1.3
 					self.threshold = sum(threshold_samples) / threshold_depth
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
