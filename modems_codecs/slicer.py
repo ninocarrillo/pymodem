@@ -272,7 +272,6 @@ class FourLevelSlicer:
 	def tune(self):
 		self.sync_register = 0
 		self.phase_clock = 0.0
-		self.sync_phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
 		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1
 		self.working_byte = 0
@@ -323,9 +322,12 @@ class FourLevelSlicer:
 			self.streamaddress += 1
 			# increment phase clocks
 			self.phase_clock += 1.0
-			self.sync_phase_clock += 1.0
-			if self.sync_phase_clock >= self.rollover_threshold:
-				self.sync_phase_clock -= self.samples_per_symbol
+			# check for symbol center
+			if self.phase_clock >= self.rollover_threshold:
+				sample_stream.append(sample)
+				# at or past symbol center, reset phase_clock
+				self.phase_clock -= self.samples_per_symbol
+
 				threshold_index += 1
 				if threshold_index >= threshold_depth:
 					threshold_index = 0
@@ -335,11 +337,7 @@ class FourLevelSlicer:
 					self.sync_register += 1
 				if (self.sync_register == 0x55555) or (self.sync_register == 0xaaaaa):
 					self.threshold = sum(threshold_samples) / threshold_depth
-			# check for symbol center
-			if self.phase_clock >= self.rollover_threshold:
-				sample_stream.append(sample)
-				# at or past symbol center, reset phase_clock
-				self.phase_clock -= self.samples_per_symbol
+					
 				# shift and bound the working byte
 				self.working_byte = (self.working_byte << 2) & 0xFF
 				# This will determine the symbol value, from 0 at the lowest, to 3 at the highest.
@@ -373,7 +371,6 @@ class FourLevelSlicer:
 					or (self.last_sample >= 0.0 and sample < 0.0)
 				):
 				# zero crossing detected, adjust phase_clock
-				self.sync_phase_clock = self.sync_phase_clock * self.lock_rate
 				self.phase_clock = self.phase_clock * self.lock_rate
 				
 			# save this sample to compare with the next for zero-crossing detect
