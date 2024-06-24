@@ -332,10 +332,10 @@ class FourLevelSlicer:
 				if threshold_index >= threshold_depth:
 					threshold_index = 0
 				threshold_samples[threshold_index] = (abs(sample) * 2 / 3) * 1.0
-				self.sync_register = (self.sync_register << 1) & 0xFFFFF
+				self.sync_register = (self.sync_register << 1) & 0xFFFF
 				if sample > 0:
 					self.sync_register += 1
-				if (self.sync_register == 0x55555) or (self.sync_register == 0xaaaaa):
+				if (self.sync_register == 0x5555):
 					self.threshold = sum(threshold_samples) / threshold_depth
 					
 				# shift and bound the working byte
