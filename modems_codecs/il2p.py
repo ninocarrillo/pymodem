@@ -348,6 +348,8 @@ class IL2PCodec:
 
 	def decode(self, data):
 		result = []
+		syncword = int(0xF15E48)
+		#syncword = int(0x57DF7F)
 		for stream_byte in data:
 			self.input_byte = int(stream_byte.data)
 			self.working_packet.streamaddress = stream_byte.address
@@ -355,7 +357,7 @@ class IL2PCodec:
 			for input_bit_index in range(8):
 				if self.state == 'sync_search':
 					self.get_a_bit(0xFFFFFF)
-					if bit_distance_24(self.working_word, 0xF15E48) <= \
+					if bit_distance_24(self.working_word, syncword) <= \
 														self.sync_tolerance:
 						self.bit_index = 0
 						self.state = 'rx_header'
