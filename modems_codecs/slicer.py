@@ -274,7 +274,6 @@ class FourLevelSlicer:
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
 		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
-		self.rollover_threshold = int(self.rollover_threshold * 32768)
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -294,6 +293,7 @@ class FourLevelSlicer:
 				symbol_index = 3
 			self.demap[symbol_index] = index
 		print("demap: ", self.demap)
+		print("lock rate :", self.lock_rate)
 
 	def slice(self, samples):
 		# This method will attempt to resynchronize a 4-level symbol stream,
@@ -319,7 +319,8 @@ class FourLevelSlicer:
 		value_stream = []
 		symbol_stream = []
 		threshold_stream = []
-		self.phase_clock_step = 32768
+		#self.phase_clock_step = 32768
+		self.phase_clock_step = 1.0
 		self.phase_clock_step *= (1 + 500e-6)
 		freq_stream = []
 		phase_error_stream = []
@@ -329,15 +330,15 @@ class FourLevelSlicer:
 			# increment phase clocks
 			self.phase_clock += self.phase_clock_step
 			# check for symbol center
-			if self.phase_clock >= self.rollover_threshold:
+			if self.phase_clock > self.rollover_threshold:
 				sample_stream.append(sample)
 				# at or past symbol center, reset phase_clock
-				self.phase_clock -= (self.samples_per_symbol * 32768)
+				self.phase_clock -= self.samples_per_symbol
 
 				threshold_index += 1
 				if threshold_index >= threshold_depth:
 					threshold_index = 0
-				threshold_samples[threshold_index] = (abs(sample) * 2 / 3) * 1.0
+				threshold_samples[threshold_index] = (abs(sample) * 2.0 / 3.0) * 1.0
 				self.sync_register = (self.sync_register << 1) & 0xFFFF
 				if sample > 0:
 					self.sync_register += 1
@@ -378,7 +379,7 @@ class FourLevelSlicer:
 				):
 				# zero crossing detected, adjust phase_clock
 				phase_clock_error = self.phase_clock
-				self.phase_clock = int(self.phase_clock * self.lock_rate)
+				self.phase_clock = self.phase_clock * self.lock_rate
 
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample

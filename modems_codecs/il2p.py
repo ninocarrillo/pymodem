@@ -152,6 +152,11 @@ class IL2PCodec:
 		self.input_byte <<= 1
 		self.bit_index += 1
 
+	def dump_block(self):
+		for i in range(self.byte_index_a):
+			print(hex(self.buffer[i]), end=' ')
+		print("\nend block")
+
 	def block_unscramble(self):
 		self.lfsr.shift_register = 0x1F0
 		self.buffer[:self.byte_index_a] = \
@@ -174,6 +179,11 @@ class IL2PCodec:
 			if rs_result > 0:
 				print("Successful RS block decode with corrected errors: ", rs_result)
 			self.bytes_corrected += rs_result
+
+	def dump_header_hex(self):	
+		for i in range(13):
+			print(hex(self.buffer[i]), end=' ')
+		print("end header")
 
 	def header_rs_decode(self):
 		if self.disable_rs:
@@ -329,6 +339,7 @@ class IL2PCodec:
 									self.header['AX25_PID_byte']
 				)
 		else:
+			print("IL2P Transparent")
 			# Type 0 Transparent Encapsulation
 			pass
 
@@ -360,6 +371,7 @@ class IL2PCodec:
 							or \
 							(bit_distance_24(self.working_word, 0x57DF7F) <= self.sync_tolerance) \
 					):
+						print("Syncword: ", hex(self.working_word))
 						self.bit_index = 0
 						self.state = 'rx_header'
 				elif self.state == 'rx_header':
@@ -378,6 +390,9 @@ class IL2PCodec:
 							self.byte_index_a = 13
 							self.block_unscramble()
 							self.byte_index_a = 0
+
+
+							#self.dump_header_hex()
 
 							# Unpack IL2P header
 							self.unpack_il2p_header()
@@ -425,6 +440,7 @@ class IL2PCodec:
 						self.byte_index_a += 1
 						if self.byte_index_a == self.block_size + self.num_roots:
 							# this block is completely collected
+							#self.dump_block()
 							self.block_rs_decode()
 							self.block_unscramble()
 
@@ -459,6 +475,7 @@ class IL2PCodec:
 						self.buffer[self.byte_index_a] = self.working_word
 						self.byte_index_a += 1
 						if self.byte_index_a == self.block_size + self.num_roots:
+							#self.dump_block()
 							self.block_rs_decode()
 							self.block_unscramble()
 
