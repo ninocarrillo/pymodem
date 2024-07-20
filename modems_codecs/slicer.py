@@ -273,7 +273,8 @@ class FourLevelSlicer:
 		self.sync_register = 0
 		self.phase_clock = 0.0
 		self.samples_per_symbol = self.sample_rate / self.symbol_rate
-		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 1
+		self.rollover_threshold = (self.samples_per_symbol / 2.0) - 0.5
+		self.rollover_threshold = int(self.rollover_threshold * 32768)
 		self.working_byte = 0
 		self.working_bit_count = 0
 		self.last_sample = 0.0
@@ -318,15 +319,20 @@ class FourLevelSlicer:
 		value_stream = []
 		symbol_stream = []
 		threshold_stream = []
+		self.phase_clock_step = 32768
+		self.phase_clock_step *= (1 + 500e-6)
+		freq_stream = []
+		phase_error_stream = []
+		phase_clock_error = 0
 		for sample in samples:
 			self.streamaddress += 1
 			# increment phase clocks
-			self.phase_clock += 1.0
+			self.phase_clock += self.phase_clock_step
 			# check for symbol center
 			if self.phase_clock >= self.rollover_threshold:
 				sample_stream.append(sample)
 				# at or past symbol center, reset phase_clock
-				self.phase_clock -= self.samples_per_symbol
+				self.phase_clock -= (self.samples_per_symbol * 32768)
 
 				threshold_index += 1
 				if threshold_index >= threshold_depth:
@@ -337,7 +343,7 @@ class FourLevelSlicer:
 					self.sync_register += 1
 				if (self.sync_register == 0x5555):
 					self.threshold = sum(threshold_samples) / threshold_depth
-					
+
 				# shift and bound the working byte
 				self.working_byte = (self.working_byte << 2) & 0xFF
 				# This will determine the symbol value, from 0 at the lowest, to 3 at the highest.
@@ -371,16 +377,18 @@ class FourLevelSlicer:
 					or (self.last_sample >= 0.0 and sample < 0.0)
 				):
 				# zero crossing detected, adjust phase_clock
-				self.phase_clock = self.phase_clock * self.lock_rate
-				
+				phase_clock_error = self.phase_clock
+				self.phase_clock = int(self.phase_clock * self.lock_rate)
+
 			# save this sample to compare with the next for zero-crossing detect
 			self.last_sample = sample
 			threshold_stream.append(self.threshold)
+			phase_error_stream.append(phase_clock_error)
 		plot.figure()
-		#plot.plot(symbol_stream)
-		#plot.plot(value_stream)
+		plot.plot(symbol_stream)
 		plot.plot(sample_stream, '.')
 		plot.plot(samples)
-		plot.plot(threshold_stream)
+		#plot.plot(threshold_stream)
+		plot.plot(phase_error_stream)
 		plot.show()
 		return result
