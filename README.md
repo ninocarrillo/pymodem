@@ -13,7 +13,7 @@ The operation of Pymodem is specified at runtime by a config file. The config fi
 ## Modems
 - AFSK in 1200 bps and 300 bps formats
 - BPSK in 1200 bps and 300 bps formats
-- QPSK in 600 bps and 2400 bps formats
+- QPSK in 600 bps and 2400 bps, and 3600 bps formats
 - FSK in 9600 bps and 4800 bps formats
 
 Arbitrary modes can be described for all modems in the configuration .json passed at program start.
