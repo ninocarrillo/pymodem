@@ -5,7 +5,7 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
-from matplotlib import pyplot as plot
+#from matplotlib import pyplot as plot
 
 class BinarySlicer:
 
@@ -385,11 +385,11 @@ class FourLevelSlicer:
 			self.last_sample = sample
 			threshold_stream.append(self.threshold)
 			phase_error_stream.append(phase_clock_error)
-		plot.figure()
-		plot.plot(symbol_stream)
-		plot.plot(sample_stream, '.')
-		plot.plot(samples)
+		#plot.figure()
+		#plot.plot(symbol_stream)
+		#plot.plot(sample_stream, '.')
+		#plot.plot(samples)
 		#plot.plot(threshold_stream)
-		plot.plot(phase_error_stream)
-		plot.show()
+		#plot.plot(phase_error_stream)
+		#plot.show()
 		return result

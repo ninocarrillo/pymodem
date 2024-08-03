@@ -10,7 +10,7 @@ from numpy import arange, sin, cos, pi, convolve, sqrt
 from modems_codecs.rrc import RRC
 from modems_codecs.string_ops import check_boolean
 from modems_codecs.agc import AGC
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 class FSKModem:
 
