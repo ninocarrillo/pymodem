@@ -319,9 +319,7 @@ class FourLevelSlicer:
 		value_stream = []
 		symbol_stream = []
 		threshold_stream = []
-		#self.phase_clock_step = 32768
 		self.phase_clock_step = 1.0
-		self.phase_clock_step *= (1 + 500e-6)
 		freq_stream = []
 		phase_error_stream = []
 		phase_clock_error = 0
@@ -338,7 +336,7 @@ class FourLevelSlicer:
 				threshold_index += 1
 				if threshold_index >= threshold_depth:
 					threshold_index = 0
-				threshold_samples[threshold_index] = (abs(sample) * 2.0 / 3.0) * 1.0
+				threshold_samples[threshold_index] = (abs(sample) * 2.0 / 3.0) * 1.08
 				self.sync_register = (self.sync_register << 1) & 0xFFFF
 				if sample > 0:
 					self.sync_register += 1

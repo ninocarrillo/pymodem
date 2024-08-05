@@ -41,7 +41,7 @@ def hamming_decode(data):
 	result = hamming_decode_table[int(data) & 0x7F]
 	return result
 
-def bit_distance_24(data_a, data_b):
+def bit_distance_32(data_a, data_b):
 	Distance8 = [
 			0, 1, 1, 2, 1, 2, 2, 3,
 			1, 2, 2, 3, 2, 3, 3, 4,
@@ -77,7 +77,7 @@ def bit_distance_24(data_a, data_b):
 			5, 6, 6, 7, 6, 7, 7, 8
 		]
 	result = 0
-	for index in range(3):
+	for index in range(4):
 		a = data_a & 0xFF
 		b = data_b & 0xFF
 		data_a >>= 8
@@ -180,7 +180,7 @@ class IL2PCodec:
 				print("Successful RS block decode with corrected errors: ", rs_result)
 			self.bytes_corrected += rs_result
 
-	def dump_header_hex(self):	
+	def dump_header_hex(self):
 		for i in range(13):
 			print(hex(self.buffer[i]), end=' ')
 		print("end header")
@@ -365,11 +365,11 @@ class IL2PCodec:
 			self.working_packet.SourceDecoder = self.identifier
 			for input_bit_index in range(8):
 				if self.state == 'sync_search':
-					self.get_a_bit(0xFFFFFF)
+					self.get_a_bit(0xFFFFFFFF)
 					if ( \
-							(bit_distance_24(self.working_word, 0xF15E48) <= self.sync_tolerance) \
+							(bit_distance_32(self.working_word & 0xFFFFFF, 0xF15E48) <= self.sync_tolerance) \
 							or \
-							(bit_distance_24(self.working_word, 0x57DF7F) <= self.sync_tolerance) \
+							(bit_distance_32(self.working_word & 0xFFFFFFFF, 0x5D57DF7F) <= self.sync_tolerance) \
 					):
 						print("Syncword: ", hex(self.working_word))
 						self.bit_index = 0
