@@ -5,7 +5,7 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
-#from matplotlib import pyplot as plot
+from matplotlib import pyplot as plot
 
 class BinarySlicer:
 
@@ -252,7 +252,7 @@ class FourLevelSlicer:
 		elif self.definition == '9600':
 			self.symbol_rate = 9600
 			self.lock_rate = 0.985
-			self.threshold = 23000
+			self.threshold = 0
 		self.symbol_map = [1, 3, -1, -3]
 
 		self.tune()
@@ -323,25 +323,31 @@ class FourLevelSlicer:
 		freq_stream = []
 		phase_error_stream = []
 		phase_clock_error = 0
+		self.phase_clock_2 = 0.0
 		for sample in samples:
 			self.streamaddress += 1
 			# increment phase clocks
 			self.phase_clock += self.phase_clock_step
 			# check for symbol center
 			if self.phase_clock > self.rollover_threshold:
-				sample_stream.append(sample)
 				# at or past symbol center, reset phase_clock
 				self.phase_clock -= self.samples_per_symbol
 
 				threshold_index += 1
 				if threshold_index >= threshold_depth:
 					threshold_index = 0
-				threshold_samples[threshold_index] = (abs(sample) * 2.0 / 3.0) * 1.08
+				threshold_samples[threshold_index] = (abs(sample) * 2.0 / 3.0) * 1.0
 				self.sync_register = (self.sync_register << 1) & 0xFFFF
 				if sample > 0:
 					self.sync_register += 1
 				if (self.sync_register == 0x5555):
 					self.threshold = sum(threshold_samples) / threshold_depth
+					self.phase_clock_2 = self.phase_clock
+
+			self.phase_clock_2 += self.phase_clock_step
+			if self.phase_clock_2 > self.rollover_threshold:
+				self.phase_clock_2 -= self.samples_per_symbol
+				sample_stream.append(sample)
 
 				# shift and bound the working byte
 				self.working_byte = (self.working_byte << 2) & 0xFF
@@ -368,8 +374,8 @@ class FourLevelSlicer:
 					result.append(AddressedData(self.working_byte, self.streamaddress))
 			else:
 				sample_stream.append(0)
-				value_stream.append(-2)
-				symbol_stream.append(-1)
+			#	value_stream.append(-2)
+			#	symbol_stream.append(-1)
 			# check for zero-crossing in sample stream
 			if (
 					(self.last_sample < 0.0 and sample >= 0.0)
@@ -383,11 +389,11 @@ class FourLevelSlicer:
 			self.last_sample = sample
 			threshold_stream.append(self.threshold)
 			phase_error_stream.append(phase_clock_error)
-		#plot.figure()
-		#plot.plot(symbol_stream)
-		#plot.plot(sample_stream, '.')
-		#plot.plot(samples)
-		#plot.plot(threshold_stream)
+		plot.figure()
+		plot.plot(symbol_stream)
+		plot.plot(sample_stream, '.')
+		plot.plot(samples)
+		plot.plot(threshold_stream)
 		#plot.plot(phase_error_stream)
-		#plot.show()
+		plot.show()
 		return result

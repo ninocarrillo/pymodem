@@ -73,8 +73,8 @@ class FSKModem:
 			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 4800.0			# symbols per second (or baud)
 			self.input_filter_type = 'lpf'
-			self.input_lpf_cutoff = 10000
-			self.input_lpf_span = 2			# Number of symbols to span with the input
+			self.input_lpf_cutoff = 0.9 * self.symbol_rate
+			self.input_lpf_span = 4			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False
@@ -85,8 +85,8 @@ class FSKModem:
 			self.agc_decay_rate = 3			# Normalized to full scale
 			self.symbol_rate = 9600.0			# symbols per second (or baud)
 			self.input_filter_type = 'lpf'
-			self.input_lpf_cutoff = 15000
-			self.input_lpf_span = 2			# Number of symbols to span with the input
+			self.input_lpf_cutoff = 0.9 * self.symbol_rate
+			self.input_lpf_span = 4			# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 			self.invert = False
@@ -152,8 +152,6 @@ class FSKModem:
 
 		if self.invert:
 			audio = -audio
-		# perform AGC on the audio samples, saving over the original samples
-		#self.AGC.apply(audio)
 		#plt.figure()
 		#plt.plot(audio)
 		#plt.plot(self.AGC.envelope_buffer)

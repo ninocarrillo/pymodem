@@ -18,6 +18,28 @@ def print_to_string(*args, **kwargs):
     return contents
 # end found on stack overflow
 
+def ValidateHeader(frame):
+	count = len(frame)
+	index = 0
+	result = True
+	if (count > 15):
+		address_extension_bit = 0
+		subfield_index = 0
+		subfield_character_index = 0
+		while (index < count):
+			working_character = int(frame[index])
+			if (working_character & 0b1) == 1:
+				address_extension_bit = 1
+			working_character = working_character >> 1
+			if subfield_character_index < 7:
+				if working_character < 32 or working_character > 126:
+					result = False
+			index += 1
+			subfield_character_index += 1
+	else:
+		result = False
+	return result
+
 def print_ax25_header_to_string(frame, delimiter):
 	string_output = ''
 	count = len(frame)
@@ -180,6 +202,11 @@ class PacketMeta:
 		self.ValidCRC = result[2]
 		return self.ValidCRC
 
+	def Validate(self):
+		self.ValidHeader = False
+		result = ValidateHeader(self.data)
+		self.ValidHeader = result
+
 class PacketMetaArray:
 
 	def __init__(self):
@@ -193,6 +220,12 @@ class PacketMetaArray:
 		for array in self.raw_packet_arrays:
 			for packet in array:
 				packet.CalcCRC()
+				packet.Validate()
+
+	def ValidateSourceHeaders(self):
+		for array in self.raw_packet_arrays:
+			for packet in array:
+				packet.ValidateHeader()
 
 	def Correlate(self, **kwargs):
 		self.address_distance = kwargs.get('address_distance', 10000)
@@ -242,7 +275,7 @@ class PacketMetaArray:
 		self.bad_count = 0
 		for packet_array in self.raw_packet_arrays:
 			for packet in packet_array:
-				if packet.ValidCRC == False:
+				if (packet.ValidCRC == False) or (packet.ValidHeader == False):
 					self.bad_count += 1
 		return self.bad_count
 
@@ -273,7 +306,7 @@ class PacketMetaArray:
 		# now print results
 		self.good_count = 0
 		for packet in self.unique_packet_array:
-			if packet.ValidCRC:
+			if packet.ValidCRC and packet.ValidHeader:
 				self.good_count += 1
 		return self.good_count
 
@@ -282,7 +315,7 @@ class PacketMetaArray:
 		# now print results
 		self.good_count = 0
 		for packet in self.unique_packet_array:
-			if packet.ValidCRC:
+			if packet.ValidCRC and packet.ValidHeader:
 				self.good_count += 1
 				string_output += print_to_string("Packet number: ", self.good_count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 				string_output += print_to_string("source decoders: ", packet.CorrelatedDecoders)
@@ -305,7 +338,7 @@ class PacketMetaArray:
 			string_output += print_to_string("CRC saves: ", self.CountBad())
 		elif order.style == 'decoded_headers':
 			for packet in self.unique_packet_array:
-				if packet.ValidCRC:
+				if packet.ValidCRC and packet.ValidHeader:
 					count += 1
 					string_output += print_to_string("\n\nPacket number: ", count, " CRC: ", hex(packet.CalculatedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("Source decoders: ", packet.CorrelatedDecoders)
