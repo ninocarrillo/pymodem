@@ -247,11 +247,11 @@ class FourLevelSlicer:
 		self.definition = kwargs.get('config', '4800')
 
 		if self.definition == '4800':
-			self.fast_envelope_attack_rate = 50
-			self.fast_envelope_sustain_time = 1/4800
+			self.fast_envelope_attack_rate = 1000000
+			self.fast_envelope_sustain_time = 2/4800
 			self.fast_envelope_decay_rate = 50
 			self.slow_envelope_attack_rate = 50
-			self.slow_envelope_sustain_time = 20/4800
+			self.slow_envelope_sustain_time = 40/4800
 			self.slow_envelope_decay_rate = 50
 			self.symbol_rate = 4800
 			self.lock_rate = 0.985
@@ -365,8 +365,6 @@ class FourLevelSlicer:
 			fast_envelope.append(self.FastEnvelope.envelope)
 			slow_envelope.append(self.SlowEnvelope.envelope)
 
-			sample = sample - self.SlowEnvelope.zero
-
 			# increment phase clocks
 			self.phase_clock += self.phase_clock_step
 			# check for symbol center
@@ -381,7 +379,7 @@ class FourLevelSlicer:
 				self.sync_register = (self.sync_register << 1) & 0xFFFF
 				if sample > 0:
 					self.sync_register += 1
-				if (self.sync_register == 0x5555):
+				if (self.sync_register == 0x5555) or (self.sync_register == 0xCCCC):
 					self.threshold = sum(threshold_samples) / threshold_depth
 					self.phase_clock_2 = self.phase_clock
 
@@ -394,12 +392,12 @@ class FourLevelSlicer:
 				self.working_byte = (self.working_byte << 2) & 0xFF
 				# This will determine the symbol value, from 0 at the lowest, to 3 at the highest.
 				if sample > 0:
-					if sample >= self.threshold:
+					if sample >= (self.threshold):
 						symbol = 3
 					else:
 						symbol = 2
 				else:
-					if sample <= -self.threshold:
+					if sample <= (-self.threshold):
 						symbol = 0
 					else:
 						symbol = 1
