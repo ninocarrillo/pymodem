@@ -6,6 +6,7 @@
 
 from modems_codecs.data_classes import AddressedData
 from matplotlib import pyplot as plot
+from modems_codecs.agc import AGC
 
 class BinarySlicer:
 
@@ -246,10 +247,22 @@ class FourLevelSlicer:
 		self.definition = kwargs.get('config', '4800')
 
 		if self.definition == '4800':
+			self.fast_envelope_attack_rate = 50
+			self.fast_envelope_sustain_time = 1/4800
+			self.fast_envelope_decay_rate = 50
+			self.slow_envelope_attack_rate = 50
+			self.slow_envelope_sustain_time = 20/4800
+			self.slow_envelope_decay_rate = 50
 			self.symbol_rate = 4800
 			self.lock_rate = 0.985
 			self.threshold = 0
 		elif self.definition == '9600':
+			self.fast_envelope_attack_rate = 1000000
+			self.fast_envelope_sustain_time = 2/9600
+			self.fast_envelope_decay_rate = 50
+			self.slow_envelope_attack_rate = 50
+			self.slow_envelope_sustain_time = 40/9600
+			self.slow_envelope_decay_rate = 50
 			self.symbol_rate = 9600
 			self.lock_rate = 0.985
 			self.threshold = 0
@@ -295,6 +308,23 @@ class FourLevelSlicer:
 		print("demap: ", self.demap)
 		print("lock rate :", self.lock_rate)
 
+		self.FastEnvelope = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.fast_envelope_attack_rate,
+			sustain_time = self.fast_envelope_sustain_time,
+			decay_rate = self.fast_envelope_decay_rate,
+			target_amplitude = 32768,
+			record_envelope = True
+		)
+		self.SlowEnvelope = AGC(
+			sample_rate = self.sample_rate,
+			attack_rate = self.slow_envelope_attack_rate,
+			sustain_time = self.slow_envelope_sustain_time,
+			decay_rate = self.slow_envelope_decay_rate,
+			target_amplitude = 32768,
+			record_envelope = True
+		)
+
 	def slice(self, samples):
 		# This method will attempt to resynchronize a 4-level symbol stream,
 		# make symbol decisions at resynchronized symbol centers, and store the
@@ -319,6 +349,8 @@ class FourLevelSlicer:
 		value_stream = []
 		symbol_stream = []
 		threshold_stream = []
+		fast_envelope = []
+		slow_envelope = []
 		self.phase_clock_step = 1.0
 		freq_stream = []
 		phase_error_stream = []
@@ -326,6 +358,15 @@ class FourLevelSlicer:
 		self.phase_clock_2 = 0.0
 		for sample in samples:
 			self.streamaddress += 1
+
+			# detect the fast and slow envelopes:
+			self.FastEnvelope.simple_peak_detect(sample)
+			self.SlowEnvelope.simple_peak_detect(sample)
+			fast_envelope.append(self.FastEnvelope.envelope)
+			slow_envelope.append(self.SlowEnvelope.envelope)
+
+			sample = sample - self.SlowEnvelope.zero
+
 			# increment phase clocks
 			self.phase_clock += self.phase_clock_step
 			# check for symbol center
@@ -394,6 +435,8 @@ class FourLevelSlicer:
 		plot.plot(sample_stream, '.')
 		plot.plot(samples)
 		plot.plot(threshold_stream)
+		plot.plot(fast_envelope)
+		plot.plot(slow_envelope)
 		#plot.plot(phase_error_stream)
 		plot.show()
 		return result

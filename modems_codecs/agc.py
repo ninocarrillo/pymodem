@@ -16,6 +16,9 @@ class AGC:
 		self.scaled_decay_rate = self.decay_rate / self.sample_rate
 		self.sustain_increment = 1 / self.sample_rate
 		self.envelope = 0
+		self.positive_envelope = 0
+		self.negative_envelope = 0
+		self.zero = 0
 		self.normal = 1.0
 		self.envelope_buffer = []
 		self.sustain_count = 0
@@ -31,6 +34,28 @@ class AGC:
 			self.envelope -= (self.scaled_decay_rate * self.normal)
 			if self.envelope < 0:
 				self.envelope = 0
+		self.sustain_count += self.sustain_increment
+
+	def simple_peak_detect(self, sample):
+		if sample > self.positive_envelope:
+			self.positive_envelope += self.attack_rate
+			if self.positive_envelope > sample:
+				self.positive_envelope = sample
+			self.sustain_count = 0.0
+		elif sample < self.negative_envelope:
+			self.negative_envelope -= self.attack_rate
+			if self.negative_envelope < sample:
+				self.negative_envelope = sample
+			self.sustain_count = 0.0
+		if self.sustain_count >= self.sustain_time:
+			self.positive_envelope -= self.decay_rate
+			if self.positive_envelope < 0:
+				self.positive_envelope = 0
+			self.negative_envelope += self.decay_rate
+			if self.negative_envelope > 0:
+				self.negative_envelope = 0
+		self.envelope = (self.positive_envelope - self.negative_envelope) / 2
+		self.zero = self.negative_envelope + self.envelope
 		self.sustain_count += self.sustain_increment
 
 	def apply(self, buffer):
