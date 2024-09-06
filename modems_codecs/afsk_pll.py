@@ -36,7 +36,7 @@ class AFSKPLLModem:
 			self.output_lpf_cutoff = 350.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 200*1.25
+			self.max_freq_offset = 50*1.25
 			self.LoopFilter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
@@ -44,7 +44,7 @@ class AFSKPLLModem:
 				gain=1.0
 			)
 			pi_p = 0.3
-			pi_i = pi_p/2500
+			pi_i = pi_p/6000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -167,8 +167,8 @@ class AFSKPLLModem:
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		#print(self.rrc)
-		plt.figure()
-		plt.plot(self.pi_i)
-		plt.plot(demod_audio)
-		plt.show()
+		#plt.figure()
+		#plt.plot(self.pi_i)
+		#plt.plot(demod_audio)
+		#plt.show()
 		return demod_audio
