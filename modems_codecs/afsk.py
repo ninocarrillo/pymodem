@@ -170,16 +170,16 @@ class AFSKModem:
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 		# Create the correlation products.
-		mark_rms = sqrt(
+		mark_mag = sqrt(
 			convolve(audio, self.mark_correlator_i, 'valid')**2
 			+ convolve(audio, self.mark_correlator_q, 'valid')**2
 		)
-		space_rms = sqrt(
+		space_mag = sqrt(
 			convolve(audio, self.space_correlator_i, 'valid')**2
 			+ convolve(audio, self.space_correlator_q, 'valid')**2
 		)
 		# The demodulated signal is mark-space:
-		audio = mark_rms - space_rms
+		audio = mark_mag - space_mag
 		# Apply the output filter:
 		if (self.output_oversample > 1.0):
 			audio = resample_poly(audio, self.output_oversample, 1)

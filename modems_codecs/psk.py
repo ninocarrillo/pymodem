@@ -6,7 +6,7 @@
 from scipy.signal import firwin
 from scipy.signal import remez
 from math import ceil, sin, pi, atan2
-from numpy import convolve, zeros
+from numpy import convolve, zeros, log
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
@@ -16,7 +16,7 @@ from modems_codecs.nco import NCO
 from modems_codecs.hilbert import Hilbert
 from modems_codecs.complexmath import ComplexNumber
 from modems_codecs.phase_detector import PhaseDetector
-#from matplotlib import pyplot as plot
+from matplotlib import pyplot as plot
 
 class BPSKModem:
 
@@ -161,8 +161,22 @@ class BPSKModem:
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
+		
+		instantaneous_power = []
+		power_sampling_filter = firwin(
+			int(self.sample_rate / 50),
+			[ 3000 ],
+			pass_zero='lowpass',
+			fs=self.sample_rate,
+			scale=True
+		)
+		power_audio = convolve(input_audio, power_sampling_filter)
+		for power_sample in power_audio:
+			instantaneous_power.append(10*log(power_sample**2))
+		
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
+		
 
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
@@ -191,9 +205,17 @@ class BPSKModem:
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		demod_audio = convolve(demod_audio, self.rrc.taps, 'valid')
+		#power_filter = firwin(
+		#	int(self.sample_rate / 5),
+		#	[ 30 ],
+		#	pass_zero='lowpass',
+		#	fs=self.sample_rate,
+		#	scale=True
+		#)
 		#print(self.rrc)
 		#plot.figure()
 		#plot.plot(self.loop_output)
+		#plot.plot(convolve(instantaneous_power, power_filter))
 		#plot.show()
 		return demod_audio
 
@@ -749,20 +771,20 @@ class MPSKModem:
 		demod_audio.q_data = convolve(demod_audio.q_data, self.rrc.taps, 'valid')
 
 
-		#plot.figure()
-		#plot.subplot(221)
-		#plot.plot(angle)
-		#plot.title("Output Phase")
-		#plot.subplot(222)
-		#plot.plot(angle_error)
-		#plot.title("Angle Error")
-		#plot.subplot(121)
-		#plot.plot(control)
-		#plot.title("NCO Control")
-		#plot.subplot(122)
-		#plot.plot(integral)
-		#plot.title("PI Integral")
-		#plot.show()
+		# plot.figure()
+		# plot.subplot(221)
+		# plot.plot(angle)
+		# plot.title("Output Phase")
+		# plot.subplot(222)
+		# plot.plot(angle_error)
+		# plot.title("Angle Error")
+		# plot.subplot(121)
+		# plot.plot(control)
+		# plot.title("NCO Control")
+		# plot.subplot(122)
+		# plot.plot(integral)
+		# plot.title("PI Integral")
+		# plot.show()
 		# plot.figure()
 		# plot.plot(demod_audio.i_data)
 		# plot.plot(demod_audio.q_data)
