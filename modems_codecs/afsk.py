@@ -159,14 +159,7 @@ class AFSKModem:
 		self.output_sample_rate = self.output_oversample*self.sample_rate
 
 	def demod(self, input_audio):
-		#print("\nLPF tap count: ", len(self.output_lpf))
-		#print("\nLPF taps:")
-		#for tap in self.output_lpf:
-		#	print(f'{int(round(tap*32768))}, ', end='')
-		#print("\nBPF tap count: ", len(self.input_bpf))
-		#print("\nBPF taps:")
-		#for tap in self.input_bpf:
-		#	print(f'{int(round(tap*32768))}, ', end='')
+
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 		# Create the correlation products.
