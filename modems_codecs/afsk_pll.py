@@ -5,14 +5,14 @@
 
 from scipy.signal import firwin
 from math import ceil, sin, pi
-from numpy import convolve, zeros
+from numpy import convolve, zeros, log
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plot
 
 class AFSKPLLModem:
 
@@ -139,6 +139,18 @@ class AFSKPLLModem:
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
+		instantaneous_power = []
+		power_sampling_filter = firwin(
+			int(self.sample_rate / 50),
+			[ 3000 ],
+			pass_zero='lowpass',
+			fs=self.sample_rate,
+			scale=True
+		)
+		power_audio = convolve(input_audio, power_sampling_filter)
+		for power_sample in power_audio:
+			instantaneous_power.append(10*log(power_sample**2))
+
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 
@@ -166,9 +178,16 @@ class AFSKPLLModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
-		#print(self.rrc)
-		#plt.figure()
-		#plt.plot(self.pi_i)
-		#plt.plot(demod_audio)
-		#plt.show()
+
+		power_filter = firwin(
+			int(self.sample_rate / 10),
+			[ 30 ],
+			pass_zero='lowpass',
+			fs=self.sample_rate,
+			scale=True
+		)
+		#plot.figure()
+		#plot.plot(convolve(instantaneous_power, power_filter))
+		#plot.show()
+
 		return demod_audio

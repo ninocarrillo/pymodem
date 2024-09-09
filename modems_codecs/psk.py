@@ -176,13 +176,13 @@ class BPSKModem:
 		
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
-		
 
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
 
 		self.loop_output = []
 		demod_audio = []
+		filtered_power = []
 		# This is a costas loop
 		for sample in audio:
 			self.NCO.update()
@@ -201,21 +201,22 @@ class BPSKModem:
 			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF.output)
 			self.loop_output.append(self.FeedbackController.integral)
 			demod_audio.append(i_mixer)
+			filtered_power.append(10*log(sample**2))
 
 		# Apply the output filter:
 		#demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
 		demod_audio = convolve(demod_audio, self.rrc.taps, 'valid')
-		#power_filter = firwin(
-		#	int(self.sample_rate / 5),
-		#	[ 30 ],
-		#	pass_zero='lowpass',
-		#	fs=self.sample_rate,
-		#	scale=True
-		#)
-		#print(self.rrc)
+		
+		power_filter = firwin(
+			int(self.sample_rate / 10),
+			[ 30 ],
+			pass_zero='lowpass',
+			fs=self.sample_rate,
+			scale=True
+		)
 		#plot.figure()
-		#plot.plot(self.loop_output)
 		#plot.plot(convolve(instantaneous_power, power_filter))
+		#plot.plot(convolve(filtered_power, power_filter))
 		#plot.show()
 		return demod_audio
 
