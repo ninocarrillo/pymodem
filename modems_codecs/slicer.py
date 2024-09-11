@@ -27,6 +27,9 @@ class BinarySlicer:
 		elif self.definition == '9600':
 			self.symbol_rate = 9600
 			self.lock_rate = 0.88
+		elif self.definition == '4800':
+			self.symbol_rate = 4800
+			self.lock_rate = 0.88
 		else:
 			self.symbol_rate = 1200
 			self.lock_rate = 0.75
