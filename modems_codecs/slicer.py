@@ -5,7 +5,6 @@
 # 30 Mar 2024
 
 from modems_codecs.data_classes import AddressedData
-from matplotlib import pyplot as plot
 
 class BinarySlicer:
 
