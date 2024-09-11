@@ -4,7 +4,6 @@
 # 17 May 2024
 
 from math import pi, sin, atan, atan2, sqrt
-from matplotlib import pyplot as plot
 
 
 class ComplexNumber:
