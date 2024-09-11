@@ -12,7 +12,6 @@ from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
-from matplotlib import pyplot as plot
 
 class AFSKPLLModem:
 
