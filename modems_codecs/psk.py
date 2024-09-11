@@ -16,7 +16,6 @@ from modems_codecs.nco import NCO
 from modems_codecs.hilbert import Hilbert
 from modems_codecs.complexmath import ComplexNumber
 from modems_codecs.phase_detector import PhaseDetector
-from matplotlib import pyplot as plot
 
 class BPSKModem:
 
