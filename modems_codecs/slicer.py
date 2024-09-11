@@ -6,7 +6,6 @@
 
 from modems_codecs.data_classes import AddressedData
 from matplotlib import pyplot as plot
-from modems_codecs.agc import AGC
 
 class BinarySlicer:
 
