@@ -6,7 +6,6 @@
 from modems_codecs.complexmath import ComplexNumber
 from math import pi, sin, atan, atan2, sqrt
 from numpy import floor
-from matplotlib import pyplot as plot
 
 
 class PhaseDetector:
