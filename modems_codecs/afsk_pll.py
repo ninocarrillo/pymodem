@@ -139,17 +139,6 @@ class AFSKPLLModem:
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
-		instantaneous_power = []
-		power_sampling_filter = firwin(
-			int(self.sample_rate / 50),
-			[ 3000 ],
-			pass_zero='lowpass',
-			fs=self.sample_rate,
-			scale=True
-		)
-		power_audio = convolve(input_audio, power_sampling_filter)
-		for power_sample in power_audio:
-			instantaneous_power.append(10*log(power_sample**2))
 
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
@@ -178,16 +167,5 @@ class AFSKPLLModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
-
-		power_filter = firwin(
-			int(self.sample_rate / 10),
-			[ 30 ],
-			pass_zero='lowpass',
-			fs=self.sample_rate,
-			scale=True
-		)
-		#plot.figure()
-		#plot.plot(convolve(instantaneous_power, power_filter))
-		#plot.show()
 
 		return demod_audio
