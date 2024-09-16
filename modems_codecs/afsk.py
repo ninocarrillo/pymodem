@@ -25,8 +25,8 @@ class AFSKModem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.mark_freq = 1600.0				# mark tone frequency
-			self.space_freq = 1800.0				# space tone frequency
+			self.mark_freq = 1625.0				# mark tone frequency
+			self.space_freq = 1775.0				# space tone frequency
 			self.space_gain = 1.0				# gain correction for space tone correlator
 											# for optimizing emphasized audio.
 											# 1.0 recommended for flat audio, around 1.7
@@ -132,7 +132,6 @@ class AFSKModem:
 		# Computing the time indices in steps. First, create an ascending count,
 		# one count for each sample in the symbol-time.
 		time_indices = arange(ceil(self.correlator_span * self.sample_rate / self.symbol_rate))
-		#print(chirp)
 		# Now scale the time indices according to frequency.
 		mark_indices = time_indices * (2.0 * pi * (self.mark_freq + self.correlator_offset) / self.sample_rate)
 		# Calculate the mark waveforms.
