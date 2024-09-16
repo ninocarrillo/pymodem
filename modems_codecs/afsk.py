@@ -33,12 +33,12 @@ class AFSKModem:
 											# for de-emphasized audio.
 											# Implement multiple parallel demodulators
 											# to handle general cases.
-			self.output_lpf_cutoff = 350.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 240.0		# low pass filter cutoff frequency for
 											# output signal after correlators
 			self.output_lpf_span = 2.5			# Number of symbols to span with the output
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
-			self.correlator_span = 0.5		# correlator span in symbols
+			self.correlator_span = 0.3			# correlator span in symbols
 			self.correlator_offset = 0.0		# frequency offset for correlator in hz
 		else:
 			# set some default values for 1200 bps AFSK:
@@ -125,19 +125,6 @@ class AFSKModem:
 			fs=self.sample_rate
 		)
 
-		# print("Sample Rate: ", self.sample_rate)
-		# print("Input BPF Tap Count: ", len(self.input_bpf))
-		# print("Input BPF Taps: ")
-		# for tap in self.input_bpf:
-			# print(int(round(tap * 32768,0)), end=', ')
-		# print(" ")
-
-		# print("Output LPF Tap Count: ", len(self.output_lpf))
-		# print("Output LPF Taps: ")
-		# for tap in self.output_lpf:
-			# print(int(round(tap * 32768,0)), end=', ')
-		# print(" ")
-
 		# Create quadrature correlators for mark and space tones. Quadrature means
 		# we will have two tone patterns at each frequency, with 90 degrees of
 		# phase difference (sine and cosine).
@@ -145,6 +132,7 @@ class AFSKModem:
 		# Computing the time indices in steps. First, create an ascending count,
 		# one count for each sample in the symbol-time.
 		time_indices = arange(ceil(self.correlator_span * self.sample_rate / self.symbol_rate))
+		#print(chirp)
 		# Now scale the time indices according to frequency.
 		mark_indices = time_indices * (2.0 * pi * (self.mark_freq + self.correlator_offset) / self.sample_rate)
 		# Calculate the mark waveforms.
