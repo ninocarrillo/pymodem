@@ -522,7 +522,7 @@ class MPSKModem:
 			self.input_bpf_span = 5.1			# milliseconds spanned by input filter
 			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 5
+			self.max_freq_offset = 15
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
@@ -698,6 +698,9 @@ class MPSKModem:
 			rolloff_rate = self.rrc_rolloff_rate
 		)
 		self.output_sample_rate = self.sample_rate
+
+		# force costas loop to start at maximum frequency offset
+		self.FeedbackController.integral = -self.max_freq_offset
 
 	def demod(self, input_audio):
 
