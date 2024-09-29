@@ -237,9 +237,11 @@ class QPSKModem:
 				cutoff=100.0,
 				gain=1.0
 			)
+			pi_p = 0.02
+			pi_i = pi_p / 651
 			self.FeedbackController = PI_control(
-				p= 0.020,
-				i= 0.000031,
+				p= pi_p,
+				i= pi_i,
 				i_limit=self.max_freq_offset,
 				gain= 858
 			)
@@ -529,7 +531,7 @@ class MPSKModem:
 				cutoff= 150,
 				gain= 1
 			)
-			pi_p = 0.11
+			pi_p = 0.05
 			pi_i = pi_p / 1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
