@@ -25,8 +25,8 @@ class AFSKModem:
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.mark_freq = 1625.0				# mark tone frequency
-			self.space_freq = 1775.0				# space tone frequency
+			self.mark_freq = 1695.0				# mark tone frequency
+			self.space_freq = 1705.0				# space tone frequency
 			self.space_gain = 1.0				# gain correction for space tone correlator
 											# for optimizing emphasized audio.
 											# 1.0 recommended for flat audio, around 1.7
