@@ -27,15 +27,15 @@ class AFSKPLLModem:
 			self.symbol_rate = 300.0			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1500.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1900.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 6.0		# Number of symbols to span with the input
+			self.input_bpf_span = 7.0		# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
 			self.carrier_freq = 1700.0				# carrier tone frequency
-			self.output_lpf_cutoff = 350.0		# low pass filter cutoff frequency for
+			self.output_lpf_cutoff = 240.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
-			self.output_lpf_span = 1.5			# Number of symbols to span with the output
-			self.max_freq_offset = 50*1.25
+			self.output_lpf_span = 5			# Number of symbols to span with the output
+			self.max_freq_offset = 200
 			self.LoopFilter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
