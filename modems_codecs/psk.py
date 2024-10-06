@@ -519,10 +519,10 @@ class MPSKModem:
 			self.symbol_rate = 300			# symbols per second (or baud)
 			self.input_bpf_low_cutoff = 1200.0	# low cutoff frequency for input filter
 			self.input_bpf_high_cutoff = 1800.0	# high cutoff frequency for input filter
-			self.input_bpf_span = 5.1			# milliseconds spanned by input filter
+			self.input_bpf_span = 4			# milliseconds spanned by input filter
 			self.hilbert_span = 3.4			# milliseconds spanned by hilbert transformer
 			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 15
+			self.max_freq_offset = 25
 			self.rrc_rolloff_rate = 0.6
 			self.rrc_span = 6
 			self.Loop_LPF = IIR_1(
@@ -531,13 +531,13 @@ class MPSKModem:
 				cutoff= 150,
 				gain= 1
 			)
-			pi_p = 0.05
+			pi_p = 0.1
 			pi_i = pi_p / 1000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= (14400/65536)
+				gain= (7200/65536)
 			)
 		elif self.definition == "qpsk_2400":
 			self.constellation_id = 'qpsk'
