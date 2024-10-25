@@ -35,20 +35,20 @@ class AFSKPLLModem:
 			self.output_lpf_cutoff = 240.0		# low pass filter cutoff frequency for
 											# output signal after I/Q demodulation
 			self.output_lpf_span = 5			# Number of symbols to span with the output
-			self.max_freq_offset = 200
+			self.max_freq_offset = 50
 			self.LoopFilter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
 				cutoff=150.0,
 				gain=1.0
 			)
-			pi_p = 0.3
+			pi_p = 0.6
 			pi_i = pi_p/6000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
 				i_limit=self.max_freq_offset,
-				gain= 1800
+				gain= 900
 			)
 
 		self.oscillator_amplitude = 1.0
