@@ -172,7 +172,7 @@ def main():
 		results.add(decoded_data)
 
 	results.CalcCRCs()
-	results.Correlate(address_distance=input_sample_rate/4)
+	results.Correlate(address_distance=input_sample_rate/40)
 
 	for report_order in report_stack:
 		print(f"Generating {report_order[0]}")

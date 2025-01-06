@@ -32,7 +32,7 @@ def ValidateHeader(frame):
 				address_extension_bit = 1
 			working_character = working_character >> 1
 			if subfield_character_index < 7:
-				if working_character < 32 or working_character > 126:
+				if (working_character < 32 or working_character > 126) and (working_character != 0):
 					result = False
 			index += 1
 			subfield_character_index += 1
@@ -228,13 +228,13 @@ class PacketMetaArray:
 				packet.ValidateHeader()
 
 	def Correlate(self, **kwargs):
-		self.address_distance = kwargs.get('address_distance', 10000)
+		self.address_distance = kwargs.get('address_distance', 1000)
 		# Identify unique and duplicate packets based on stream address and CalculatedCRC
 		first_array = True
 		for raw_packet_array in self.raw_packet_arrays:
 			for raw_packet in raw_packet_array:
 				# only check validated packets
-				if raw_packet.ValidCRC:
+				if raw_packet.ValidCRC and raw_packet.ValidHeader:
 					# assume this packet is unique
 					is_unique = True
 					# everything in the first array is unique
@@ -249,6 +249,7 @@ class PacketMetaArray:
 									(raw_packet.CalculatedCRC == unique_packet.CalculatedCRC)
 								):
 									is_unique = False
+									# print(f"Not unique. Distance: {abs(raw_packet.streamaddress - unique_packet.streamaddress)}, {raw_packet.CalculatedCRC}, {unique_packet.CalculatedCRC}")
 									unique_packet.CorrelatedDecoders.append(raw_packet.SourceDecoder)
 									break
 					if is_unique:
@@ -284,9 +285,14 @@ class PacketMetaArray:
 		self.bad_count = 0
 		for packet_array in self.raw_packet_arrays:
 			for packet in packet_array:
-				if packet.ValidCRC == False:
+				if (packet.ValidCRC == False) or (packet.ValidHeader == False):
 					self.bad_count += 1
-					string_output += print_to_string("Valid IL2P Decode with Invalid CRC:")
+					string_bad = ''
+					if packet.ValidCRC == False:
+						string_bad += print_to_string(" bad CRC")
+					if packet.ValidHeader == False:
+						string_bad += print_to_string(" bad Header")
+					string_output += print_to_string(f"Frame with defect: {string_bad}")
 					string_output += print_to_string("Packet number: ", self.bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("source decoder: ", packet.SourceDecoder)
 					string_output += print_to_string("Packet byte count: ", len(packet.data))
