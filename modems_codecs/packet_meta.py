@@ -289,9 +289,9 @@ class PacketMetaArray:
 					self.bad_count += 1
 					string_bad = ''
 					if packet.ValidCRC == False:
-						string_bad += print_to_string(" bad CRC")
+						string_bad += print_to_string(" bad CRC", end='')
 					if packet.ValidHeader == False:
-						string_bad += print_to_string(" bad Header")
+						string_bad += print_to_string(" bad header", end='')
 					string_output += print_to_string(f"Frame with defect: {string_bad}")
 					string_output += print_to_string("Packet number: ", self.bad_count, "Calc CRC: ", hex(packet.CalculatedCRC), "Carried CRC: ", hex(packet.CarriedCRC), "stream address: ", packet.streamaddress)
 					string_output += print_to_string("source decoder: ", packet.SourceDecoder)
