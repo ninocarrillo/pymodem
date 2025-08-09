@@ -6,7 +6,7 @@
 from scipy.signal import firwin
 from scipy.signal import remez
 from math import ceil, sin, pi, atan2, sqrt
-from numpy import convolve, zeros, log, array
+from numpy import convolve, zeros, log, array, vstack
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
@@ -29,33 +29,45 @@ class BPSKMorseModem:
 			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
 			self.agc_sustain_time = 1.0	# sec
 			self.agc_decay_rate = 50.0			# Normalized to full scale / sec
-			self.symbol_rate = 10.0			# symbols per second (or baud)
-			self.input_bpf_low_cutoff = 1485.0	# low cutoff frequency for input filter
-			self.input_bpf_high_cutoff = 1515.0	# high cutoff frequency for input filter
+			self.symbol_rate = 17		# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 985.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 1015.0	# high cutoff frequency for input filter
 			self.input_bpf_span = 0.5		# Number of symbols to span with the input
 											# filter. This is used with the sampling
 											# rate to determine the tap count.
 											# more taps = shaper cutoff, more processing
-			self.carrier_freq = 1500.0				# carrier tone frequency
-			self.max_freq_offset = 25
-			self.output_lpf_cutoff = 20
+			self.carrier_freq = 1000.0				# carrier tone frequency
+			self.morse_tone_freq = 440.0
+			self.max_freq_offset = 10
+			self.output_lpf_cutoff = 15
 			self.output_lpf_span = 2
-			gain = 0.04
-			cutoff = 20
-			self.Loop_LPF_1 = IIR_1(
+			
+			
+			
+			LoopGain = 0.045
+			LoopCutoff = 50
+			BranchGain = 1
+			BranchCutoff = 200
+			self.Loop_Filter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=cutoff,
-				gain=gain
+				cutoff=LoopCutoff,
+				gain=LoopGain
 			)
-			self.Loop_LPF_2 = IIR_1(
+			self.I_Filter = IIR_1(
 				sample_rate=self.sample_rate,
 				filter_type='lpf',
-				cutoff=cutoff,
-				gain=sqrt(gain)
+				cutoff=BranchCutoff,
+				gain=BranchGain
+			)
+			self.Q_Filter = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=BranchCutoff,
+				gain=BranchGain
 			)
 			pi_p = 0.06
-			pi_i = pi_p / 1000
+			pi_i = pi_p / 2000
 			self.FeedbackController = PI_control(
 				p= pi_p,
 				i= pi_i,
@@ -140,11 +152,20 @@ class BPSKMorseModem:
 			wavetable_size = 256
 		)
 		
+		self.MorseNCO = NCO(
+			sample_rate = self.sample_rate,
+			amplitude = self.oscillator_amplitude,
+			set_frequency = self.morse_tone_freq,
+			wavetable_size = 256
+		)
+		
 		self.output_sample_rate = self.sample_rate
 
 	def demod(self, input_audio):
 
 		# Apply the input filter.
+		input_audio = convolve(input_audio, [1], 'valid')
+		input_audio = input_audio / 32768
 		audio = convolve(input_audio, self.input_bpf, 'valid')
 
 		# perform AGC on the audio samples, saving over the original samples
@@ -152,27 +173,35 @@ class BPSKMorseModem:
 
 		self.loop_output = []
 		demod_audio = []
-		demod_morse_audio = []
+		demod_morse_audio_l = []
+		demod_morse_audio_r = []
+		demod_morse_audio = zeros((len(audio),2))
 		# This is a costas loop
+		i = 0
 		for sample in audio:
 			self.NCO.update()
+			self.MorseNCO.update()
 			# mix the in phase oscillator output with the input signal
-			#i_mixer = sample * self.NCO.sine_output
-			i_mixer = sample * self.NCO.ComplexOutput.real
+			self.I_Filter.update(sample * self.NCO.ComplexOutput.real)
+			i_mixer = self.I_Filter.output
 			# The branch low-pass filters might not be needed when using a
 			# matched channel filter before slicing, like RRC.
 			# mix the quadrature phase oscillator output with the input signal
-			#q_mixer = sample * self.NCO.cosine_output
-			q_mixer = sample * self.NCO.ComplexOutput.imag
+			self.Q_Filter.update(sample * self.NCO.ComplexOutput.imag)
+			q_mixer = self.Q_Filter.output
 			loop_mixer = i_mixer * q_mixer
 			# low pass filter this product
-			self.Loop_LPF_1.update(loop_mixer)
-			self.Loop_LPF_2.update(self.Loop_LPF_1.output)
+			self.Loop_Filter.update(loop_mixer)
 			# use a P-I control feedback arrangement to update the oscillator frequency
-			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_LPF_1.output)
+			self.NCO.control = self.FeedbackController.update_saturate(self.Loop_Filter.output)
+			self.MorseNCO.control = self.NCO.control
 			self.loop_output.append(self.FeedbackController.integral)
 			demod_audio.append(i_mixer)
-			demod_morse_audio.append(self.NCO.ComplexOutput.real)
+			#demod_morse_audio_l.append(self.MorseNCO.ComplexOutput.real)
+			#demod_morse_audio_r.append(self.MorseNCO.ComplexOutput.real)
+			demod_morse_audio[i,0] = self.MorseNCO.ComplexOutput.real
+			demod_morse_audio[i,1] = self.MorseNCO.ComplexOutput.real
+			i = i + 1
 			#if (i_mixer > 0) :
 			#	demod_morse_audio.append(i_mixer * self.NCO.ComplexOutput.real)
 			#else:
@@ -180,14 +209,36 @@ class BPSKMorseModem:
 
 		# Apply the output filter:
 		demod_audio = convolve(demod_audio, self.output_lpf, 'full')
-		for i in range(len(demod_morse_audio)):
+		enable_count = 0
+		last_sample = 0
+		for i in range(len(demod_audio)):
+			enable_count = enable_count - 1
+			if enable_count < 0:
+				enable_count = 0
 			try:
-				if (demod_audio[i] > 0) :
-					demod_morse_audio[i] = demod_morse_audio[i] * demod_audio[i]
-				else:
-					demod_morse_audio[i] = 0
+				if (last_sample < 0):
+					if (demod_audio[i] > 0):
+						enable_count = round(self.sample_rate/self.symbol_rate)
 			except:
 				pass
+			last_sample = demod_audio[i]
+			
+			threshold = 0.2
+			gain = 2
+			try:
+				demod_morse_audio[i,0] = (2**gain)*(demod_audio[i]**gain) * demod_morse_audio[i,0]
+
+				demod_morse_audio[i,1] = input_audio[i]
+				#else:
+				#demod_morse_audio[i,0] = 0
+				#demod_morse_audio[i,1] = 0
+					
+
+					
+			except:
+				pass
+
+
 		plt.figure()
 		#plt.plot(audio)
 		plt.plot(demod_audio)
@@ -195,7 +246,8 @@ class BPSKMorseModem:
 		#plt.plot(demod_morse_audio)
 		plt.show()
 		
-		writewav("../demod_morse_audio.wav", int(self.sample_rate), array(demod_morse_audio, dtype='float32'))
+		#writewav("../demod_morse_audio.wav", int(self.sample_rate), array(demod_morse_audio_l, dtype='float32'))
+		writewav("../demod_morse_audio.wav", int(self.sample_rate), demod_morse_audio)
 		writewav("../filtered_audio.wav", int(self.sample_rate), array(audio, dtype='float32'))
 		
 
