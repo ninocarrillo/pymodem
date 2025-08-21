@@ -5,13 +5,14 @@
 
 from scipy.signal import firwin
 from math import ceil, sin, pi
-from numpy import convolve, zeros, log
+from numpy import convolve, zeros, log, ones
 from modems_codecs.agc import AGC
 from modems_codecs.rrc import RRC
 from modems_codecs.data_classes import IQData
 from modems_codecs.pi_control import PI_control
 from modems_codecs.iir import IIR_1
 from modems_codecs.nco import NCO
+from matplotlib import pyplot as plt
 
 class AFSKPLLModem:
 
@@ -51,8 +52,39 @@ class AFSKPLLModem:
 				gain= 900
 			)
 
-		self.oscillator_amplitude = 1.0
+		elif self.definition == '1200':
+			# set some default values for 1200 bps AFSK:
+			self.agc_attack_rate = 500.0		# Normalized to full scale / sec
+			self.agc_sustain_time = 0.0	# sec
+			self.agc_decay_rate = 2.5			# Normalized to full scale / sec
+			self.symbol_rate = 1200.0			# symbols per second (or baud)
+			self.input_bpf_low_cutoff = 900.0	# low cutoff frequency for input filter
+			self.input_bpf_high_cutoff = 2500.0	# high cutoff frequency for input filter
+			self.input_bpf_span = 3.7		# Number of symbols to span with the input
+											# filter. This is used with the sampling
+											# rate to determine the tap count.
+											# more taps = shaper cutoff, more processing
+			self.carrier_freq = 1700.0				# carrier tone frequency
+			self.output_lpf_cutoff = 900.0		# low pass filter cutoff frequency for
+											# output signal after I/Q demodulation
+			self.output_lpf_span = 5			# Number of symbols to span with the output
+			self.max_freq_offset = 50
+			self.LoopFilter = IIR_1(
+				sample_rate=self.sample_rate,
+				filter_type='lpf',
+				cutoff=2200.0,
+				gain=1.0
+			)
+			pi_p = 4.75
+			pi_i = 0
+			self.FeedbackController = PI_control(
+				p= pi_p,
+				i= pi_i,
+				i_limit=self.max_freq_offset,
+				gain= 900
+			)
 
+		self.oscillator_amplitude = 1.0
 
 
 		self.tune()
@@ -107,6 +139,8 @@ class AFSKPLLModem:
 			scale=True
 		)
 
+		#self.output_lpf = ones(ceil(self.sample_rate / self.symbol_rate))
+
 		# print("Sample Rate: ", self.sample_rate)
 		# print("Input BPF Tap Count: ", len(self.input_bpf))
 		# print("Input BPF Taps: ")
@@ -141,6 +175,7 @@ class AFSKPLLModem:
 
 		# Apply the input filter.
 		audio = convolve(input_audio, self.input_bpf, 'valid')
+		#audio = input_audio
 
 		# perform AGC on the audio samples, saving over the original samples
 		self.AGC.apply(audio)
@@ -165,6 +200,10 @@ class AFSKPLLModem:
 			self.pi_i.append(self.FeedbackController.integral)
 
 		# Apply the output filter:
+		#plt.figure()
+		#plt.plot(demod_audio)
 		demod_audio = convolve(demod_audio, self.output_lpf, 'valid')
+		#plt.plot(demod_audio)
+		#plt.show()
 
 		return demod_audio

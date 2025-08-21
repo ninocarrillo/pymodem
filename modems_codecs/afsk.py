@@ -6,7 +6,7 @@
 
 from scipy.signal import firwin, resample_poly
 from math import ceil
-from numpy import arange, sin, cos, pi, convolve, sqrt
+from numpy import arange, sin, cos, pi, convolve, sqrt, ones
 from numpy import abs as npabs
 from numpy.fft import fft
 
@@ -125,6 +125,9 @@ class AFSKModem:
 			fs=self.sample_rate
 		)
 
+		self.output_lpf = ones(ceil(self.sample_rate / self.symbol_rate))
+		#self.output_lpf = [1]
+
 		# Create quadrature correlators for mark and space tones. Quadrature means
 		# we will have two tone patterns at each frequency, with 90 degrees of
 		# phase difference (sine and cosine).
@@ -159,9 +162,9 @@ class AFSKModem:
 			+ convolve(audio, self.space_correlator_q, 'valid')**2
 		)
 		# The demodulated signal is mark-space:
-		audio = mark_mag - space_mag
+		audio = (mark_mag**2) - (space_mag**2)
 		# Apply the output filter:
 		if (self.output_oversample > 1.0):
 			audio = resample_poly(audio, self.output_oversample, 1)
-		audio = convolve(audio, self.output_lpf, 'valid')
+		#audio = convolve(audio, self.output_lpf, 'valid')
 		return audio
