@@ -39,7 +39,7 @@ class BPSKMorseModem:
 			self.carrier_freq = 1000.0				# carrier tone frequency
 			self.morse_tone_freq = 440.0
 			self.max_freq_offset = 10
-			self.output_lpf_cutoff = 15
+			self.output_lpf_cutoff = 8
 			self.output_lpf_span = 2
 			
 			
@@ -226,7 +226,11 @@ class BPSKMorseModem:
 			threshold = 0.2
 			gain = 2
 			try:
+				#if ((2**gain)*(demod_audio[i]**gain) > 0.06) :
+				#	demod_morse_audio[i,0] = 0.25* demod_morse_audio[i,0]
 				demod_morse_audio[i,0] = (2**gain)*(demod_audio[i]**gain) * demod_morse_audio[i,0]
+				#else:
+				#	demod_morse_audio[i,0] = 0
 
 				demod_morse_audio[i,1] = input_audio[i]
 				#else:
