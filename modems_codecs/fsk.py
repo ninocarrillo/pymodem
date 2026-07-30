@@ -17,6 +17,8 @@ class FSKModem:
 	def __init__(self, **kwargs):
 		self.definition = kwargs.get('config', '9600')
 		self.sample_rate = kwargs.get('sample_rate', 96000)
+		# FSK demodulates at the input rate; the slicer is configured from this.
+		self.output_sample_rate = self.sample_rate
 
 		self.agc_attack_rate = 1		# Normalized to full scale / sec
 		self.agc_sustain_time = 0.1 # sec
